@@ -1,6 +1,6 @@
 # NEON ARCADE
 
-A browser game library featuring NEON RUSH, an endless arcade survival game, and GRAVITY HEIST, a 12-room physics puzzle adventure. Both use HTML5 Canvas, vanilla JavaScript, CSS, and synthesized Web Audio. No build step or runtime dependencies.
+A browser game library featuring NEON RUSH (arcade survival), GRAVITY HEIST (gravity puzzles), and ECHO FORGE (soundwave physics puzzles). All use HTML5 Canvas, vanilla JavaScript, CSS, and synthesized Web Audio. No build step or runtime dependencies.
 
 ## Run
 
@@ -43,6 +43,21 @@ Select **GRAVITY HEIST** from `index.html`, or open `gravity-heist.html` directl
 
 Rooms 1–3 introduce gravity, 4–6 introduce timing, 7–9 introduce magnetic walls, fields, and switches, and 10–12 combine these mechanics. Level geometry is handcrafted and fixed; there is no procedural level generation.
 
+## Play ECHO FORGE
+
+Select **ECHO FORGE** from the library, or open `echo-forge.html`. The emitter remains fixed: every interaction with objects happens through sound.
+
+- **Click / tap** anywhere in the chamber for a circular pulse. **Hold and release** to charge it for up to 1.2 seconds. **Drag** to aim a cone; longer drags strengthen the pulse, up to a cap. The large PULSE button also supports holding on mobile.
+- **1 / LOW** pushes heavy cargo. **2 / MID** opens switches and starts moving baffles. **3 / HIGH** activates crystals, shatters glass, and collects optional purple tone fragments. Every frequency also transfers momentum to the crystal, with distance-dependent strength.
+- **Space** charges a pulse while held; release to fire. **F** fires a quick pulse. **Left / Right Arrow** changes aim by 15°, **Up / Down Arrow** sets a vertical aim, and **C** returns to radial pulses. The on-screen aim button toggles between radial and a rightward cone.
+- **R** restarts immediately; **P / Escape** pauses and resumes. Changing tabs or losing focus pauses objects, waves, energy recharge, and moving platforms. Pausing cancels a held gesture without firing or consuming energy.
+- Energy recharges at 20 points per second. A pulse costs 18 plus 12 times its strength. Holding or aiming increases strength from 0.65 to 1.4. If energy is low, wait and try again; the chamber cannot run out of energy permanently.
+- Push the crystal into the green receiver. In chambers 4–12, wake it with HIGH first. Solid walls and closed gates block sound. MID-activated baffles stop physical objects but their acoustic grating transmits sound.
+- Match a relay’s labeled frequency to amplify and re-emit sound from that relay. Angled golden mirrors reflect it into a focused cone. Chains have bounded depth and remember visited nodes to prevent endless feedback.
+- Earn one star for delivery, one for collecting every tone fragment, and one for meeting **both** time and pulse targets. Best time, fewest pulses, highest stars, unlocked chambers, and mute preference are saved locally. Restarting clears only the current attempt.
+
+Chambers 1–3 teach pulses and cargo; 4–6 teach frequencies, switches, and platforms; 7–9 teach resonance and aiming; 10–12 combine reflection, relay chains, gates, glass, and moving-platform timing. All 12 chambers have verified three-star playthroughs.
+
 ## Verify
 
 Run `node --check game.js` and `node test.cjs`. The dependency-free smoke test exercises menus, scoring, pause/resume, window focus handling, mute persistence, collision, records, restart, and high-DPI mobile resizing with mocked browser APIs. Visual appearance, audio, and physical touch input still need a real browser check.
@@ -51,6 +66,14 @@ For GRAVITY HEIST, run `node gravity/test.cjs` to replay saved solver routes thr
 
 Run `node gravity/verify.cjs --cores` to search for routes that collect each optional core before escaping, stored in `gravity/core-routes.json`. These route files are verification artifacts, not required for gameplay.
 
+For ECHO FORGE, run `node echo/test.cjs` to replay every three-star route and verify frequencies, reflection, relay chains, energy regeneration, collision safety, mouse/touch input paths, keyboard controls, pause, records, reload, unlocking, game completion, audio lifecycle, and bounded high-DPI rendering. Run `node echo/verify.cjs` to regenerate the deterministic real-physics playthroughs in `echo/routes.json`. No test modifies live saved browser progress.
+
+Browser APIs are mocked for UI/input/rendering/audio checks. A live browser is still needed to assess visual layout, actual speakers, and physical touch hardware.
+
+## Static hosting / Netlify
+
+Publish the repository root (`.`) with **no build command**. `netlify.toml` sets the publish directory. The library is `index.html`; each game has its own real HTML route, with relative assets and no SPA rewrites. Games also work by opening HTML files directly. Progress is browser-local and is not shared between file URLs, localhost, and deployed sites.
+
 ## Implementation
 
 `index.html`, `library.css`, and `library.js` provide the responsive game library. The registry at the top of `library.js` lists released games and their playable pages. The library displays saved personal bests and refreshes them when returning with the browser Back button. To add another game, create its page, add a registry entry, and supply its card artwork.
@@ -58,3 +81,5 @@ Run `node gravity/verify.cjs --cores` to search for routes that collect each opt
 `neon-rush.html` contains the game menus and accessible controls; `style.css` handles game presentation; `game.js` owns simulation, rendering, input, scoring, and audio. A 120 Hz fixed simulation step keeps movement, collision checks, and scoring independent of rendering frame rate. Canvas resolution follows device pixel ratio (capped at 2). Obstacle rows reserve a two-lane corridor, share speed, and maintain at least 0.9 seconds between rows. Difficulty ramps up gradually and is capped.
 
 GRAVITY HEIST lives in `gravity-heist.html` and `gravity/`: `levels.js` defines rooms; `physics.js` implements pure simulation and interactions; `render.js` draws the letterboxed, high-DPI viewport; `audio.js` synthesizes sounds; `game.js` manages screens and saved progress; `input.js` handles controls and focus. Physics runs at 120 Hz with a 420 px/s velocity cap, limiting travel per step to 3.5 pixels, below the thinnest obstacle thickness. No simulation step uses rendering frame duration directly. Reduced-motion preferences disable decorative motion, trails, and screen shake.
+
+ECHO FORGE is isolated in `echo-forge.html` and `echo/`, with separate level, physics, audio, rendering, input, and game-state modules. It uses a 120 Hz simulation with axis-resolved circle/rectangle collisions, circle/circle cargo contacts, a 380 px/s object speed cap, line-of-sight sound propagation, one hit per object per wave, up to 32 active waves, depth-limited echo chains, and a reusable 240-particle pool. Its viewport is letterboxed rather than stretched, device pixel ratio is capped at 2, and reduced-motion preferences disable decorative animation and simplify wave effects.

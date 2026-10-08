@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#100e20" />
+    <meta
+      name="description"
+      content="ECHO FORGE — shape the silence. A physics puzzle game played entirely with soundwaves."
+    />
+    <title>ECHO FORGE · Shape the silence.</title>
+    <link rel="stylesheet" href="echo/style.css" />
+  </head>
+  <body>
+    <header>
+      <a href="index.html" class="brand"><span>≋</span> ECHO<b>FORGE</b></a>
+      <div>
+        <a href="index.html" class="library-link">← ALL GAMES</a
+        ><button id="echo-mute" class="icon-button" aria-label="Mute sound">
+          ♫
+        </button>
+      </div>
+    </header>
+    <main>
+      <section id="echo-menu" class="screen menu">
+        <div class="menu-copy">
+          <p class="eyebrow"><i></i> AN EXPERIMENT IN SOUND &amp; MOTION</p>
+          <h1>ECHO<br /><span>FORGE.</span></h1>
+          <p class="tagline">Shape the silence.</p>
+          <p class="description">
+            No footsteps. No shortcuts.<br />Push with a pulse. Bend an echo.<br />Make
+            the whole room resonate.
+          </p>
+          <button id="echo-play" class="primary">
+            ENTER THE FORGE <span>↗</span></button
+          ><button id="echo-select" class="secondary">
+            CHAMBER SELECT <span>12 EXPERIMENTS</span>
+          </button>
+          <p id="echo-progress" class="progress"></p>
+          <div class="quick-guide">
+            <span>CLICK / TAP</span> pulse <i>·</i> <span>HOLD</span> charge
+            <i>·</i> <span>DRAG</span> aim<br /><kbd>1</kbd> LOW
+            <kbd>2</kbd> MID <kbd>3</kbd> HIGH <i>·</i> <kbd>SPACE</kbd> pulse
+          </div>
+        </div>
+        <div class="menu-art" aria-hidden="true">
+          <div class="hero-ring ring-one"></div>
+          <div class="hero-ring ring-two"></div>
+          <div class="hero-ring ring-three"></div>
+          <div class="hero-emitter">≋</div>
+          <div class="hero-crystal"></div>
+          <div class="hero-node">◇</div>
+          <div class="hero-caption">
+            <span>THE WORLD IS YOUR INSTRUMENT.</span>
+            <div class="mini-spectrum">▂ ▄ ▆ ▃ █ ▅ ▂ ▆ ▄ ▂</div>
+          </div>
+          <span class="art-tag">SIGNAL / 003<br />RESONANCE ONLINE</span>
+        </div>
+      </section>
+      <section id="echo-levels" class="screen" hidden>
+        <div class="level-heading">
+          <div>
+            <p class="eyebrow">TWELVE WAYS TO BREAK THE SILENCE</p>
+            <h2>THE CHAMBERS.</h2>
+          </div>
+          <button id="echo-back" class="secondary">← BACK</button>
+        </div>
+        <p class="description">
+          One star for delivery. One for every tone fragment. One for beating
+          both time and pulse targets.
+        </p>
+        <div id="echo-level-grid"></div>
+      </section>
+      <section id="echo-gameplay" hidden>
+        <div class="hud">
+          <div>
+            <span id="echo-room-number" class="eyebrow"></span>
+            <h2 id="echo-room-name"></h2>
+            <span id="echo-targets" class="target-label"></span>
+          </div>
+          <div class="stats">
+            <div><span>TIME</span><strong id="echo-time">0.0s</strong></div>
+            <div><span>PULSES</span><strong id="echo-pulses">0</strong></div>
+            <div>
+              <span>FRAGMENTS</span><strong id="echo-fragments">0 / 1</strong>
+            </div>
+            <button
+              id="echo-restart"
+              class="icon-button"
+              aria-label="Restart chamber (R)"
+            >
+              ↻</button
+            ><button
+              id="echo-pause"
+              class="icon-button"
+              aria-label="Pause (P or Escape)"
+            >
+              Ⅱ
+            </button>
+          </div>
+        </div>
+        <div class="arena">
+          <canvas
+            id="echo-world"
+            aria-label="Soundwave puzzle chamber. Click to pulse, hold to charge, drag to aim."
+            tabindex="0"
+          ></canvas>
+          <div id="echo-notice" role="status" aria-live="polite"></div>
+        </div>
+        <div class="instrument-panel">
+          <div
+            class="frequency-controls"
+            role="group"
+            aria-label="Pulse frequency"
+          >
+            <button id="echo-low" class="frequency low" aria-pressed="false">
+              <span>01</span><strong>LOW</strong
+              ><small>HEAVY CARGO</small></button
+            ><button id="echo-mid" class="frequency mid" aria-pressed="true">
+              <span>02</span><strong>MID</strong
+              ><small>SWITCHES &amp; BAFFLES</small></button
+            ><button id="echo-high" class="frequency high" aria-pressed="false">
+              <span>03</span><strong>HIGH</strong
+              ><small>CRYSTALS &amp; GLASS</small>
+            </button>
+          </div>
+          <div class="energy-panel">
+            <div>
+              <span>ENERGY</span><strong id="echo-energy-label">100%</strong>
+            </div>
+            <div
+              id="echo-energy"
+              class="energy-meter"
+              role="progressbar"
+              aria-label="Pulse energy"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="100"
+            >
+              <i></i>
+            </div>
+            <span id="echo-charge-label">HOLD TO CHARGE</span>
+            <div class="charge-meter"><i id="echo-charge"></i></div>
+          </div>
+          <button
+            id="echo-pulse"
+            class="pulse-button"
+            aria-label="Hold and release to fire a sound pulse"
+          >
+            ≋ <span>PULSE<small>HOLD &amp; RELEASE</small></span>
+          </button>
+        </div>
+        <div class="below-arena">
+          <span id="echo-hint"></span
+          ><button
+            id="echo-aim-mode"
+            class="aim-mode"
+            aria-label="Toggle radial or aimed pulse"
+          >
+            RADIAL · C TO RESET
+          </button>
+        </div>
+        <p class="keyboard-help">
+          1 / 2 / 3 frequency <i>·</i> Space hold / release <i>·</i> ← / → aim
+          <i>·</i> C radial <i>·</i> R restart <i>·</i> P pause
+        </p>
+      </section>
+    </main>
+    <div id="echo-overlay" class="overlay" hidden>
+      <section
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="echo-modal-title"
+      >
+        <p id="echo-modal-label" class="eyebrow"></p>
+        <h2 id="echo-modal-title"></h2>
+        <div id="echo-modal-stars" class="stars"></div>
+        <p id="echo-modal-description"></p>
+        <div id="echo-modal-stats"></div>
+        <button id="echo-modal-primary" class="primary"></button
+        ><button id="echo-modal-retry" class="secondary" hidden>
+          REPLAY CHAMBER</button
+        ><button id="echo-modal-levels" class="text-button">
+          CHAMBER SELECT
+        </button>
+      </section>
+    </div>
+    <footer>
+      <span>BUILT FOR A DIFFERENT KIND OF FLOW.</span
+      ><span>LISTEN. AIM. RESONATE.</span>
+    </footer>
+    <script src="echo/levels.js"></script>
+    <script src="echo/physics.js"></script>
+    <script src="echo/audio.js"></script>
+    <script src="echo/render.js"></script>
+    <script src="echo/game.js"></script>
+    <script src="echo/input.js"></script>
+  </body>
+</html>

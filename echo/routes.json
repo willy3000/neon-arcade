@@ -1,0 +1,248 @@
+[
+  {
+    "actions": [
+      {
+        "time": 0,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": null
+      },
+      {
+        "time": 1.8083333333333294,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": null
+      }
+    ],
+    "time": 3.024999999999992,
+    "pulses": 2,
+    "fragments": 1,
+    "stars": 3
+  },
+  {
+    "actions": [
+      {
+        "time": 0,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": null
+      },
+      {
+        "time": 1.8083333333333294,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": null
+      }
+    ],
+    "time": 3.3916666666666573,
+    "pulses": 2,
+    "fragments": 1,
+    "stars": 3
+  },
+  {
+    "actions": [
+      {
+        "time": 0,
+        "frequency": "HIGH",
+        "strength": 1.1,
+        "aim": null
+      },
+      {
+        "time": 0.9083333333333325,
+        "frequency": "LOW",
+        "strength": 1.1,
+        "aim": null
+      },
+      {
+        "time": 1.8166666666666627,
+        "frequency": "LOW",
+        "strength": 1.1,
+        "aim": null
+      },
+      {
+        "time": 2.724999999999993,
+        "frequency": "LOW",
+        "strength": 1.1,
+        "aim": null
+      },
+      {
+        "time": 3.633333333333323,
+        "frequency": "LOW",
+        "strength": 1.1,
+        "aim": null
+      }
+    ],
+    "time": 4.325000000000005,
+    "pulses": 5,
+    "fragments": 1,
+    "stars": 3
+  },
+  {
+    "actions": [
+      {
+        "time": 0,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": null
+      },
+      {
+        "time": 1.8083333333333294,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": null
+      }
+    ],
+    "time": 3.408333333333324,
+    "pulses": 2,
+    "fragments": 1,
+    "stars": 3
+  },
+  {
+    "actions": [
+      {
+        "time": 0,
+        "frequency": "MID",
+        "strength": 1.4,
+        "aim": null
+      },
+      {
+        "time": 1.8083333333333294,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": null
+      }
+    ],
+    "time": 3.4749999999999903,
+    "pulses": 2,
+    "fragments": 1,
+    "stars": 3
+  },
+  {
+    "actions": [
+      {
+        "time": 0,
+        "frequency": "MID",
+        "strength": 1.4,
+        "aim": null
+      },
+      {
+        "time": 1.8083333333333294,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": null
+      }
+    ],
+    "time": 3.3666666666666574,
+    "pulses": 2,
+    "fragments": 1,
+    "stars": 3
+  },
+  {
+    "actions": [
+      {
+        "time": 0,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": null
+      }
+    ],
+    "time": 1.5583333333333302,
+    "pulses": 1,
+    "fragments": 1,
+    "stars": 3
+  },
+  {
+    "actions": [
+      {
+        "time": 0,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": -0.4487233440107211
+      }
+    ],
+    "time": 1.824999999999996,
+    "pulses": 1,
+    "fragments": 1,
+    "stars": 3
+  },
+  {
+    "actions": [
+      {
+        "time": 0,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": null
+      }
+    ],
+    "time": 2.1666666666666616,
+    "pulses": 1,
+    "fragments": 1,
+    "stars": 3
+  },
+  {
+    "actions": [
+      {
+        "time": 0,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": 0
+      }
+    ],
+    "time": 1.3083333333333311,
+    "pulses": 1,
+    "fragments": 1,
+    "stars": 3
+  },
+  {
+    "actions": [
+      {
+        "time": 0,
+        "frequency": "MID",
+        "strength": 1.1,
+        "aim": 0
+      },
+      {
+        "time": 1.2083333333333315,
+        "frequency": "HIGH",
+        "strength": 1.1,
+        "aim": 0
+      }
+    ],
+    "time": 2.308333333333328,
+    "pulses": 2,
+    "fragments": 1,
+    "stars": 3
+  },
+  {
+    "actions": [
+      {
+        "time": 0,
+        "frequency": "MID",
+        "strength": 1.4,
+        "aim": 0
+      },
+      {
+        "time": 2.4083333333333274,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": 0
+      },
+      {
+        "time": 4.808333333333362,
+        "frequency": "MID",
+        "strength": 1.4,
+        "aim": 0
+      },
+      {
+        "time": 7.208333333333481,
+        "frequency": "HIGH",
+        "strength": 1.4,
+        "aim": 0
+      }
+    ],
+    "time": 9.191666666666785,
+    "pulses": 4,
+    "fragments": 1,
+    "stars": 3
+  }
+]

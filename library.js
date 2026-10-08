@@ -25,6 +25,18 @@
       caption: "BEND GRAVITY. BREAK INTO ORBIT.",
       progress: true,
     },
+    {
+      title: "ECHO FORGE",
+      href: "echo-forge.html",
+      genre: "SOUNDWAVE PUZZLE · 12 CHAMBERS",
+      description:
+        "Shape the silence. Charge a pulse, bend a reflected echo, and set off a chain of resonance to guide the crystal home.",
+      controls: "CLICK / TOUCH · HOLD · DRAG TO AIM",
+      bestKey: "echo-forge-progress",
+      art: "echo-forge",
+      caption: "LISTEN. AIM. RESONATE.",
+      progress: true,
+    },
   ];
   const list = document.getElementById("game-list"),
     template = document.getElementById("game-card-template");
