@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0d1019" />
+    <meta
+      name="description"
+      content="RIFTBREAKERS: an original solo and local co-op action platformer. Fire, lightning, and one last stand."
+    />
+    <title>RIFTBREAKERS · Fire meets lightning.</title>
+    <link rel="stylesheet" href="riftbreakers/style.css" />
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="index.html"
+        ><span class="brand-icon">N</span> NEON<span>ARCADE</span></a
+      >
+      <div class="header-links">
+        <span class="edition">RIFTBREAKERS / 005</span
+        ><a href="index.html">← ALL GAMES</a>
+      </div>
+    </header>
+    <main>
+      <section id="rift-menu" class="screen menu">
+        <div class="menu-copy">
+          <p class="eyebrow"><i></i> TWO WARRIORS. ONE LAST STAND.</p>
+          <h1>
+            RIFT<span>BREAKERS<span class="title-period">.</span></span>
+          </h1>
+          <p class="tagline">FIRE MEETS LIGHTNING.</p>
+          <p class="description">
+            The sky is tearing open.<br />Make the invaders regret coming
+            through.
+          </p>
+          <div
+            class="character-select"
+            role="group"
+            aria-label="Choose your solo hero"
+          >
+            <button
+              id="rift-pick-blaze"
+              class="character-pick"
+              aria-pressed="true"
+            >
+              <b>BLAZE</b><span>HEAVY FIRE VANGUARD</span></button
+            ><button
+              id="rift-pick-volt"
+              class="character-pick volt"
+              aria-pressed="false"
+            >
+              <b>VOLT</b><span>LIGHTNING ASSASSIN</span>
+            </button>
+          </div>
+          <div class="play-buttons">
+            <button id="rift-solo" class="primary">
+              SOLO + AI <span>↗</span></button
+            ><button id="rift-coop" class="secondary">
+              TWO PLAYERS <span>↗</span>
+            </button>
+          </div>
+          <nav class="menu-links" aria-label="Game navigation">
+            <button id="rift-select">CAMPAIGN</button
+            ><button id="rift-how">HOW TO PLAY</button
+            ><button id="rift-settings">SETTINGS</button>
+          </nav>
+          <p id="rift-progress" class="progress"></p>
+          <p id="rift-offline" class="offline"></p>
+        </div>
+        <div class="cover" aria-hidden="true">
+          <div class="cover-grid"></div>
+          <div class="rift-ring ring-one"></div>
+          <div class="rift-ring ring-two"></div>
+          <span class="cover-label">BREACH DETECTED / 03:09</span>
+          <svg viewBox="0 0 580 600" class="cover-warriors">
+            <defs>
+              <linearGradient id="cover-sword">
+                <stop stop-color="#ffc58a" />
+                <stop offset="1" stop-color="#ff7142" />
+              </linearGradient>
+              <linearGradient id="cover-volt">
+                <stop stop-color="#c7fff5" />
+                <stop offset="1" stop-color="#30cdc7" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M30 540 158 499 308 520 480 490 565 538V600H30"
+              fill="#202938"
+            />
+            <path d="m60 542 410-37" stroke="#5b6878" stroke-width="3" />
+            <g class="cover-blaze">
+              <path d="m199 234-54 86-61 62 110-29 38-62" fill="#9f4234" />
+              <path
+                d="m206 274-40 65 27 76 93 7 33-80-58-73"
+                fill="#364153"
+                stroke="#657085"
+                stroke-width="3"
+              />
+              <path d="m182 295 39 25 56-29-9 38-47 28-39-22" fill="#ff9b54" />
+              <path d="m199 231 57-14 23 50-27 29-49-12" fill="#27303f" />
+              <path d="m191 236 13-41 21 21 34-31 18 49-44-7" fill="#e36940" />
+              <path d="m235 251 34-5" stroke="#ffe0a4" stroke-width="8" />
+              <path
+                d="m196 409-8 61-29 52h40l32-43 10-55M254 419l21 52 1 48h41l-4-58-33-53"
+                fill="#4c5b6c"
+                stroke="#81909f"
+                stroke-width="3"
+              />
+              <path
+                d="m287 308 49 23 42-38"
+                fill="none"
+                stroke="#6c7b8e"
+                stroke-width="24"
+              />
+              <path
+                d="m364 309 116-174 26-22-7 42-107 175"
+                fill="url(#cover-sword)"
+              />
+              <path d="m363 313 38 23" stroke="#ffe3ac" stroke-width="8" />
+              <path d="m382 294 101-147" stroke="#ffe6bc" stroke-width="3" />
+              <path
+                d="m186 310-28 52 29 20"
+                fill="none"
+                stroke="#67788a"
+                stroke-width="22"
+              />
+            </g>
+            <g class="cover-volt">
+              <path
+                d="m355 236-52 38-24 105 42-15 30 64 63-84"
+                fill="#164554"
+              />
+              <path
+                d="m350 274 51-7 31 57-21 80-65 3-22-83"
+                fill="#334d5d"
+                stroke="#578491"
+                stroke-width="3"
+              />
+              <path
+                d="m344 294 58 26-46 25"
+                fill="none"
+                stroke="#70f5eb"
+                stroke-width="7"
+              />
+              <path d="m333 246 17-42 41 7 24 41-26 32-42-2" fill="#24515f" />
+              <path d="m371 244 29 6" stroke="#b5fff4" stroke-width="6" />
+              <path
+                d="m348 401-30 54 4 57h32l10-54 17-42M386 407l40 49 12 52h30l-13-68-43-43"
+                fill="#406574"
+                stroke="#72a6b2"
+                stroke-width="3"
+              />
+              <path
+                d="m410 294 41 39 37-14M336 291l-25 47-19 27"
+                fill="none"
+                stroke="#658e9c"
+                stroke-width="18"
+              />
+              <path
+                d="m475 316 61-35-20 42-37 9M288 358l-60 41 51-5 25-24"
+                fill="url(#cover-volt)"
+              />
+            </g>
+            <path
+              class="cover-lightning"
+              d="m427 153-54 44 55 16-88 69m157 95-49 17 28 16-42 19"
+              fill="none"
+              stroke="#70f5eb"
+              stroke-width="3"
+            />
+          </svg>
+          <div class="cover-badge">
+            <span>9 STAGES</span><b>3 GUARDIANS.<br />ZERO MERCY.</b>
+          </div>
+          <span class="cover-bottom"
+            >LOCAL CO-OP / SOLO WITH AI / NO DOWNLOADS</span
+          >
+        </div>
+      </section>
+      <section id="rift-levels" class="screen" hidden>
+        <div class="screen-heading">
+          <div>
+            <p class="eyebrow">THE WORLD WON'T SAVE ITSELF</p>
+            <h2>CHOOSE YOUR BREACH.</h2>
+          </div>
+          <button id="rift-levels-back" class="secondary compact">
+            ← BACK
+          </button>
+        </div>
+        <div id="rift-level-grid" class="level-grid"></div>
+      </section>
+      <section id="rift-instructions" class="screen" hidden>
+        <div class="screen-heading">
+          <div>
+            <p class="eyebrow">A FIELD GUIDE TO MAKING AN ENTRANCE</p>
+            <h2>MOVE FAST. HIT HARD.</h2>
+          </div>
+          <button id="rift-how-back" class="secondary compact">← BACK</button>
+        </div>
+        <div class="guide-grid">
+          <article>
+            <span class="guide-number">01</span>
+            <h3>THE TWO WARRIORS</h3>
+            <p>
+              Blaze swings a heavy sword and ignites the battlefield. Volt uses
+              quick blades and chain lightning. Solo gives you an AI partner.
+              Press <kbd>X</kbd> to switch; both heroes stay in the fight.
+            </p>
+            <div id="rift-controls-guide"></div>
+          </article>
+          <article>
+            <span class="guide-number">02</span>
+            <h3>COMBAT WITH INTENT</h3>
+            <p>
+              Tap attack to strike. Time another tap near the end to continue
+              Blaze's three-hit or Volt's four-hit combo. Heavy strikes break
+              reinforced crates and guard armor. Specials cost 35 energy.
+              Ultimate needs a full charge.
+            </p>
+            <p>
+              Double-jump, wall-jump, and dash to reposition. Dash immunity
+              starts just after launch and lasts briefly. Heavy attacks in the
+              air slam downward. You can dash out of light or heavy recovery.
+            </p>
+          </article>
+          <article>
+            <span class="guide-number">03</span>
+            <h3>BREAK THE DISTANCE</h3>
+            <p>
+              Grapple attaches to a glowing anchor or nearby enemy. Steer to
+              swing, then press again to release with momentum. Fast swings can
+              kick enemies. Jump over red strips when their warning line fills.
+            </p>
+            <p>
+              Read enemy warning shapes. Gold outlines mark upcoming danger; red
+              marks the active attack. Boss cores take more damage during
+              recovery.
+            </p>
+          </article>
+          <article>
+            <span class="guide-number">04</span>
+            <h3>BETTER TOGETHER</h3>
+            <p>
+              Alternate hits to earn team bonuses. Volt electrifies Blaze's fire
+              zones. When fusion is full, both players confirm within two
+              seconds while close. In solo, your AI confirms for you.
+            </p>
+            <p>
+              Stand within reach of a downed partner for 1.45 seconds without
+              attacking to revive them. Rescue within 20 seconds. Both down
+              means a checkpoint retry.
+            </p>
+            <p>
+              Clear each encounter, break the generator, then bring both heroes
+              to extraction. Collect gold relics for another star. A fast run
+              with ≤100 team damage and no falls earns the third.
+            </p>
+          </article>
+        </div>
+        <button id="rift-how-play" class="primary">READY TO BREAK IN ↗</button>
+      </section>
+      <section id="rift-settings-screen" class="screen" hidden>
+        <div class="screen-heading">
+          <div>
+            <p class="eyebrow">MAKE IT YOUR FIGHT</p>
+            <h2>SETTINGS.</h2>
+          </div>
+          <button id="rift-settings-back" class="secondary compact">
+            ← BACK
+          </button>
+        </div>
+        <div class="settings-grid">
+          <fieldset>
+            <legend>SOUND &amp; PRESENTATION</legend>
+            <label
+              ><span>Sound effects</span
+              ><input id="rift-setting-sfx" type="checkbox" /></label
+            ><label
+              ><span>Synth soundtrack</span
+              ><input id="rift-setting-music" type="checkbox" /></label
+            ><label
+              ><span>Visual quality</span
+              ><select id="rift-setting-quality">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select></label
+            ><label
+              ><span>Screen shake</span
+              ><input
+                id="rift-setting-shake"
+                type="range"
+                min="0"
+                max="1"
+                step=".1" /></label
+            ><label
+              ><span>Reduced flash</span
+              ><input id="rift-setting-reducedFlash" type="checkbox" /></label
+            ><label
+              ><span>Reduced motion</span
+              ><input id="rift-setting-reducedMotion" type="checkbox" /></label
+            ><label
+              ><span>Short fusion sequence</span
+              ><input id="rift-setting-shortFusion" type="checkbox" /></label
+            ><label
+              ><span>Touch button size</span
+              ><input
+                id="rift-setting-touchScale"
+                type="range"
+                min=".8"
+                max="1.3"
+                step=".1"
+            /></label>
+          </fieldset>
+          <fieldset>
+            <legend>KEYBOARD BINDINGS</legend>
+            <p class="setting-note">
+              Select an action, then press its new key. Each action needs a
+              unique key. Escape cancels. R, X, Tab, Enter and Escape stay
+              reserved.
+            </p>
+            <p id="rift-binding-status" role="status"></p>
+            <div id="rift-bindings"></div>
+            <button id="rift-reset-bindings" class="secondary compact">
+              RESET CONTROLS
+            </button>
+          </fieldset>
+        </div>
+      </section>
+      <section id="rift-gameplay" hidden>
+        <div class="mission-bar">
+          <div>
+            <p id="rift-chapter" class="eyebrow"></p>
+            <h2 id="rift-level-name"></h2>
+          </div>
+          <div class="mission-tools">
+            <span id="rift-time">0.0s</span><span id="rift-relics">◇ 0 / 2</span
+            ><button id="rift-switch" class="secondary compact">
+              SWITCH · X</button
+            ><button
+              id="rift-restart"
+              class="icon-button"
+              aria-label="Restart level"
+              title="Restart · R"
+            >
+              ↻</button
+            ><button
+              id="rift-pause"
+              class="icon-button"
+              aria-label="Pause game"
+              title="Pause · Escape"
+            >
+              Ⅱ
+            </button>
+          </div>
+        </div>
+        <div class="hud">
+          <div id="rift-blaze-card" class="hero-card blaze">
+            <div class="hero-card-title">
+              <b>BLAZE</b><span id="rift-blaze-role"></span
+              ><span id="rift-blaze-health"></span>
+            </div>
+            <div class="meter health"><i id="rift-blaze-hp"></i></div>
+            <div class="resources">
+              <span>ENERGY <b id="rift-blaze-energy"></b></span
+              ><span>ULT <b id="rift-blaze-ultimate"></b></span>
+            </div>
+            <div class="mini-meters">
+              <i id="rift-blaze-energy-bar"></i
+              ><i id="rift-blaze-ultimate-bar"></i>
+            </div>
+          </div>
+          <div class="team-card">
+            <div>
+              <span>SUPERNOVA FUSION</span><b id="rift-fusion-label">0%</b>
+            </div>
+            <div class="meter fusion"><i id="rift-fusion"></i></div>
+            <p id="rift-combo">BUILD YOUR MOMENTUM</p>
+          </div>
+          <div id="rift-volt-card" class="hero-card volt">
+            <div class="hero-card-title">
+              <b>VOLT</b><span id="rift-volt-role"></span
+              ><span id="rift-volt-health"></span>
+            </div>
+            <div class="meter health"><i id="rift-volt-hp"></i></div>
+            <div class="resources">
+              <span>ENERGY <b id="rift-volt-energy"></b></span
+              ><span>ULT <b id="rift-volt-ultimate"></b></span>
+            </div>
+            <div class="mini-meters">
+              <i id="rift-volt-energy-bar"></i
+              ><i id="rift-volt-ultimate-bar"></i>
+            </div>
+          </div>
+        </div>
+        <div id="rift-boss-hud" class="boss-hud" hidden>
+          <span id="rift-boss-name"></span>
+          <div class="meter"><i id="rift-boss-hp"></i></div>
+          <b id="rift-boss-phase"></b>
+        </div>
+        <div class="arena">
+          <canvas
+            id="rift-world"
+            width="1080"
+            height="600"
+            tabindex="0"
+            aria-label="RIFTBREAKERS gameplay. Controls are described in How to Play."
+          ></canvas>
+          <div id="rift-notice" role="status" aria-live="polite"></div>
+          <div
+            id="rift-overlay"
+            class="overlay"
+            hidden
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rift-modal-title"
+          >
+            <div class="modal">
+              <p id="rift-modal-label" class="eyebrow"></p>
+              <h2 id="rift-modal-title"></h2>
+              <p id="rift-modal-stars" class="stars"></p>
+              <p id="rift-modal-description"></p>
+              <div id="rift-modal-stats"></div>
+              <button id="rift-modal-primary" class="primary"></button>
+              <div class="modal-links">
+                <button id="rift-modal-replay">REPLAY</button
+                ><button id="rift-modal-levels">CAMPAIGN</button
+                ><button id="rift-modal-settings">SETTINGS</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="below-arena">
+          <p id="rift-objective">
+            CLEAR THE ENCOUNTER · BREAK THE GENERATOR · EXTRACT TOGETHER
+          </p>
+          <span id="rift-score">000000</span>
+        </div>
+        <div id="rift-touch" class="touch-controls" hidden>
+          <div class="move-controls">
+            <button data-action="left" aria-label="Move left">←</button
+            ><button data-action="right" aria-label="Move right">→</button>
+          </div>
+          <div class="action-controls">
+            <button data-action="jump" aria-label="Jump or double jump">
+              ↑<span>JUMP</span></button
+            ><button data-action="light" aria-label="Light attack">
+              ╱<span>SLASH</span></button
+            ><button data-action="dash" aria-label="Dash">
+              »<span>DASH</span></button
+            ><button data-action="special" aria-label="Special attack">
+              ϟ<span>SPECIAL</span></button
+            ><button data-action="heavy" aria-label="Heavy attack">
+              ⇣<span>HEAVY</span></button
+            ><button
+              data-action="grapple"
+              aria-label="Attach or release grapple"
+            >
+              ⌁<span>GRAPPLE</span></button
+            ><button data-action="ultimate" aria-label="Ultimate attack">
+              ✦<span>ULTIMATE</span></button
+            ><button data-action="fusion" aria-label="Confirm fusion">
+              ⨯<span>FUSION</span>
+            </button>
+          </div>
+        </div>
+        <p class="keyboard-help">
+          TAP YOUR ATTACKS. TIME YOUR DODGES. BRING YOUR PARTNER HOME.
+          <span>R · RESTART / ESC · PAUSE</span>
+        </p>
+      </section>
+    </main>
+    <footer>
+      <span>RIFTBREAKERS / FIRE × LIGHTNING.</span
+      ><span>ORIGINAL WORLDS. SHARED VICTORIES.</span>
+    </footer>
+    <script src="riftbreakers/levels.js"></script>
+    <script src="riftbreakers/physics.js"></script>
+    <script src="riftbreakers/combat.js"></script>
+    <script src="riftbreakers/ai.js"></script>
+    <script src="riftbreakers/simulation.js"></script>
+    <script src="riftbreakers/save.js"></script>
+    <script src="riftbreakers/audio.js"></script>
+    <script src="riftbreakers/render.js"></script>
+    <script src="riftbreakers/game.js"></script>
+    <script src="riftbreakers/input.js"></script>
+  </body>
+</html>

@@ -14,3 +14,12 @@
 .phasebound .art-orbit{border-color:#b7a0ff22}
 .phasebound .energy{background:#b7a0ff;border-radius:0;transform:rotate(45deg);box-shadow:0 0 20px #b7a0ff}
 .phasebound .art-status{color:#79f4ef}
+.game-art.riftbreakers{background:radial-gradient(ellipse at 75% 55%,#58343f,#171826 70%)}
+.riftbreakers .art-title{font-size:clamp(39px,4.5vw,63px);color:#ffad72;top:84px;text-shadow:0 0 30px #ffad7230}
+.riftbreakers .art-orbit{border-color:#b68cff55;box-shadow:0 0 22px #b68cff18;animation:echo-card 4s ease-in-out infinite}
+.riftbreakers .art-ball{background:#45505e;border:2px solid #ffad72;border-radius:5px;width:30px;height:42px;left:69%;top:58%;box-shadow:0 0 24px #ffad7233}
+.riftbreakers .art-ball:after{content:'';position:absolute;width:60px;height:5px;left:13px;top:8px;background:#ffad72;box-shadow:0 0 15px #ffad72;transform:rotate(-48deg);transform-origin:left}
+.riftbreakers .obstacle.one{width:26px;height:37px;border:2px solid #70f5eb;border-radius:12px 12px 3px 3px;background:#254655;box-shadow:0 0 18px #70f5eb33;top:57%;left:86%;transform:rotate(9deg)}
+.riftbreakers .obstacle.two,.riftbreakers .obstacle.three,.riftbreakers .art-trail{display:none}
+.riftbreakers .energy{background:#b68cff;box-shadow:0 0 15px #b68cff;border-radius:0;transform:rotate(45deg)}
+.riftbreakers .art-status{color:#ffad72}

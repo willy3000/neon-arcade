@@ -3,6 +3,19 @@
   "use strict";
   const games = [
     {
+      title: "RIFTBREAKERS",
+      href: "riftbreakers.html",
+      genre: "CO-OP ACTION · 9 BREACHES",
+      description:
+        "Fire meets lightning. Master blade combos, swing across the ruins, and close the final breach with a friend or an AI partner.",
+      controls: "SOLO + AI / TWO PLAYERS / TOUCH",
+      bestKey: "riftbreakers-progress",
+      art: "riftbreakers",
+      caption: "MOVE FAST. HIT HARD. BREAK TOGETHER.",
+      progress: true,
+      levels: 9,
+    },
+    {
       title: "PHASEBOUND",
       href: "phasebound.html",
       genre: "CO-OP PLATFORM PUZZLE · 12 RUINS",
@@ -62,13 +75,13 @@
         const saved = JSON.parse(localStorage.getItem(game.bestKey));
         if (Array.isArray(saved))
           stars = saved
-            .slice(0, 12)
+            .slice(0, game.levels || 12)
             .reduce(
               (sum, r) => sum + Math.max(0, Math.min(3, Number(r?.stars) || 0)),
               0,
             );
       } catch {}
-      return `STARS ${stars} / 36`;
+      return `STARS ${stars} / ${(game.levels || 12) * 3}`;
     }
     let best = 0;
     try {
