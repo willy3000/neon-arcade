@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#111425" />
+    <meta
+      name="description"
+      content="PHASEBOUND — two worlds, one journey. An original local co-op puzzle platformer."
+    />
+    <title>PHASEBOUND · Two worlds. One journey.</title>
+    <link rel="stylesheet" href="phasebound/style.css" />
+  </head>
+  <body>
+    <header>
+      <a href="index.html" class="brand"><span>◈</span> PHASE<b>BOUND</b></a>
+      <div>
+        <a href="index.html" class="library-link">← ALL GAMES</a
+        ><button
+          id="phase-music"
+          class="icon-button"
+          aria-label="Enable ambient music"
+          title="Ambient music"
+        >
+          ♬</button
+        ><button id="phase-mute" class="icon-button" aria-label="Mute sound">
+          ♫
+        </button>
+      </div>
+    </header>
+    <main>
+      <section id="phase-menu" class="screen menu">
+        <div class="menu-copy">
+          <p class="eyebrow"><i></i> AN ADVENTURE BETWEEN WORLDS</p>
+          <h1>PHASE<br /><span>BOUND.</span></h1>
+          <p class="tagline">Two worlds. One journey.</p>
+          <p class="description">
+            Stone and spirit. Spark and starlight.<br />Find a way through the
+            fractures.<br />Neither of you gets home alone.
+          </p>
+          <button id="phase-play-coop" class="primary">
+            PLAY TOGETHER <span>↗</span></button
+          ><button id="phase-play-solo" class="secondary">
+            PLAY SOLO <span>SWITCH BETWEEN BOTH</span>
+          </button>
+          <div class="menu-links">
+            <button id="phase-select">LEVEL SELECT</button
+            ><button id="phase-instructions">HOW TO PLAY</button>
+          </div>
+          <p id="phase-progress" class="progress"></p>
+          <div class="quick-guide">
+            <span class="amber">KAI</span> <kbd>A D</kbd> move <kbd>W</kbd> jump
+            <kbd>S</kbd> interact<br /><span class="cyan">LUMA</span>
+            <kbd>← →</kbd> move <kbd>↑</kbd> jump <kbd>↓</kbd> interact
+          </div>
+        </div>
+        <div class="menu-art" aria-hidden="true">
+          <div class="arch physical"></div>
+          <div class="arch spirit"></div>
+          <div class="art-bridge"></div>
+          <div class="hero-kai">
+            <div class="kai-eyes">••</div>
+            <div class="kai-feet">▰ ▰</div>
+          </div>
+          <div class="hero-luma">
+            <div class="luma-eyes">••</div>
+            <span>⌣</span>
+          </div>
+          <div class="hero-tether"></div>
+          <div class="floating-crystal"></div>
+          <span class="art-caption">DISTANCE DIVIDES. CONNECTION REVEALS.</span
+          ><span class="art-tag"
+            >LOCAL CO-OP / SOLO PLAY<br />THREE CHAPTERS · TWELVE RUINS</span
+          >
+        </div>
+      </section>
+      <section id="phase-levels" class="screen" hidden>
+        <div class="level-heading">
+          <div>
+            <p class="eyebrow">A PATH THROUGH THE FRACTURE</p>
+            <h2>THE JOURNEY.</h2>
+          </div>
+          <button id="phase-levels-back" class="secondary">← BACK</button>
+        </div>
+        <p class="description">
+          Play with a friend on one keyboard, or switch between Kai and Luma in
+          solo mode. Every room needs both sparks.
+        </p>
+        <div id="phase-level-grid"></div>
+      </section>
+      <section id="phase-how" class="screen" hidden>
+        <div class="level-heading">
+          <div>
+            <p class="eyebrow">BETTER TOGETHER</p>
+            <h2>MEET THE SPARKS.</h2>
+          </div>
+          <button id="phase-how-back" class="secondary">← BACK</button>
+        </div>
+        <div class="instruction-cards">
+          <article class="kai-card">
+            <span class="eyebrow">PHYSICAL DIMENSION</span>
+            <h3>KAI</h3>
+            <p>
+              A compact stone creature with an amber heart. Push and brace heavy
+              blocks. Hold amber pressure plates to power the way forward.
+            </p>
+            <p>
+              <kbd>A / D</kbd> move · <kbd>W</kbd> jump · <kbd>S</kbd> interact
+            </p>
+          </article>
+          <article class="luma-card">
+            <span class="eyebrow">SPIRIT DIMENSION</span>
+            <h3>LUMA</h3>
+            <p>
+              A curious spirit with a cyan glow. Phase through amber stone and
+              striped veils. Activate spirit relays to reveal Kai’s temporary
+              bridges.
+            </p>
+            <p>
+              <kbd>← / →</kbd> move · <kbd>↑</kbd> jump · <kbd>↓</kbd> interact
+            </p>
+          </article>
+        </div>
+        <div class="instruction-notes">
+          <p>
+            <b>Two matching exits.</b> A portal keeps its spark safe, but both
+            must arrive before a room is complete.
+          </p>
+          <p>
+            <b>Read the dimensions.</b> Amber terrain affects Kai. Cyan terrain
+            affects Luma. Striped purple veils block Kai and let Luma through.
+            Neutral stone supports both.
+          </p>
+          <p>
+            <b>Link at purple nodes.</b> Bring both close, then interact. An
+            active tether powers shared gates and limits separation. Interact
+            away from other mechanisms to unlink.
+          </p>
+          <p>
+            <b>Solo and mobile.</b> Use either set of movement keys or the touch
+            buttons. Press <kbd>X</kbd> or tap SWITCH to select a character.
+            Park the other on a plate or ferry before switching.
+          </p>
+          <p>
+            <b>Stay responsive.</b> Hold jump for height; tap for a short hop.
+            <kbd>R</kbd> restarts; <kbd>Escape</kbd> pauses. Hint reveals one of
+            three clues. Flag checkpoints save both positions and puzzle
+            mechanisms.
+          </p>
+        </div>
+        <button id="phase-how-play" class="primary">
+          START THE JOURNEY <span>↗</span>
+        </button>
+      </section>
+      <section id="phase-gameplay" hidden>
+        <div class="hud">
+          <div>
+            <span id="phase-room-number" class="eyebrow"></span>
+            <h2 id="phase-room-name"></h2>
+            <span id="phase-targets" class="target-label"></span>
+          </div>
+          <div class="hud-tools">
+            <div class="run-stats">
+              <span id="phase-time">0.0s</span
+              ><span id="phase-crystals">◇ 0 / 1</span>
+            </div>
+            <button id="phase-mode" class="mode-button">TWO PLAYERS</button
+            ><button
+              id="phase-restart"
+              class="icon-button"
+              aria-label="Restart level (R)"
+            >
+              ↻</button
+            ><button
+              id="phase-pause"
+              class="icon-button"
+              aria-label="Pause (Escape)"
+            >
+              Ⅱ
+            </button>
+          </div>
+        </div>
+        <div class="arena">
+          <canvas
+            id="phase-world"
+            tabindex="0"
+            aria-label="Phasebound platforming room. Kai uses A D W S. Luma uses arrow keys."
+          ></canvas>
+          <div id="phase-notice" role="status" aria-live="polite"></div>
+        </div>
+        <div class="below-arena">
+          <div class="character-status">
+            <span id="phase-kai-status" class="amber">KAI · A D W S</span
+            ><i>↔</i
+            ><span id="phase-luma-status" class="cyan">LUMA · ARROWS</span
+            ><span id="phase-link-status"></span>
+          </div>
+          <button id="phase-hint" class="hint-button">HINT 0 / 3</button>
+        </div>
+        <p id="phase-hint-text" hidden role="status"></p>
+        <div id="phase-touch-controls" class="touch-controls" hidden>
+          <button
+            id="phase-touch-left"
+            aria-label="Move selected character left"
+          >
+            ←</button
+          ><button
+            id="phase-touch-right"
+            aria-label="Move selected character right"
+          >
+            →</button
+          ><button
+            id="phase-switch"
+            class="switch-button"
+            aria-label="Switch selected character (X)"
+          >
+            <strong>KAI</strong><span>SWITCH · X</span></button
+          ><button
+            id="phase-touch-jump"
+            aria-label="Jump with selected character"
+          >
+            ↑<span>JUMP</span></button
+          ><button
+            id="phase-touch-interact"
+            aria-label="Interact with selected character"
+          >
+            ◇<span>INTERACT</span>
+          </button>
+        </div>
+        <p class="keyboard-help">
+          Hold jump for height <i>·</i> S / ↓ interact <i>·</i> R restart
+          <i>·</i> Escape pause <i>·</i> X switch in solo mode
+        </p>
+      </section>
+    </main>
+    <div id="phase-overlay" class="overlay" hidden>
+      <section
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="phase-modal-title"
+      >
+        <p id="phase-modal-label" class="eyebrow"></p>
+        <h2 id="phase-modal-title"></h2>
+        <div id="phase-modal-stars" class="stars"></div>
+        <p id="phase-modal-description"></p>
+        <div id="phase-modal-stats"></div>
+        <button id="phase-modal-primary" class="primary"></button
+        ><button id="phase-modal-retry" class="secondary" hidden>
+          REPLAY LEVEL</button
+        ><button id="phase-modal-levels" class="text-button">
+          LEVEL SELECT
+        </button>
+      </section>
+    </div>
+    <footer>
+      <span>STONE &amp; SPIRIT / NEVER ALONE.</span
+      ><span>ONE KEYBOARD. TWO SPARKS.</span>
+    </footer>
+    <script src="phasebound/levels.js"></script>
+    <script src="phasebound/physics.js"></script>
+    <script src="phasebound/audio.js"></script>
+    <script src="phasebound/render.js"></script>
+    <script src="phasebound/game.js"></script>
+    <script src="phasebound/input.js"></script>
+  </body>
+</html>

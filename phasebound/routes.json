@@ -1,0 +1,2143 @@
+[
+  {
+    "won": true,
+    "dead": false,
+    "time": 3.741666666666656,
+    "collected": 1,
+    "stage": 0,
+    "kai": [
+      959,
+      552
+    ],
+    "luma": [
+      1009,
+      552
+    ],
+    "actions": [
+      {
+        "frames": 116,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 25,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 48,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 25,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 231,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "won": true,
+    "dead": false,
+    "time": 3.741666666666656,
+    "collected": 2,
+    "stage": 0,
+    "kai": [
+      959,
+      552
+    ],
+    "luma": [
+      1009,
+      552
+    ],
+    "actions": [
+      {
+        "frames": 106,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 67,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 54,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 67,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 149,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 2,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      }
+    ]
+  },
+  {
+    "won": true,
+    "dead": false,
+    "time": 7.483333333333495,
+    "collected": 1,
+    "stage": 2,
+    "kai": [
+      959,
+      552
+    ],
+    "luma": [
+      1009,
+      552
+    ],
+    "actions": [
+      {
+        "frames": 154,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      },
+      {
+        "frames": 446,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {},
+          "luma": {}
+        }
+      },
+      {
+        "frames": 297,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      }
+    ]
+  },
+  {
+    "won": true,
+    "dead": false,
+    "time": 5.500000000000063,
+    "collected": 1,
+    "stage": 2,
+    "kai": [
+      959,
+      552
+    ],
+    "luma": [
+      1009,
+      552
+    ],
+    "actions": [
+      {
+        "frames": 215,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          },
+          "luma": {}
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 248,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 195,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "won": true,
+    "dead": false,
+    "time": 4.525000000000015,
+    "collected": 1,
+    "stage": 2,
+    "kai": [
+      959,
+      552
+    ],
+    "luma": [
+      1009,
+      552
+    ],
+    "actions": [
+      {
+        "frames": 93,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          }
+        }
+      },
+      {
+        "frames": 350,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 99,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      }
+    ]
+  },
+  {
+    "won": true,
+    "dead": false,
+    "time": 7.483333333333495,
+    "collected": 1,
+    "stage": 4,
+    "kai": [
+      959,
+      552
+    ],
+    "luma": [
+      1009,
+      552
+    ],
+    "actions": [
+      {
+        "frames": 210,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          }
+        }
+      },
+      {
+        "frames": 332,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      },
+      {
+        "frames": 235,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {},
+          "luma": {}
+        }
+      },
+      {
+        "frames": 119,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      }
+    ]
+  },
+  {
+    "won": true,
+    "dead": false,
+    "time": 4.5916666666666845,
+    "collected": 1,
+    "stage": 2,
+    "kai": [
+      959,
+      552
+    ],
+    "luma": [
+      1009,
+      552
+    ],
+    "actions": [
+      {
+        "frames": 101,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          }
+        }
+      },
+      {
+        "frames": 342,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 107,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      }
+    ]
+  },
+  {
+    "won": true,
+    "dead": false,
+    "time": 7.5000000000001625,
+    "collected": 1,
+    "stage": 5,
+    "kai": [
+      959,
+      552
+    ],
+    "luma": [
+      1009,
+      552
+    ],
+    "actions": [
+      {
+        "frames": 97,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      },
+      {
+        "frames": 273,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          }
+        }
+      },
+      {
+        "frames": 289,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      },
+      {
+        "frames": 172,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {},
+          "luma": {}
+        }
+      },
+      {
+        "frames": 67,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      }
+    ]
+  },
+  {
+    "won": true,
+    "dead": false,
+    "time": 3.8333333333333224,
+    "collected": 1,
+    "stage": 2,
+    "kai": [
+      959,
+      552
+    ],
+    "luma": [
+      1009,
+      552
+    ],
+    "actions": [
+      {
+        "frames": 106,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 13,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          },
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 38,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 15,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 274,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 11,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "won": true,
+    "dead": false,
+    "time": 10.083333333333401,
+    "collected": 1,
+    "stage": 4,
+    "kai": [
+      959,
+      552
+    ],
+    "luma": [
+      1009,
+      552
+    ],
+    "actions": [
+      {
+        "frames": 78,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 12,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          },
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 378,
+        "actions": {
+          "kai": {},
+          "luma": {}
+        }
+      },
+      {
+        "frames": 18,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 12,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 33,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 6,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 8,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 7,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 8,
+        "actions": {
+          "kai": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 13,
+        "actions": {
+          "kai": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      },
+      {
+        "frames": 380,
+        "actions": {
+          "kai": {},
+          "luma": {}
+        }
+      },
+      {
+        "frames": 20,
+        "actions": {
+          "kai": {
+            "right": true,
+            "jump": true
+          },
+          "luma": {
+            "right": true,
+            "jump": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {},
+          "luma": {}
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 38,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 8,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 7,
+        "actions": {
+          "kai": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 8,
+        "actions": {
+          "kai": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 14,
+        "actions": {
+          "kai": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 9,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 16,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 115,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 12,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "won": true,
+    "dead": false,
+    "time": 4.308333333333337,
+    "collected": 1,
+    "stage": 4,
+    "kai": [
+      959,
+      552
+    ],
+    "luma": [
+      1009,
+      552
+    ],
+    "actions": [
+      {
+        "frames": 51,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          }
+        }
+      },
+      {
+        "frames": 169,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 70,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          },
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 42,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 75,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 91,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 15,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      }
+    ]
+  },
+  {
+    "won": true,
+    "dead": false,
+    "time": 6.733333333333458,
+    "collected": 2,
+    "stage": 8,
+    "kai": [
+      999,
+      552
+    ],
+    "luma": [
+      1019,
+      552
+    ],
+    "actions": [
+      {
+        "frames": 67,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          }
+        }
+      },
+      {
+        "frames": 280,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          },
+          "luma": {}
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 70,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 17,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 8,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 29,
+        "actions": {
+          "kai": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 8,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 23,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 11,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 20,
+        "actions": {
+          "kai": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 14,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 13,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 51,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          },
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 4,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 52,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 7,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 8,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {},
+          "luma": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false,
+            "interact": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 58,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 8,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 17,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": true,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 9,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {
+            "left": false,
+            "right": false,
+            "jump": true,
+            "jumpPressed": false
+          }
+        }
+      },
+      {
+        "frames": 24,
+        "actions": {
+          "kai": {
+            "left": false,
+            "right": true,
+            "jump": true,
+            "jumpPressed": false
+          },
+          "luma": {}
+        }
+      }
+    ]
+  }
+]

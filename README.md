@@ -83,3 +83,21 @@ Publish the repository root (`.`) with **no build command**. `netlify.toml` sets
 GRAVITY HEIST lives in `gravity-heist.html` and `gravity/`: `levels.js` defines rooms; `physics.js` implements pure simulation and interactions; `render.js` draws the letterboxed, high-DPI viewport; `audio.js` synthesizes sounds; `game.js` manages screens and saved progress; `input.js` handles controls and focus. Physics runs at 120 Hz with a 420 px/s velocity cap, limiting travel per step to 3.5 pixels, below the thinnest obstacle thickness. No simulation step uses rendering frame duration directly. Reduced-motion preferences disable decorative motion, trails, and screen shake.
 
 ECHO FORGE is isolated in `echo-forge.html` and `echo/`, with separate level, physics, audio, rendering, input, and game-state modules. It uses a 120 Hz simulation with axis-resolved circle/rectangle collisions, circle/circle cargo contacts, a 380 px/s object speed cap, line-of-sight sound propagation, one hit per object per wave, up to 32 active waves, depth-limited echo chains, and a reusable 240-particle pool. Its viewport is letterboxed rather than stretched, device pixel ratio is capped at 2, and reduced-motion preferences disable decorative animation and simplify wave effects.
+
+## Play PHASEBOUND
+
+Select **PHASEBOUND** from the library, or open `phasebound.html` directly. Guide both characters into their matching portals to finish each of 12 handcrafted levels across three chapters.
+
+- **Two players:** Kai uses **A/D** to move, **W** to jump, and **S** to interact. Luma uses **Left/Right**, **Up**, and **Down**. Both control schemes work simultaneously.
+- **Solo:** either movement scheme controls the selected character. Press **X** or the character button to switch. Mobile has movement, jump, interact, and switch buttons with simultaneous touch support. The inactive character stops horizontally; gravity and moving platforms still apply.
+- **R** restarts; **Escape** pauses/resumes. Losing focus or hiding the tab pauses physics and mechanism timers.
+- Amber terrain and blocks belong to Kai; cyan terrain belongs to Luma. Both use neutral stone. Luma phases through striped veils and physical blocks.
+- Kai pushes blocks onto plates and braces/releases nearby blocks with interact. Luma activates spirit relays to reveal timed bridges or unlock gates.
+- Bring both characters inside a purple tether node and interact to link. Stay close to power tether gates; interact away from blocks and relays to unlink.
+- Larger levels save a checkpoint when both reach its flag. Falling returns both there, restores mechanisms, and preserves collected crystals. Restart resets the attempt.
+- Earn one star for bringing both home, one for every crystal, and one for meeting the displayed time without falling. Progress, best times, collected crystals, mode, mute, and music preferences save locally.
+- HINT reveals three progressive clues. Sound and optional ambient music have separate controls.
+
+PHASEBOUND uses separate `phasebound/{levels,physics,render,audio,game,input}.js` modules, original canvas artwork, a 120 Hz simulation, dimension-filtered collisions, coyote time, buffered variable-height jumps, moving platforms, and a capped particle pool. Input packets remain separate from simulation; multiplayer is local on one device.
+
+Run `node phasebound/test.cjs` to replay all 12 cooperative and solo three-star routes and check mechanisms, collision rules, independent/simultaneous input, checkpoints, touch cancellation, pause, saves/reload, progression, rendering, and synthesized audio. Run `node phasebound/verify.cjs` and `node phasebound/verify.cjs --solo` to regenerate the test-only action recordings. The solo verifier sends actions to only one selected character at a time. Live visual, speaker, and physical touch checks require a browser.

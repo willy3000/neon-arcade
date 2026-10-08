@@ -3,6 +3,18 @@
   "use strict";
   const games = [
     {
+      title: "PHASEBOUND",
+      href: "phasebound.html",
+      genre: "CO-OP PLATFORM PUZZLE · 12 RUINS",
+      description:
+        "Two sparks in overlapping worlds. Guide Kai and Luma through ancient machinery, reveal hidden bridges, and find a way home together.",
+      controls: "WASD + ARROWS · SOLO SWITCH · TOUCH",
+      bestKey: "phasebound-progress",
+      art: "phasebound",
+      caption: "TWO WORLDS. ONE WAY HOME.",
+      progress: true,
+    },
+    {
       title: "NEON RUSH",
       href: "neon-rush.html",
       genre: "ENDLESS ARCADE · SURVIVAL",
