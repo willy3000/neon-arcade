@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#070b15"><meta name="description" content="NEON RUSH — a neon arcade survival game. Dodge, collect, repeat.">
+  <title>NEON RUSH · One more run.</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="game" aria-label="Neon Rush game arena"></canvas>
+  <div class="shell">
+    <header><a class="brand" href="index.html" aria-label="Return to game library"><span class="brand-icon">N</span> NEON<span>RUSH</span><i>ARCADE / 001</i></a><div class="header-actions"><a class="library-link" href="index.html">← ALL GAMES</a><button id="mute" class="icon-button" aria-label="Mute sound" title="Mute sound">♫</button><button id="pause" class="icon-button" aria-label="Pause game" title="Pause (P / Esc)" hidden>Ⅱ</button></div></header>
+    <div id="hud" hidden><div><span class="eyebrow">CURRENT SCORE</span><strong id="score">000000</strong><div class="life-row"><span class="eyebrow">LIVES</span><span id="lives" role="img" aria-label="5 of 5 lives remaining">♥♥♥♥♥</span></div><div class="active-effects" aria-label="Active power-ups"><span id="effect-shield" hidden></span><span id="effect-magnet" hidden></span><span id="effect-double" hidden></span><span id="effect-blaster" hidden></span></div><button id="fire" class="fire-button" aria-label="Fire blaster (Space or left mouse button)" hidden>FIRE · SPACE / CLICK</button></div><div class="hud-right"><span class="eyebrow">MULTIPLIER</span><strong id="combo">×1</strong><span id="time">00:00</span></div></div>
+    <main id="menu" class="overlay">
+      <div class="intro"><span class="eyebrow kicker"><b></b> ENDLESS ARCADE SURVIVAL</span><h1>NEON<br><span>RUSH</span><em>ONE MORE RUN.</em></h1><p class="description">Find your flow. Dodge the chaos.<br>Chase the light.</p><button id="play" class="primary">LET’S PLAY <span>↗</span></button><div class="best-card"><span class="trophy">♜</span><div><span class="eyebrow">PERSONAL BEST</span><strong id="menu-best">000000</strong></div><span class="best-label">YOUR NEXT TARGET</span></div></div>
+      <div class="arena-label"><span class="eyebrow">THE ARENA</span><span>STAY IN MOTION. STAY ALIVE.</span></div>
+      <div class="instructions"><div><span class="instruction-number">01</span><div><strong>MOVE</strong><p>Mouse, touch, or <kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd></p></div></div><div><span class="instruction-number">02</span><div><strong>DODGE</strong><p>Five lives. Pink hearts restore one.</p></div></div><div><span class="instruction-number">03</span><div><strong>POWER UP</strong><p>Gold builds combos. Hexagons grant lives, shields, magnets, double points &amp; blasters.</p></div></div></div>
+    </main>
+    <section id="end" class="modal" hidden><span class="eyebrow" id="end-label">SIGNAL LOST</span><h2>WHAT A<br><span>RUSH.</span></h2><p id="end-message">Take a breath. Then beat it.</p><div class="results"><div><span class="eyebrow">FINAL SCORE</span><strong id="final-score">0</strong></div><div><span class="eyebrow">PERSONAL BEST</span><strong id="final-best">0</strong></div></div><div id="run-details"></div><button id="again" class="primary">PLAY AGAIN <span>↗</span></button><button id="home" class="text-button">BACK TO MENU</button></section>
+    <section id="paused" class="modal" hidden><span class="eyebrow">TAKE A BREATHER</span><h2>ON<br><span>HOLD.</span></h2><p>Your next move is waiting.</p><button id="resume" class="primary">KEEP GOING <span>↗</span></button><button id="pause-home" class="text-button">BACK TO MENU</button></section>
+    <div id="announcement" role="status" aria-live="polite"></div>
+    <footer><span>BUILT FOR THE FLOW STATE.</span><span class="footer-center">DODGE <i>·</i> COLLECT <i>·</i> REPEAT</span><span><b></b> NO LIMITS. JUST YOU.</span></footer>
+  </div><script src="game.js"></script>
+</body></html>
+
+

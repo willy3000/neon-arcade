@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#090d18" />
+    <title>GRAVITY HEIST · Bend the rules.</title>
+    <link rel="stylesheet" href="gravity/style.css" />
+  </head>
+  <body>
+    <header>
+      <a href="index.html" class="brand"><span>G</span> GRAVITY<b>HEIST</b></a>
+      <div>
+        <a href="index.html" class="library-link">← ALL GAMES</a
+        ><button id="mute" aria-label="Mute sound">♫</button>
+      </div>
+    </header>
+    <main>
+      <section id="menu" class="screen menu">
+        <div class="menu-copy">
+          <p class="eyebrow">ORBITAL FACILITY / UNAUTHORIZED ENTRY</p>
+          <h1>GRAVITY<br /><span>HEIST.</span></h1>
+          <p class="tagline">Small robot. Big getaway.</p>
+          <p class="description">
+            You can’t walk. You can’t jump.<br />Turn gravity. Keep your
+            momentum.<br />Steal the core. Find your way out.
+          </p>
+          <button id="play" class="primary">
+            BEGIN THE HEIST <span>↗</span></button
+          ><button id="select" class="secondary">
+            LEVEL SELECT <span>12 ROOMS</span>
+          </button>
+          <p id="progress" class="progress"></p>
+          <div class="tutorial">
+            <kbd>Q / ←</kbd> rotate left <i>·</i> <kbd>E / →</kbd> rotate
+            right<br /><kbd>R</kbd> restart <i>·</i> <kbd>SPACE</kbd> pause
+          </div>
+        </div>
+        <div class="menu-art" aria-hidden="true">
+          <div class="orbit outer"></div>
+          <div class="orbit inner"></div>
+          <span class="vector">↓</span>
+          <div class="big-robot">
+            <div class="antenna"></div>
+            <div class="visor"><i></i><i></i></div>
+            <div class="robot-feet">▰ ▰</div>
+          </div>
+          <span class="art-label">UNIT G-07 / GRAVITY OVERRIDE ONLINE</span
+          ><span class="art-core">◇</span>
+        </div>
+      </section>
+      <section id="levels" class="screen" hidden>
+        <div class="level-heading">
+          <div>
+            <p class="eyebrow">CHOOSE YOUR POINT OF ENTRY</p>
+            <h2>THE FACILITY.</h2>
+          </div>
+          <button id="levels-back" class="secondary">← BACK</button>
+        </div>
+        <p class="description">
+          Reach the portal to unlock the next room. Steal the optional core and
+          beat both targets for three stars.
+        </p>
+        <div id="level-grid"></div>
+      </section>
+      <section id="gameplay" hidden>
+        <div class="hud">
+          <div>
+            <span class="eyebrow" id="room-number">ROOM 01 / 12</span>
+            <h2 id="room-name"></h2>
+            <span id="room-targets" class="room-targets"></span>
+          </div>
+          <div class="stats">
+            <div><span>TIME</span><strong id="timer">0.0s</strong></div>
+            <div><span>ROTATIONS</span><strong id="rotations">0</strong></div>
+            <div><span>CORE</span><strong id="core-status">◇</strong></div>
+            <button id="restart" aria-label="Restart room (R)">↻</button
+            ><button id="pause" aria-label="Pause (Space)">Ⅱ</button>
+          </div>
+        </div>
+        <div class="arena">
+          <canvas id="world" aria-label="Gravity Heist facility room"></canvas>
+          <div id="notice" role="status" aria-live="polite"></div>
+        </div>
+        <div class="control-bar">
+          <button
+            id="rotate-left"
+            aria-label="Rotate gravity counterclockwise (Q or Left Arrow)"
+          >
+            ↶ <span>Q / ←</span>
+          </button>
+          <div class="gravity-readout">
+            <span class="eyebrow">GRAVITY FIELD</span
+            ><strong id="gravity-arrow">↓</strong><span id="hint"></span>
+          </div>
+          <button
+            id="rotate-right"
+            aria-label="Rotate gravity clockwise (E or Right Arrow)"
+          >
+            <span>E / →</span> ↷
+          </button>
+        </div>
+      </section>
+    </main>
+    <div id="overlay" class="overlay" hidden>
+      <section
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        tabindex="-1"
+      >
+        <p id="modal-label" class="eyebrow"></p>
+        <h2 id="modal-title"></h2>
+        <div id="modal-stars" class="stars"></div>
+        <p id="modal-description"></p>
+        <div id="modal-stats"></div>
+        <button id="modal-primary" class="primary"></button
+        ><button id="modal-retry" class="secondary" hidden>REPLAY ROOM</button
+        ><button id="modal-levels" class="text-button">LEVEL SELECT</button>
+      </section>
+    </div>
+    <footer>
+      <span>NO FOOTSTEPS. JUST PHYSICS.</span
+      ><span>G-07 <i>●</i> SYSTEM READY</span>
+    </footer>
+    <script src="gravity/levels.js"></script>
+    <script src="gravity/physics.js"></script>
+    <script src="gravity/audio.js"></script>
+    <script src="gravity/render.js"></script>
+    <script src="gravity/game.js"></script>
+    <script src="gravity/input.js"></script>
+  </body>
+</html>
