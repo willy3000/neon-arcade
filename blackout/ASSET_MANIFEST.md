@@ -21,3 +21,5 @@ Research: the initial `kenney.nl/assets/topdown-shooter` URL and the `foley-soun
 No paid asset, image generator or asset purchase was needed. Future animation additions must retain these credits or use separately verified sources.
 
 `assets/integrity.json` records the file sizes and SHA-256 hashes of all redistributable game assets.
+
+The Top-down Shooter license (`assets/licenses/kenney-props.txt`) uses LF line endings, enforced by `.gitattributes` and the asset preparation script. Its integrity entry reflects that representation so Git checkout line-ending conversion does not invalidate the checksum. The license text is unchanged.
