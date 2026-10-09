@@ -1,6 +1,6 @@
 # NEON ARCADE
 
-A six-game browser arcade: NEON RUSH, GRAVITY HEIST, ECHO FORGE, PHASEBOUND, RIFTBREAKERS, and the AFTERSTRIKE vertical slice. All use HTML5 Canvas, vanilla JavaScript, CSS, and synthesized Web Audio. No build step or runtime dependencies.
+A seven-game browser arcade: BLACKOUT PROTOCOL, NEON RUSH, GRAVITY HEIST, ECHO FORGE, PHASEBOUND, RIFTBREAKERS, and AFTERSTRIKE. BLACKOUT PROTOCOL is a top-down combat vertical slice using locally vendored Phaser, licensed sprite atlases and sampled audio. The other games use HTML5 Canvas and vanilla JavaScript. Deployment needs no compilation or backend.
 
 ## Run
 
@@ -10,7 +10,7 @@ Open `index.html` in a modern browser, or serve this directory locally:
 python -m http.server 8000
 ```
 
-Then visit http://localhost:8000. Select a game from the library to play. NEON RUSH is also available directly at `neon-rush.html`; use **ALL GAMES** in its header to return to the library. An internet connection is only used for optional Google Fonts; system fonts work offline.
+Then visit http://localhost:8000. Select a game from the library to play. BLACKOUT PROTOCOL needs HTTP hosting for its asset loader; existing games also work from file URLs. An internet connection is only used for optional Google Fonts; system fonts work offline. If port 8000 is occupied, use `python -m http.server 8127` and http://localhost:8127.
 
 ## Play NEON RUSH
 
@@ -72,9 +72,11 @@ Browser APIs are mocked for UI/input/rendering/audio checks. A live browser is s
 
 ## Static hosting / Netlify
 
-Publish the repository root (`.`) with **no build command**. `netlify.toml` sets the publish directory. The library is `index.html`; each game has its own real HTML route, with relative assets and no SPA rewrites. Games also work by opening HTML files directly. Progress is browser-local and is not shared between file URLs, localhost, and deployed sites.
+Run `npm run build` (or `node blackout/tools/build-static.cjs`) and publish **`dist`**. `netlify.toml` configures this dependency-free copy/validation build and publish directory. The library is `index.html`; each game has its own real HTML route, with relative assets and no SPA rewrites. Games also work by opening HTML files directly. Progress is browser-local and is not shared between file URLs, localhost, and deployed sites.
 
 ## Implementation
+
+BLACKOUT PROTOCOL lives in `blackout-protocol.html` and `blackout/`. Its engine and gameplay assets are checked in, so there is no runtime CDN dependency. The static packaging script excludes development dependencies, source archives and QA tools from the deployable folder. BLACKOUT requires HTTP(S) rather than a file URL; the existing games retain their file-URL support.
 
 `index.html`, `library.css`, and `library.js` provide the responsive game library. The registry at the top of `library.js` lists released games and their playable pages. The library displays saved personal bests and refreshes them when returning with the browser Back button. To add another game, create its page, add a registry entry, and supply its card artwork.
 
@@ -153,3 +155,25 @@ Touch controls expose movement and combat, with an expandable ability tray. Stan
 The isolated `afterstrike/` modules implement fixed-step physics, combat, echo recording, AI, simulation, persistence, original articulated artwork, bounded effects, audio, rendering, UI and input. No runtime dependencies or external assets are required. See [design](afterstrike/GAME_DESIGN.md) and [asset manifest](afterstrike/assets/manifest.json).
 
 Run `node afterstrike/test.cjs` for the verification suite and `node afterstrike/verify.cjs` to regenerate real-action completion routes for every weapon. Canvas snapshots and hardware-testing limitations are documented in [QA](afterstrike/QA.md).
+
+
+## Play BLACKOUT PROTOCOL
+
+Open `blackout-protocol.html` from a local server or choose its card in the library. **Deploy into campaign / Continue campaign** plays THE CRASH: recover the radio, reach the supply cache, cross Vesper City, hold extraction and survive the betrayal. Four checkpoints restore equipment and safely restart encounters. This release contains the opening mission and a live-fire range; the other eight chapters are planned, not playable.
+
+| Action | Default control |
+|---|---|
+| Move / aim / fire | WASD / mouse / left click |
+| Steady aim / sprint | Right click / Shift |
+| Roll / combat dive | Space / Shift + Space while moving |
+| Slide / vault / interact | Ctrl while sprinting / E |
+| Reload / rifle, shotgun, pistol | R / 1, 2, 3 |
+| Knife combo / heavy knife | Tap F / hold F |
+| Stim / frag | Q / G |
+| Pause | Escape |
+
+Sprint → slide → vault during the first 0.44 seconds of the slide earns PERFECT FLOW: shorter traversal and stamina restoration. Sliding melee and melee → roll cancels also reward timing. Rolls have a short invulnerability window and stamina cost; damage interrupts healing. Barrels, vehicles, glass, crates, weak walls, low cover and electrical panels have real damage and collision changes. Infantry, rushers, snipers, shields and the staged commander use perception and readable attack preparation. Training adds a drone and all eight firearm definitions; select its slot-1 firearm in settings. Resupply at the southern locker with E. Training does not change campaign progress.
+
+Settings provide keyboard rebinding, story/standard/high intensity pressure, sampled effects volume, optional ambient music, shake strength, reduced flash and visual detail. Focus loss and hidden tabs pause play. Saves are versioned and tolerate unavailable storage. Desktop keyboard and mouse are the supported target.
+
+`npm ci` installs QA dependencies only. `npm test` runs deterministic systems and full campaign control-packet replays across all three difficulties; `npm run build` validates and packages the static distributable in `dist/`. `npm run test:browser` launches its own temporary server for real Chromium input, graphics, audio context, pause, settings and persistence checks. Install its browser with `npx playwright install chromium` if needed. See [game design](blackout/GAME_DESIGN.md), [asset licenses](blackout/ASSET_MANIFEST.md), [animation scope](blackout/ANIMATION_SPEC.md), [campaign plan](blackout/CAMPAIGN_PLAN.md), [testing](blackout/TEST_REPORT.md), and [progress](blackout/DEVELOPMENT_PROGRESS.md).

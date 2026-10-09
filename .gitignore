@@ -1,0 +1,6 @@
+node_modules/
+dist/
+blackout/assets/source/
+blackout/qa/*.webm
+blackout/qa/*.json
+__pycache__/

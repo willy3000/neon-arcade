@@ -1,0 +1,16 @@
+{
+  "name": "neon-arcade",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static Neon Arcade games; development dependencies are used only for QA.",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node blackout/tests/core.cjs && node blackout/tests/walkthrough.cjs",
+    "build": "node blackout/tools/build-static.cjs",
+    "test:browser": "node blackout/tests/browser.cjs",
+    "serve": "python -m http.server 8127 --bind 127.0.0.1"
+  },
+  "devDependencies": {
+    "playwright": "1.58.2"
+  }
+}

@@ -33,3 +33,10 @@
 .afterstrike .obstacle.two,.afterstrike .obstacle.three{display:none}
 .afterstrike .energy{background:#e8d49f;box-shadow:0 0 15px #e8d49f33;border-radius:0;transform:rotate(45deg)}
 .afterstrike .art-status{color:#96e6f2}
+
+.game-art.blackout{background:#1b261c url('blackout/assets/cover.svg') center 58%/cover;isolation:isolate}
+.blackout:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#162016ed,#16201688 65%,#16201622);z-index:0}
+.blackout .art-title{font-size:clamp(42px,5vw,68px);line-height:.9;width:260px;top:78px;color:#e4ddbe;text-shadow:none;transform:none;letter-spacing:0}
+.blackout .art-status{color:#dfad70}.blackout .art-id,.blackout .art-caption{color:#c3b98f}
+.blackout .art-grid,.blackout .art-orbit,.blackout .art-ball,.blackout .art-trail,.blackout .obstacle,.blackout .energy{display:none}
+.blackout .art-status i{background:#dfad70;box-shadow:none}

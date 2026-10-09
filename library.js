@@ -3,6 +3,18 @@
   "use strict";
   const games = [
     {
+      title: "BLACKOUT PROTOCOL",
+      href: "blackout-protocol.html",
+      genre: "TACTICAL ACTION · OPENING MISSION",
+      description:
+        "Shot down. Cut off. Left for dead. Master slides, vaults and close-quarters combat in the occupied streets of Vesper City.",
+      controls: "KEYBOARD + MOUSE · CAMPAIGN + TRAINING",
+      bestKey: "blackout-protocol-progress",
+      art: "blackout",
+      caption: "THE MISSION IS OVER. YOUR WAR HAS JUST BEGUN.",
+      campaign: true,
+    },
+    {
       title: "AFTERSTRIKE",
       href: "afterstrike.html",
       genre: "ACTION ROGUELITE · ECHOES OF WAR",
@@ -81,6 +93,14 @@
     games.length,
   ).padStart(2, "0");
   function bestLabel(game) {
+    if (game.campaign) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(game.bestKey));
+        if (saved?.completed) return `THE CRASH / ${saved.best?.rating || "COMPLETE"}`;
+        if (saved?.checkpoint) return `CHECKPOINT ${Math.min(4, Math.max(1, Number(saved.checkpoint.stage) + 1))} / 4`;
+      } catch {}
+      return "OPERATION BLACKOUT";
+    }
     if (game.run) {
       try {
         const saved = JSON.parse(localStorage.getItem(game.bestKey));

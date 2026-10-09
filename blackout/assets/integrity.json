@@ -1,0 +1,164 @@
+{
+  "files": [
+    {
+      "file": "audio/ambience.ogg",
+      "bytes": 58493,
+      "sha256": "4965baaab0d922993bd17931b7e9e57cddfb270d179febb20b6b99eaff3ae379"
+    },
+    {
+      "file": "audio/body.ogg",
+      "bytes": 5351,
+      "sha256": "7d3ba0bb5e60a11b5d3e558c141303dcf494256675fbf753c0d252d2cf0481e3"
+    },
+    {
+      "file": "audio/empty.ogg",
+      "bytes": 4827,
+      "sha256": "3b3df7f9ec2b7fe1d0709517087da5866a038acde655b81fe3dac8c0153f1483"
+    },
+    {
+      "file": "audio/explosion.ogg",
+      "bytes": 47907,
+      "sha256": "be2b8ddc62e4a24c91e2e77793de98549ce216faf2f323a917e7d6f34321ff97"
+    },
+    {
+      "file": "audio/flow.ogg",
+      "bytes": 12507,
+      "sha256": "516c415098fbdcf4d76015462f432879de9ad4d9dd928907186a6f9ed7f219d0"
+    },
+    {
+      "file": "audio/footstep-concrete-0.ogg",
+      "bytes": 5808,
+      "sha256": "d7267e183067757c92c169de2a379abea592cfca6b39bb2e8feea15221ad79fe"
+    },
+    {
+      "file": "audio/footstep-concrete-1.ogg",
+      "bytes": 6255,
+      "sha256": "b21fa546d74941196b25da8a20b7010abd8c05c4fcf93545d1f344e66a664e13"
+    },
+    {
+      "file": "audio/footstep-wood.ogg",
+      "bytes": 5895,
+      "sha256": "9ff095b05cee5eec40b081defe3f0eef7232bb16d4865ce03b9f6dbab875cfdd"
+    },
+    {
+      "file": "audio/glass.ogg",
+      "bytes": 8400,
+      "sha256": "9252d50bfb85edb17d6073c4a7806e10cdb9de56d3dbfc93a4b9727146d2df6d"
+    },
+    {
+      "file": "audio/heal.ogg",
+      "bytes": 7889,
+      "sha256": "e9bf081206e392e07c9b6208e5440b5244e58fd4b37d41990d0b9872b499f66d"
+    },
+    {
+      "file": "audio/metal.ogg",
+      "bytes": 7117,
+      "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003"
+    },
+    {
+      "file": "audio/pickup.ogg",
+      "bytes": 9355,
+      "sha256": "246c0ed6d8fce9849a032f6018d507f6a36e45541bd6c705a6cac1b910860a94"
+    },
+    {
+      "file": "audio/pistol.ogg",
+      "bytes": 12504,
+      "sha256": "49b5954f78ef55b10b884b62b95f01650834d8104a7667b900203dd5c1023c30"
+    },
+    {
+      "file": "audio/radio.ogg",
+      "bytes": 119024,
+      "sha256": "1527944e16eb14b48ee03fe3e7ce6aae94262833a4e1f83928d451a7414fe4e1"
+    },
+    {
+      "file": "audio/reload-pistol.wav",
+      "bytes": 278572,
+      "sha256": "685cac6a184e3cc3ec09a25b6ddb1d6feffd86d469778f339aa423d384035c50"
+    },
+    {
+      "file": "audio/reload-rifle.wav",
+      "bytes": 274476,
+      "sha256": "efb2d724d634eabe6ba8d3065686abca848bb7497d4d43a5e4aed5e5ea23016f"
+    },
+    {
+      "file": "audio/reload-shotgun.wav",
+      "bytes": 83628,
+      "sha256": "33e007321ba83301c861aef573f2c40b70bc62f8f24c0164877e6dd123e24371"
+    },
+    {
+      "file": "audio/rifle.ogg",
+      "bytes": 18230,
+      "sha256": "ea368662054db998c5d623888cbb0036c74d37a5537fa8bfaa88ee8b5b5e176f"
+    },
+    {
+      "file": "audio/rumble.ogg",
+      "bytes": 14317,
+      "sha256": "3cb48d86dab63140cfb9aaeea4d4a6846abaca5831d157d8adbec0490da26343"
+    },
+    {
+      "file": "audio/shotgun.ogg",
+      "bytes": 13651,
+      "sha256": "3fc448b9a41f9ca44b3e76c7d4361d81156a9dcbee47c2565d6705ef4fd09433"
+    },
+    {
+      "file": "audio/smg.ogg",
+      "bytes": 5450,
+      "sha256": "34352e6a5cb516b9b66c4973b9df205c01186e00a60d7dff6ba67ee26d16d58b"
+    },
+    {
+      "file": "audio/wind.ogg",
+      "bytes": 9283,
+      "sha256": "facd9ba96ff4bb17d66a1a9ea1b54e7410abaa7c9a549ae76297ccf0c42ac46d"
+    },
+    {
+      "file": "audio/wood.ogg",
+      "bytes": 6575,
+      "sha256": "1723a9fd25103ed41af06054814e84e65f4a772bac86ab2dc927da93d9592ff5"
+    },
+    {
+      "file": "characters.json",
+      "bytes": 64026,
+      "sha256": "cea4e2e3c27869dfdbe7eee8a64bf9391fcbddad2489f3027e515ae289bc5e92"
+    },
+    {
+      "file": "characters.png",
+      "bytes": 1441293,
+      "sha256": "86a015e4a5dfa26581a59f89561c788aad91b856f0bfd360c5ad3b11060439ef"
+    },
+    {
+      "file": "cover.svg",
+      "bytes": 7067,
+      "sha256": "393b86b9f38b03953d1a6641574a3c596c61918b4ce585f31b006151a385cad9"
+    },
+    {
+      "file": "helicopter.svg",
+      "bytes": 1250,
+      "sha256": "d69b7b43e7b4159576efbb839e74a20fe9f06cc41e9026a25c624967958122ad"
+    },
+    {
+      "file": "licenses/kenney-impact.txt",
+      "bytes": 608,
+      "sha256": "b49aa9c56b04528b95913de13e506a0f7c5e807b9925db9bfef86af1f91120db"
+    },
+    {
+      "file": "licenses/kenney-props.txt",
+      "bytes": 494,
+      "sha256": "523b1cf39ad1d569cc5d6abc9e8785668208b9c37f1e29383e2a5f8dda8444bc"
+    },
+    {
+      "file": "licenses/kenney-scifi.txt",
+      "bytes": 571,
+      "sha256": "a9767b25c3533f69d03af136480efad08efba19a9f0d89616992b34c79fd6186"
+    },
+    {
+      "file": "props.json",
+      "bytes": 1925,
+      "sha256": "a949b17ca8e62293be06f96a2e9625b8d6edddf318973b9d31b42ab3251209d1"
+    },
+    {
+      "file": "props.png",
+      "bytes": 6648,
+      "sha256": "6fd9f012834b23e55ef3269be42f0d89c4789ce7d8ec1ba8125c0f2d6fe9bd34"
+    }
+  ]
+}
