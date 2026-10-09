@@ -86,6 +86,8 @@ licenses = ROOT / 'licenses'
 licenses.mkdir(exist_ok=True)
 for pack in ['impact', 'scifi', 'props']:
     shutil.copyfile(SOURCE / pack / 'License.txt', licenses / f'kenney-{pack}.txt')
+props_license = licenses / 'kenney-props.txt'
+props_license.write_bytes(props_license.read_bytes().replace(b'\r\n', b'\n'))
 entries = []
 for path in sorted(ROOT.rglob('*')):
     if path.is_file() and 'source' not in path.parts and path.name != 'integrity.json':
