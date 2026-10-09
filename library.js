@@ -3,6 +3,18 @@
   "use strict";
   const games = [
     {
+      title: "BLOOD OATH",
+      href: "blood-oath.html",
+      genre: "2D FIGHTER · LOCAL VERSUS",
+      description:
+        "Four oathbreakers, one pit. A one-on-one fighter with real frame data, combos, throws and supers. Bring a friend and two controllers.",
+      controls: "2 CONTROLLERS / KEYBOARD · VERSUS + ARCADE + TRAINING",
+      bestKey: "blood-oath-save",
+      art: "bloodoath",
+      caption: "SWEAR IT. THEN SURVIVE IT.",
+      fighter: true,
+    },
+    {
       title: "WILDFALL",
       href: "wildfall.html",
       genre: "ACTION PLATFORMER · BREAK THE SKY",
@@ -105,6 +117,13 @@
     games.length,
   ).padStart(2, "0");
   function bestLabel(game) {
+    if (game.fighter) {
+      try {
+        const cleared = Object.values(JSON.parse(localStorage.getItem(game.bestKey))?.arcade || {}).filter(Boolean).length;
+        if (cleared) return `ARCADE CLEARED WITH ${Math.min(4, cleared)} OF 4`;
+      } catch {}
+      return "VERSUS · ARCADE · TRAINING";
+    }
     if (game.climb) {
       try {
         const chapter = JSON.parse(localStorage.getItem(game.bestKey))?.campaign?.chapter1;

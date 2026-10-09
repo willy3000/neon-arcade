@@ -34,6 +34,12 @@
 .afterstrike .energy{background:#e8d49f;box-shadow:0 0 15px #e8d49f33;border-radius:0;transform:rotate(45deg)}
 .afterstrike .art-status{color:#96e6f2}
 
+.game-art.bloodoath{background:#1a0608 url('bloodoath/cover.jpg') 31% 80%/170%;isolation:isolate}
+.bloodoath:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0a0306f0,#0a030680 55%,#0a030620);z-index:0}
+.bloodoath .art-title{font-family:Georgia,'Times New Roman',serif;font-weight:900;font-size:clamp(40px,4.8vw,64px);line-height:.9;top:84px;color:#efe6da;text-shadow:0 3px 0 #000,0 0 26px #d11f3a;transform:none;letter-spacing:.04em}
+.bloodoath .art-status{color:#ff5a4a}.bloodoath .art-id,.bloodoath .art-caption{color:#e3c9a8}
+.bloodoath .art-grid,.bloodoath .art-orbit,.bloodoath .art-ball,.bloodoath .art-trail,.bloodoath .obstacle,.bloodoath .energy{display:none}
+.bloodoath .art-status i{background:#ff5a4a;box-shadow:none}
 .game-art.wildfall{background:#17324d url('wildfall/cover.jpg') center 40%/cover;isolation:isolate}
 .wildfall:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0b1622e6,#0b162266 60%,#0b162210);z-index:0}
 .wildfall .art-title{font-size:clamp(40px,4.8vw,64px);line-height:.9;top:84px;color:#fff;font-style:italic;text-shadow:0 2px 0 #b8894a,0 8px 26px #06101c;transform:none;letter-spacing:.01em}

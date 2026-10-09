@@ -5,7 +5,9 @@
   "description": "Static Neon Arcade games; development dependencies are used only for QA.",
   "type": "commonjs",
   "scripts": {
-    "test": "node blackout/tests/core.cjs && node blackout/tests/walkthrough.cjs && npm run test:wildfall",
+    "test": "node blackout/tests/core.cjs && node blackout/tests/walkthrough.cjs && npm run test:wildfall && npm run test:bloodoath",
+    "test:bloodoath": "node bloodoath/tests/engine.test.mjs",
+    "test:bloodoath:browser": "node bloodoath/tests/browser.cjs",
     "test:wildfall": "node wildfall/tests/sim.test.mjs && node wildfall/tests/playthrough.test.mjs",
     "test:wildfall:browser": "node wildfall/tests/browser.cjs",
     "build": "node blackout/tools/build-static.cjs",

@@ -1,0 +1,244 @@
+{
+ "files": [
+  {
+   "file": "sfx/arcCast.ogg",
+   "bytes": 9208,
+   "sha256": "13f34561740aadbd3438b971dfe248cf56ea09d333eb7a0278561e09e27c3557"
+  },
+  {
+   "file": "sfx/armor.ogg",
+   "bytes": 8713,
+   "sha256": "142fd6c77f13d25f318265901163f70f8dfe12f87829169a570025be43de7011"
+  },
+  {
+   "file": "sfx/block.ogg",
+   "bytes": 6967,
+   "sha256": "fba69c467ddd85da7b1d82e259f936b876d9ba6a3d6f1b24bdd10468e46bfe08"
+  },
+  {
+   "file": "sfx/blockH.ogg",
+   "bytes": 5634,
+   "sha256": "b914c8f1eb7c0f34bb165d7c77f4be0351f6be0660c13c53e65424e262e2c093"
+  },
+  {
+   "file": "sfx/burst.ogg",
+   "bytes": 23938,
+   "sha256": "15e3fe971ffd3415e5ab641d3a4d043fb31f6712b0956315b524ba29c3889cda"
+  },
+  {
+   "file": "sfx/chain.ogg",
+   "bytes": 10208,
+   "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708"
+  },
+  {
+   "file": "sfx/cut.ogg",
+   "bytes": 5506,
+   "sha256": "7642a4fd43e547afe4f7adfadb3dabb681c0ff512f52c1674bae30a726841faf"
+  },
+  {
+   "file": "sfx/dash.ogg",
+   "bytes": 12432,
+   "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b"
+  },
+  {
+   "file": "sfx/dive.ogg",
+   "bytes": 6733,
+   "sha256": "c60069ed7108678dd6a1306404d168a93cc2575cda37b06add9dd6c4d46352a3"
+  },
+  {
+   "file": "sfx/draw.ogg",
+   "bytes": 11134,
+   "sha256": "276403e72c3b71c47bc24db3083970c23f8e5551ffa78f436f83483c56f3f0bb"
+  },
+  {
+   "file": "sfx/fight.ogg",
+   "bytes": 13944,
+   "sha256": "889d4c2b76c7edd63138b3a976c3f7337aaba3de90019d19bca70ec958c93014"
+  },
+  {
+   "file": "sfx/fireBurst.ogg",
+   "bytes": 28274,
+   "sha256": "4b597d658d0ae101f0a030fbeea5fc3a4292ab85f017470a8254a8e7959cbd69"
+  },
+  {
+   "file": "sfx/fireCast.ogg",
+   "bytes": 27440,
+   "sha256": "e5e0b6ccc4d5720c8174a3e5b7cc6f9be3057352a89cbb2e99a00efc6fe5cc11"
+  },
+  {
+   "file": "sfx/fireHit.ogg",
+   "bytes": 204218,
+   "sha256": "924636edc923fe4aab5829b69dc5dc1c5d659dec5739865434dabee752a3bb79"
+  },
+  {
+   "file": "sfx/grab.ogg",
+   "bytes": 11787,
+   "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201"
+  },
+  {
+   "file": "sfx/hammer.ogg",
+   "bytes": 9408,
+   "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+  },
+  {
+   "file": "sfx/hitDeep.ogg",
+   "bytes": 10452,
+   "sha256": "f4c0c3eb8ab6517583b8218ed03f28923d1b687379aab4c1d5a6d4c10cf8e500"
+  },
+  {
+   "file": "sfx/hitH.ogg",
+   "bytes": 10861,
+   "sha256": "f92f5cb6ba4ff2766497292ffd90865654317eeca976f5652e0708dbdcdc0dd9"
+  },
+  {
+   "file": "sfx/hitL.ogg",
+   "bytes": 8800,
+   "sha256": "486988aa2d6440ffc4c62a0e8ccf3c23673ba84424bd4723378d451b7255eb5c"
+  },
+  {
+   "file": "sfx/hitM.ogg",
+   "bytes": 9509,
+   "sha256": "2d7c719c05999e0532f4384e1018e04cd916db715140bf16dee2dff3f820e908"
+  },
+  {
+   "file": "sfx/iceBreak.ogg",
+   "bytes": 8300,
+   "sha256": "c7742b0e33c1733ddaf902aa68464a4f5364e4d4cb6ff11b76a7aa4151a138dd"
+  },
+  {
+   "file": "sfx/iceBurst.ogg",
+   "bytes": 8946,
+   "sha256": "58686e0e562612cc566791844a10e269f8d1921f4766c14ba43976fd0a429f4e"
+  },
+  {
+   "file": "sfx/iceCast.ogg",
+   "bytes": 6093,
+   "sha256": "0eaadbbc5c259cc89a1dfbb0c99b61ca07e08710d035cc9bfc805b68cb0bdc9e"
+  },
+  {
+   "file": "sfx/iceHit.ogg",
+   "bytes": 8341,
+   "sha256": "48616f22c95589ed9fe55babf0fd012721d7b2ef1b9e85c2ad6408a2cd7c164f"
+  },
+  {
+   "file": "sfx/jump.ogg",
+   "bytes": 16508,
+   "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d"
+  },
+  {
+   "file": "sfx/knockdown.ogg",
+   "bytes": 6570,
+   "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+  },
+  {
+   "file": "sfx/ko.ogg",
+   "bytes": 14317,
+   "sha256": "3cb48d86dab63140cfb9aaeea4d4a6846abaca5831d157d8adbec0490da26343"
+  },
+  {
+   "file": "sfx/land.ogg",
+   "bytes": 6308,
+   "sha256": "507a75eb19b897087855a3be3cf11a12d7fa37d143ad535eeebe0b8031c7325d"
+  },
+  {
+   "file": "sfx/lose.ogg",
+   "bytes": 15082,
+   "sha256": "7e1f170ee00a8265723342c8d30e797a64641603a2c59c2316d3357b8c5f60d6"
+  },
+  {
+   "file": "sfx/parry.ogg",
+   "bytes": 15577,
+   "sha256": "9df61e3ae9a83dc65e5a1fd3ed19d480876f3b22b963a1b9ef6fa293592dcec4"
+  },
+  {
+   "file": "sfx/round.ogg",
+   "bytes": 15477,
+   "sha256": "3114537d0d82f83c98037b4867c67dae4faa09e904405e511a9336088d022554"
+  },
+  {
+   "file": "sfx/slam.ogg",
+   "bytes": 6665,
+   "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3"
+  },
+  {
+   "file": "sfx/stance.ogg",
+   "bytes": 28947,
+   "sha256": "5574e69dd04e5f59322c5ddffde5978f077b09170ae5e29cec0bd9901828cd90"
+  },
+  {
+   "file": "sfx/superHit.ogg",
+   "bytes": 54824,
+   "sha256": "8c7197bb3a1c504690319c3abe0e62a5423ee246dd70caab57963d0b7aa8144f"
+  },
+  {
+   "file": "sfx/superStart.ogg",
+   "bytes": 6495,
+   "sha256": "d673bfcd3aee32202908708fdadb3ad3033f65162c6dbae4615e181e19eee0d3"
+  },
+  {
+   "file": "sfx/swingH.ogg",
+   "bytes": 9370,
+   "sha256": "d00c2b3c9fff07e376145c8c8c45c90e5084ec192f6ce0387db233f7b86f1486"
+  },
+  {
+   "file": "sfx/swingL.ogg",
+   "bytes": 15532,
+   "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f"
+  },
+  {
+   "file": "sfx/swingM.ogg",
+   "bytes": 15099,
+   "sha256": "6c2064d0ef988d1ec3d56868e823ea8823a5cac00f2742560052633529407def"
+  },
+  {
+   "file": "sfx/teleport.ogg",
+   "bytes": 6854,
+   "sha256": "69e25a1b7b0781f57af84eb4424973ec406d34bc48eed8b6964787b2d74093a9"
+  },
+  {
+   "file": "sfx/uiBack.ogg",
+   "bytes": 7029,
+   "sha256": "61581c58194e3f19f531072edabbc344204c7e0a2887b8ededce4357bcf09195"
+  },
+  {
+   "file": "sfx/uiMove.ogg",
+   "bytes": 4497,
+   "sha256": "9d057b918024c787bbe6c00beed13a7ef72a3fa0c259add3cef36582792f4230"
+  },
+  {
+   "file": "sfx/uiNo.ogg",
+   "bytes": 6393,
+   "sha256": "0b574cea597d96507e782ae9764f88482ce49f46e931e57054bf7150047f2d69"
+  },
+  {
+   "file": "sfx/uiOk.ogg",
+   "bytes": 6901,
+   "sha256": "9a612fd2f513d52a296906b41071c990f75defe56be3bee60d2d4e2423b51b8b"
+  },
+  {
+   "file": "sfx/uiStart.ogg",
+   "bytes": 14169,
+   "sha256": "33b17a9a9a2397c62b285c52c33a907fdffb476909c99e42dde603f6a7a8b12c"
+  },
+  {
+   "file": "sfx/win.ogg",
+   "bytes": 15473,
+   "sha256": "03f2048dc74dae100bc29b8cd59b4497ac7a057dae32c207916495c5dc214083"
+  },
+  {
+   "file": "music/battle-theme-a.mp3",
+   "bytes": 3289143,
+   "sha256": "6042399782e581d753d616bc703e66483d5eccb5fb687a20c9a552d68c49e620"
+  },
+  {
+   "file": "music/boss-battle-2.mp3",
+   "bytes": 6043101,
+   "sha256": "ad63bbae489338bbf4816d310bb1a7d221d4682c482168844a72b7fb8c29bc8f"
+  },
+  {
+   "file": "music/determined-pursuit.mp3",
+   "bytes": 4438172,
+   "sha256": "08b411bfd3b01264fa01d4b616e5cda16ff22ce2e5db7b5e06d0f50d9776766b"
+  }
+ ]
+}

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0a0508"><meta name="description" content="BLOOD OATH. A dark-fantasy 2D fighting game: four fighters, real frame data, local versus on two controllers.">
+  <title>BLOOD OATH · NEON ARCADE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Barlow+Condensed:wght@500;700&display=swap">
+  <link rel="stylesheet" href="bloodoath/style.css">
+  <script type="module" src="bloodoath/main.js"></script>
+</head>
+<body>
+  <a class="arcade" href="index.html"><span>N</span> NEON ARCADE <i>/ ALL GAMES ↗</i></a>
+  <div id="frame" data-screen="boot">
+    <canvas id="stage" aria-label="BLOOD OATH fight"></canvas>
+
+    <section id="boot" class="screen"><h1 class="logo">BLOOD<br><span>OATH</span></h1><div class="bar"><i id="boot-bar"></i></div><p id="boot-text">Sharpening blades…</p></section>
+
+    <section id="menu" class="screen" hidden>
+      <div class="menu-side"><p class="kicker">A NEON ARCADE ORIGINAL · 2D FIGHTER</p><h1 class="logo">BLOOD<br><span>OATH</span></h1>
+        <nav class="list" id="menu-list"><button data-go="fight">FIGHT <small>One match against the computer</small></button><button data-go="versus">LOCAL VERSUS <small>Two players, two devices</small></button><button data-go="arcade">ARCADE <small>Climb to the Oathkeeper</small></button><button data-go="training">TRAINING <small>Hitboxes, frame data, a patient dummy</small></button><button data-go="guide">CHARACTER GUIDE</button><button data-go="devices">CONTROLLERS</button><button data-go="settings">SETTINGS</button></nav>
+      </div><p class="foot" id="menu-foot"></p>
+    </section>
+
+    <section id="devices" class="screen panelled" hidden>
+      <div class="panel wide"><p class="kicker">CONTROLLERS</p><h2>WHO HOLDS WHAT</h2><p class="note" id="devices-note"></p>
+        <div class="slots"><div class="slot p1"><b>PLAYER 1</b><span id="slot-0"></span><div class="test" id="test-0"></div><button id="assign-0">CHANGE</button></div><div class="slot p2"><b>PLAYER 2</b><span id="slot-1"></span><div class="test" id="test-1"></div><button id="assign-1">CHANGE</button></div></div>
+        <p class="note" id="devices-found"></p><nav class="row"><button id="devices-swap">SWAP PLAYERS</button><button id="devices-done" class="primary">DONE</button></nav></div>
+    </section>
+
+    <section id="select" class="screen" hidden>
+      <p class="kicker center" id="select-mode">LOCAL VERSUS</p><h2 class="center">CHOOSE YOUR FIGHTER</h2>
+      <div class="pick p1" id="pick-0"></div><div class="grid" id="roster"></div><div class="pick p2" id="pick-1"></div>
+      <p class="foot" id="select-foot"></p>
+    </section>
+
+    <section id="arena" class="screen" hidden><p class="kicker center">WHERE IT ENDS</p><h2 class="center">CHOOSE AN ARENA</h2><div class="arenas" id="arenas"></div><p class="foot">Either player: ← → to browse · light attack to confirm · medium to go back</p></section>
+
+    <section id="versus" class="screen" hidden><div class="vs-side p1"><canvas id="vs-0" width="520" height="560"></canvas><h3 id="vs-name-0"></h3><p id="vs-title-0"></p></div><div class="vs-mid"><b>VS</b><p id="vs-line"></p></div><div class="vs-side p2"><canvas id="vs-1" width="520" height="560"></canvas><h3 id="vs-name-1"></h3><p id="vs-title-1"></p></div></section>
+
+    <div id="hud" hidden>
+      <div class="bars"><div class="side p1"><div class="hp"><i class="lag" id="lag-0"></i><i class="fill" id="hp-0"></i></div><div class="under"><b id="name-0"></b><span class="pips" id="pips-0"></span></div></div>
+        <div class="clock" id="clock">99</div>
+        <div class="side p2"><div class="hp"><i class="lag" id="lag-1"></i><i class="fill" id="hp-1"></i></div><div class="under"><span class="pips" id="pips-1"></span><b id="name-1"></b></div></div></div>
+      <div class="meters"><div class="meter p1"><i id="meter-0"></i><em></em><em></em></div><div class="meter p2"><i id="meter-1"></i><em></em><em></em></div></div>
+      <div class="combo p1" id="combo-0" hidden></div><div class="combo p2" id="combo-1" hidden></div>
+      <div class="status p1" id="status-0"></div><div class="status p2" id="status-1"></div>
+      <div class="announce" id="announce" hidden></div>
+      <div class="training" id="training" hidden><b>TRAINING</b><span id="tr-combo"></span><span id="tr-move"></span><span id="tr-state"></span><div id="tr-inputs"></div><small>PAUSE for options · BACKSPACE / pad BACK resets positions</small></div>
+    </div>
+
+    <section id="pause" class="screen panelled" hidden><div class="panel"><p class="kicker" id="pause-kicker">PAUSED</p><h2 id="pause-title">CATCH YOUR BREATH</h2><nav class="list" id="pause-list"><button id="resume" class="primary">RESUME</button><button id="pause-moves">MOVE LIST</button>
+      <button id="tr-boxes" class="tr">HITBOXES: OFF</button><button id="tr-dummy" class="tr">DUMMY: STANDS</button><button id="tr-meter" class="tr">METER: INFINITE</button><button id="tr-reset" class="tr">RESET POSITIONS</button>
+      <button id="pause-devices">CONTROLLERS</button><button id="pause-settings">SETTINGS</button><button id="pause-select">CHARACTER SELECT</button><button id="pause-quit">MAIN MENU</button></nav></div></section>
+
+    <section id="result" class="screen panelled" hidden><div class="panel wide"><p class="kicker" id="result-kicker"></p><h2 id="result-title"></h2><p class="note" id="result-line"></p><div class="stats" id="result-stats"></div><nav class="row" id="result-list"><button id="result-next" class="primary">REMATCH</button><button id="result-select">CHARACTER SELECT</button><button id="result-menu">MAIN MENU</button></nav></div></section>
+
+    <section id="story" class="screen panelled" hidden><div class="panel wide"><p class="kicker" id="story-kicker"></p><h2 id="story-title"></h2><p class="note big" id="story-text"></p><nav class="row"><button id="story-next" class="primary">CONTINUE</button></nav></div></section>
+
+    <section id="guide" class="screen panelled" hidden><div class="panel xl"><div class="guide-head"><div><p class="kicker" id="guide-style"></p><h2 id="guide-name"></h2><p class="note" id="guide-blurb"></p></div><canvas id="guide-art" width="300" height="320"></canvas></div><nav class="tabs" id="guide-tabs"></nav><div class="moves" id="guide-moves"></div><nav class="row"><button id="guide-close" class="primary">BACK</button></nav></div></section>
+
+    <section id="settings" class="screen panelled" hidden><div class="panel xl"><p class="kicker">SETTINGS</p><h2>SET THE TERMS</h2><div class="cols">
+      <div><label>Music <input id="s-music" type="range" min="0" max="1" step="0.05"></label><label>Effects <input id="s-sfx" type="range" min="0" max="1" step="0.05"></label><label>Arena ambience <input id="s-ambience" type="range" min="0" max="1" step="0.05"></label><label>Mute everything <input id="s-muted" type="checkbox"></label>
+        <label>Blood <select id="s-blood"><option value="full">Full</option><option value="reduced">Reduced</option><option value="off">Off</option></select></label><label>Screen shake <input id="s-shake" type="range" min="0" max="1" step="0.1"></label><label>Reduce flashes <input id="s-reducedFlash" type="checkbox"></label>
+        <label>Round timer <select id="s-time"><option value="60">60</option><option value="99">99</option><option value="0">Off</option></select></label><label>Rounds to win <select id="s-rounds"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label><label>Computer skill <select id="s-cpu"><option value="0">Novice</option><option value="1">Fighter</option><option value="2">Veteran</option><option value="3">Oathsworn</option></select></label></div>
+      <div><p class="kicker">REMAP — click an action, then press a key or button</p><nav class="tabs" id="remap-tabs"><button data-dev="kb1">KEYBOARD 1</button><button data-dev="kb2">KEYBOARD 2</button><button data-dev="pad">CONTROLLERS</button></nav><div class="remap" id="remap"></div><button id="remap-reset">RESET ALL MAPPINGS</button></div></div>
+      <p class="credits">Music: "Battle Theme A" by cynicmusic, "Determined Pursuit" by Emma_MA, "Boss Battle #2" by nene (CC0, OpenGameArt). Sound effects: Kenney (CC0). Characters, arenas and effects are original.</p><nav class="row"><button id="settings-close" class="primary">DONE</button></nav></div></section>
+  </div>
+  <script>if (location.protocol === 'file:') document.getElementById('boot-text').textContent = 'BLOOD OATH must be served over HTTP. Run "npm run serve" and open http://127.0.0.1:8127/blood-oath.html';</script>
+  <noscript>BLOOD OATH needs JavaScript. <a href="index.html">Return to the arcade.</a></noscript>
+</body>
+</html>

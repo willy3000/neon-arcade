@@ -1,6 +1,6 @@
 # NEON ARCADE
 
-A seven-game browser arcade: BLACKOUT PROTOCOL, NEON RUSH, GRAVITY HEIST, ECHO FORGE, PHASEBOUND, RIFTBREAKERS, and AFTERSTRIKE. BLACKOUT PROTOCOL is a top-down combat vertical slice using locally vendored Phaser, licensed sprite atlases and sampled audio. The other games use HTML5 Canvas and vanilla JavaScript. Deployment needs no compilation or backend.
+A nine-game browser arcade: BLOOD OATH, WILDFALL, BLACKOUT PROTOCOL, NEON RUSH, GRAVITY HEIST, ECHO FORGE, PHASEBOUND, RIFTBREAKERS, and AFTERSTRIKE. BLOOD OATH is a 2D one-on-one fighting game with local versus on two controllers, drawn entirely in code with CC0 sound and music. WILDFALL is a 2.5D action-platformer using locally vendored three.js with CC0 animated characters. BLACKOUT PROTOCOL is a top-down combat vertical slice using locally vendored Phaser, licensed sprite atlases and sampled audio. The other games use HTML5 Canvas and vanilla JavaScript. Deployment needs no compilation or backend.
 
 ## Run
 
@@ -11,6 +11,34 @@ python -m http.server 8000
 ```
 
 Then visit http://localhost:8000. Select a game from the library to play. BLACKOUT PROTOCOL needs HTTP hosting for its asset loader; existing games also work from file URLs. An internet connection is only used for optional Google Fonts; system fonts work offline. If port 8000 is occupied, use `python -m http.server 8127` and http://localhost:8127.
+
+## Play BLOOD OATH
+
+Select **BLOOD OATH** from `index.html`, or open `blood-oath.html`. It loads its code as modules, so it needs HTTP hosting (`npm run serve`, then http://127.0.0.1:8127/blood-oath.html); it will not run from a file URL.
+
+- **Modes:** Fight (one match against the computer), Local Versus (two players), Arcade (three rivals, then a boss), Training (hitboxes, frame data, a configurable dummy) and a Character Guide with every move.
+- **Fighters:** Cinder (rushdown, teleport), Rime (projectiles, freeze, counter), Vesper (long sword, bleed, parry) and Grit (armour, command grab). Volt and Nyx from the original plan are not built.
+- **Keyboard, player 1:** A/D move, W jump, S crouch, F/G/H light/medium/heavy, T special, R block, Y throw, C dash, V enhance, Esc pause. **Player 2:** arrow keys, J/K/L attacks, I special, U block, O throw, N dash, M enhance, Enter pause.
+- **Controller:** stick or d-pad to move, A/B/X attacks, Y special, LB block, RB throw, LT dash, RT enhance, Start pause. Press any button once so the browser detects it. The first controller to wake goes to player 1 and the second to player 2; the **Controllers** screen shows who holds what, tests inputs and lets either player be reassigned.
+- **Basics:** block lows crouching and overheads standing; throws beat blocking; light → medium → heavy chains cancel into specials. Direction + Special gives each fighter four specials. Hold Enhance with a special to spend one bar on a stronger version; Heavy + Special spends two bars on a super; Block + Enhance while being hit spends two bars to break out of a combo.
+- Settings: volumes, blood (full, reduced, off), screen shake, reduced flashes, round timer, rounds to win, computer skill, and remapping for both keyboards and controllers.
+
+Design, frame data, assets and test results are in `bloodoath/GAME_DESIGN.md`, `FRAME_DATA.md`, `ASSET_MANIFEST.md` and `TEST_REPORT.md`. Two-controller play has only been tested with simulated controllers; see the test report. Tests: `npm run test:bloodoath` and `npm run test:bloodoath:browser`.
+
+## Play WILDFALL
+
+Select **WILDFALL** from `index.html`, or open `wildfall.html`. It loads 3D models, so it needs HTTP hosting (`npm run serve`, then http://127.0.0.1:8127/wildfall.html); it will not run from a file URL.
+
+- **Chapter 1, The Fallen Gate,** is the playable campaign: nine sections, two arenas, a three-phase boss and a grapple finale. Chapters 2–6 are not built yet. **Proving Grounds** is a practice level with every technique unlocked and a timed movement trial.
+- Choose **Vyx** (fast; wall-runs; best grapple), **Sera** (ranged fire, ice platforms, chain lightning; glides) or **Bragg** (heavy hits, parrying shield, ground slams; breaks walls and floors). They differ in physics, attacks and abilities, not just looks.
+- **Keyboard and mouse:** A/D run, Space jump (hold for height, press again in the air), Shift dash, S + Shift slide, J or left click attack, K heavy (hold to charge), S + J in the air to dive, L or right click to hold the grapple, W/S reel the rope, Q and E abilities, R interact, Esc pause.
+- **Controller:** left stick move, A jump, B dash, X attack, Y heavy, RT grapple, right stick aims it, LB/RB abilities, Start pause. Press any button once so the browser detects it.
+- The grapple is a real rope: latch onto a glowing anchor, swing, and let go on the upswing to launch. A well-timed release is a **perfect release**.
+- Chained techniques build **flow**, which raises run speed until you are hit or slow down.
+- Progress saves at checkpoints. Falling out of the world costs a little health and returns you to safe ground.
+- Settings: challenge level, volume, camera shake, reduced flashes, visual quality (Low turns off shadows and bloom) and controller on/off.
+
+Design, assets, test results and what remains are in `wildfall/GAME_DESIGN.md`, `ASSET_MANIFEST.md`, `TEST_REPORT.md` and `DEVELOPMENT_PROGRESS.md`. Tests: `npm run test:wildfall` and `npm run test:wildfall:browser`.
 
 ## Play NEON RUSH
 

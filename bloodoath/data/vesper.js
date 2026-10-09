@@ -1,0 +1,45 @@
+// VESPER — The Blood Duelist. Long sword reach, bleed that makes every later hit worse, a true parry and an evasive step.
+import { fighter, normal, special } from './common.js';
+
+const bleed = { bleed: 1 };
+export default fighter({
+  id: 'vesper', name: 'VESPER', title: 'The Blood Duelist', style: 'Footsies and parries', difficulty: 4, accent: '#e0243c',
+  blurb: 'A duelist with a cursed blade. Out-ranges everyone, opens wounds that bleed, and turns a read into a parry.',
+  health: 950, walkF: 4.6, walkB: 3.6, jump: { vy: 18, vx: 5.2 }, dashF: { frames: 14, speed: 13 }, dashB: { frames: 16, speed: 11, inv: 8 }, box: { w: 58, h: 206, crouch: 130 },
+  rig: { scale: 1.15, leg: 100, torso: 62, arm: 72, head: 24, chest: 40, waist: 28, hand: 8, bootLen: 24, limb: { thigh: [12, 9.5], shin: [9.5, 7.5], upper: [8.5, 7.5], fore: [8, 7] } },
+  poses: {
+    stance: { hip: [-4, 0.92], lean: 2, head: -2, fa: [0.7, -0.15], ba: [-0.45, 0.1], ff: [0.36, 0], bf: [-0.3, 0], wp: 20 },
+    crouch: { hip: [-2, 0.52], lean: 14, head: -8, fa: [0.6, 0.05], ba: [-0.3, 0], ff: [0.42, 0], bf: [-0.36, 0], wp: 25 },
+    block: { hip: [-6, 0.92], lean: -4, head: 4, fa: [0.4, 0.3], ba: [-0.2, 0.2], ff: [0.32, 0], bf: [-0.3, 0], wp: 95 },
+    blockLow: { hip: [-4, 0.5], lean: 10, fa: [0.5, 0.1], ba: [-0.2, 0.1], ff: [0.42, 0], bf: [-0.36, 0], wp: -75 },
+    win: { hip: [0, 0.98], lean: -4, head: -8, fa: [0.4, 0.9], ba: [-0.4, -0.1], ff: [0.2, 0], bf: [-0.2, 0], wp: 80 },
+    intro: { hip: [0, 0.9], lean: 40, head: 20, fa: [0.3, -0.4], ba: [-0.5, 0.2], ff: [0.3, 0], bf: [-0.26, 0], wp: -30 },
+  },
+  ai: { profile: 'balanced', pokes: ['5L', '5M', '2M', '5H'], antiAir: '2H', projectile: '5S', gapCloser: '6S', counter: '4S', reversal: '2S', mixup: ['6H', '2L', 'throw', '2S'] },
+  moves: {
+    '5L': normal('L', 'Riposte', [5, 3, 9], 'mid', 30, [30, 96, 176, 36], { hit: { hip: [10, 0.9], lean: 12, fa: [0.95, 0.02], wp: 2, ba: [-0.6, 0.2] } }, { cancel: ['M', 'H', 'special', 'super'], fx: 'slash', sfx: 'swingL' }),
+    '5M': normal('M', 'Cross Cut', [8, 4, 14], 'mid', 56, [30, 56, 184, 96], { wind: { fa: [0.2, 0.8], wp: 110, lean: -4 }, hit: { hip: [12, 0.88], lean: 20, fa: [0.85, -0.3], wp: -35, ba: [-0.5, 0.3] } }, { cancel: ['H', 'special', 'super'], fx: 'slash', sfx: 'swingM' }),
+    '5H': normal('H', 'Crescent Sweep', [13, 5, 22], 'mid', 90, [20, 70, 214, 72], { wind: { hip: [-8, 0.92], lean: -10, fa: [-0.5, 0.3], wp: 170 }, hit: { hip: [18, 0.84], lean: 26, fa: [0.9, 0.1], wp: -5, ba: [-0.7, 0.3], ff: [0.5, 0] } }, { cancel: ['special', 'super'], fx: 'slash', sfx: 'swingH', status: bleed }),
+    '2L': normal('L', 'Toe Prick', [6, 3, 9], 'low', 26, [24, 0, 156, 36], { hit: { hip: [4, 0.5], lean: 26, fa: [0.9, -0.5], wp: -25 } }, { crouch: true, cancel: ['M', 'H', 'special'], fx: 'slash', sfx: 'swingL' }),
+    '2M': normal('M', 'Low Line', [9, 4, 16], 'low', 50, [24, 0, 194, 42], { hit: { hip: [10, 0.46], lean: 34, fa: [0.95, -0.55], wp: -12, ff: [0.6, 0] } }, { crouch: true, cancel: ['special', 'super'], fx: 'slash', sfx: 'swingM' }),
+    '2H': normal('H', 'Skyward Rose', [10, 5, 26], 'mid', 80, [10, 60, 116, 196], { wind: { hip: [0, 0.5], lean: 24, fa: [0.4, -0.6], wp: -80 }, hit: { hip: [6, 0.98], lean: -8, fa: [0.5, 0.85], wp: 80, ba: [-0.5, 0] } }, { launch: [2, 16.5], cancel: ['jump', 'special', 'super'], fx: 'slash', sfx: 'swingH', status: bleed }),
+    '6H': normal('H', 'Delayed Verdict', [22, 4, 20], 'overhead', 84, [20, 40, 184, 176], { wind: { hip: [-4, 0.96], lean: -10, fa: [0.1, 0.95], wp: 110 }, hit: { hip: [16, 0.76], lean: 30, fa: [0.9, -0.35], wp: -45 } }, { fx: 'slash', sfx: 'swingH', feint: true, status: bleed, note: 'Press block during the wind-up to feint.' }),
+    jL: normal('L', 'Air Thrust', [5, 8, 6], 'overhead', 30, [10, 60, 174, 52], { hit: { lean: 10, fa: [0.95, -0.05], wp: 0 } }, { air: true, cancel: ['M', 'H'], fx: 'slash', sfx: 'swingL' }),
+    jM: normal('M', 'Down Cut', [7, 6, 8], 'overhead', 54, [10, 10, 174, 92], { hit: { lean: 20, fa: [0.8, -0.5], wp: -40 } }, { air: true, cancel: ['H', 'special'], fx: 'slash', sfx: 'swingM' }),
+    jH: normal('H', 'Executioner', [9, 6, 10], 'overhead', 78, [0, -30, 154, 154], { wind: { fa: [0.1, 1], wp: 120 }, hit: { lean: 34, fa: [0.7, -0.7], wp: -75 } }, { air: true, bounce: 'ground', fx: 'slash', sfx: 'swingH', status: bleed }),
+    '5S': special('Thorn Arc', [15, 1, 26], { cmd: 'S', note: 'A crescent of cursed energy with limited range. Causes bleed.', limit: 'arc', sfx: 'arcCast', anim: { wind: { fa: [-0.4, 0.4], wp: 170 }, hit: { hip: [10, 0.88], lean: 18, fa: [0.9, 0.5], wp: 60 } },
+      events: [{ f: 15, type: 'projectile', def: { kind: 'arc', look: 'arc', speed: 10, w: 40, h: 96, y: 112, damage: 54, hitstun: 18, blockstun: 14, level: 'mid', life: 46, status: bleed, fx: 'slash', pushHit: 5 }, ex: { life: 84, hits: 2, damage: 40 } }] }),
+    '6S': special('Crimson Draw', [10, 5, 22], { cmd: '→ + S', note: 'Lunging sword-draw. Fast and far, punishable when blocked.', motion: [[8, 16, 20]], box: [10, 70, 196, 72], damage: 94, hitstun: 22, blockstun: 16, status: bleed, fx: 'slash', sfx: 'draw', cancel: ['super'],
+      anim: { wind: { hip: [-10, 0.7], lean: 24, fa: [-0.5, -0.2], ba: [-0.3, -0.1], wp: 190 }, hit: { hip: [24, 0.74], lean: 30, fa: [1, 0.3], wp: 20, ff: [0.7, 0], bf: [-0.6, 0] } }, ex: { hits: 2, active: 6, damage: 60, recovery: 16 } }),
+    '4S': special('Perfect Parry', [2, 9, 26], { cmd: '← + S', note: 'A very short parry window against any strike or projectile. Success staggers the attacker.', counter: { from: 2, to: 10, catches: ['high', 'mid', 'low', 'overhead'], parry: true, stagger: 42, projectiles: true }, sfx: 'stance', stance: 'blood',
+      anim: { keys: [[0, {}], [2, { hip: [-4, 0.92], lean: -6, fa: [0.35, 0.4], wp: 100, ba: [-0.3, 0.3] }], [11, { hip: [-4, 0.92], lean: -6, fa: [0.35, 0.4], wp: 100, ba: [-0.3, 0.3] }], [37, {}]] } }),
+    '2S': special('Bloodstep', [4, 10, 10], { cmd: '↓ + S', note: 'Evasive dash that passes through the opponent.', motion: [[4, 14, 24]], invuln: [4, 14], passThrough: true, keepFacing: true, sfx: 'teleport', trail: true,
+      anim: { hit: { hip: [20, 0.6], lean: 40, fa: [0.3, -0.3], ba: [-0.7, 0.2], ff: [0.8, 0.05], bf: [-0.7, 0.1] } }, ex: { recovery: 3 } }),
+    jS: special('Falling Thorn', [12, 1, 16], { cmd: 'S in the air', note: 'A crescent thrown diagonally downward.', air: true, hang: true, limit: 'arc', sfx: 'arcCast', anim: { wind: { fa: [0.1, 1], wp: 120 }, hit: { lean: 30, fa: [0.8, -0.5], wp: -50 } },
+      events: [{ f: 12, type: 'projectile', def: { kind: 'arc', look: 'arc', speed: 9, vy: -7, w: 40, h: 80, y: 90, damage: 50, hitstun: 18, blockstun: 14, level: 'overhead', life: 40, status: bleed, fx: 'slash' } }] }),
+    super: { kind: 'super', name: 'Red Eclipse', cmd: 'H + S (2 bars)', note: 'Invulnerable dashing cut. On hit, a flurry that ends with one clean stroke.', level: 'mid', startup: 7, active: 8, recovery: 36, invuln: [1, 14], motion: [[7, 15, 30]], box: [0, 40, 204, 136], damage: 40, hitstun: 30, blockstun: 22, pushBlock: 4, hitstop: 12, heavy: true, fx: 'slash', sfx: 'superHit',
+      anim: { wind: { hip: [-10, 0.7], lean: 24, fa: [-0.5, -0.2], wp: 190 }, hit: { hip: [26, 0.72], lean: 32, fa: [1, 0.2], wp: 10, ff: [0.7, 0], bf: [-0.6, 0] } },
+      cine: { frames: 92, gap: 150, fx: 'slash', launch: [9, 13], hits: [[14, 45, 'slash'], [22, 45, 'slash'], [30, 45, 'slash'], [38, 45, 'slash'], [46, 45, 'slash'], [80, 110, 'slash']],
+        keys: [[0, { hip: [20, 0.74], lean: 30, fa: [1, 0.2], wp: 10 }], [14, { hip: [10, 0.86], lean: 16, fa: [0.8, -0.4], wp: -50 }], [22, { hip: [14, 0.88], lean: 10, fa: [0.6, 0.8], wp: 100 }], [30, { hip: [10, 0.84], lean: 22, fa: [0.9, -0.1], wp: -10 }], [38, { hip: [14, 0.9], lean: 4, fa: [0.4, 0.9], wp: 130 }], [46, { hip: [12, 0.8], lean: 28, fa: [0.9, -0.5], wp: -60 }], [66, { hip: [-16, 0.7], lean: 20, fa: [-0.5, -0.1], wp: 190 }], [80, { hip: [30, 0.76], lean: 34, fa: [1, 0.35], wp: 25 }], [92, {}]] } },
+  },
+});
