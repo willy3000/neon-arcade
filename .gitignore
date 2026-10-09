@@ -4,3 +4,4 @@ blackout/assets/source/
 blackout/qa/*.webm
 blackout/qa/*.json
 __pycache__/
+wildfall/qa/*.json

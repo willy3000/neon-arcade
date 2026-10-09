@@ -6,9 +6,9 @@
 .game-art.phasebound{background:radial-gradient(ellipse at 75% 55%,#294443,#191823 75%)}
 .phasebound .art-title{font-size:clamp(40px,4.5vw,65px);color:#ffbc79;top:82px;text-shadow:0 0 25px #ffbc7920}
 .phasebound .art-ball{width:34px;height:40px;border-radius:9px 9px 5px 5px;background:#554339;border:2px solid #ffbc79;left:68%;top:61%;box-shadow:0 0 24px #ffbc7940}
-.phasebound .art-ball:after{content:'••';position:absolute;left:4px;top:8px;color:#ffbc79;letter-spacing:5px}
+.phasebound .art-ball:after{content:'ï¿½ï¿½';position:absolute;left:4px;top:8px;color:#ffbc79;letter-spacing:5px}
 .phasebound .obstacle.one{width:32px;height:40px;left:84%;top:56%;border:2px solid #79f4ef;border-radius:50% 50% 9px 9px;background:#264443;box-shadow:0 0 24px #79f4ef40;transform:none}
-.phasebound .obstacle.one:after{content:'••';position:absolute;left:3px;top:7px;color:#79f4ef;letter-spacing:5px}
+.phasebound .obstacle.one:after{content:'ï¿½ï¿½';position:absolute;left:3px;top:7px;color:#79f4ef;letter-spacing:5px}
 .phasebound .obstacle.two,.phasebound .obstacle.three{display:none}
 .phasebound .art-trail{height:2px;width:16%;left:70%;top:67%;background:linear-gradient(90deg,#ffbc79,#b7a0ff,#79f4ef);transform:rotate(-9deg)}
 .phasebound .art-orbit{border-color:#b7a0ff22}
@@ -33,6 +33,13 @@
 .afterstrike .obstacle.two,.afterstrike .obstacle.three{display:none}
 .afterstrike .energy{background:#e8d49f;box-shadow:0 0 15px #e8d49f33;border-radius:0;transform:rotate(45deg)}
 .afterstrike .art-status{color:#96e6f2}
+
+.game-art.wildfall{background:#17324d url('wildfall/cover.jpg') center 40%/cover;isolation:isolate}
+.wildfall:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0b1622e6,#0b162266 60%,#0b162210);z-index:0}
+.wildfall .art-title{font-size:clamp(40px,4.8vw,64px);line-height:.9;top:84px;color:#fff;font-style:italic;text-shadow:0 2px 0 #b8894a,0 8px 26px #06101c;transform:none;letter-spacing:.01em}
+.wildfall .art-status{color:#f2c96a}.wildfall .art-id,.wildfall .art-caption{color:#bfe9e4}
+.wildfall .art-grid,.wildfall .art-orbit,.wildfall .art-ball,.wildfall .art-trail,.wildfall .obstacle,.wildfall .energy{display:none}
+.wildfall .art-status i{background:#f2c96a;box-shadow:none}
 
 .game-art.blackout{background:#1b261c url('blackout/assets/cover.svg') center 58%/cover;isolation:isolate}
 .blackout:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#162016ed,#16201688 65%,#16201622);z-index:0}

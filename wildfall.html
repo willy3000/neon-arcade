@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0d1b2a"><meta name="description" content="WILDFALL: Break the Sky. A momentum action-platformer of grapple swings, elemental combat and three very different heroes.">
+  <title>WILDFALL · NEON ARCADE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,700;6..12,800&display=swap">
+  <link rel="stylesheet" href="wildfall/style.css">
+  <script defer src="blackout/gamepad.js"></script>
+  <script type="module" src="wildfall/main.js"></script>
+</head>
+<body data-screen="loading">
+  <canvas id="view" tabindex="0" aria-label="WILDFALL game view"></canvas>
+  <div id="vignette" aria-hidden="true"></div>
+  <header id="topbar"><a href="index.html" class="arcade"><span>N</span> NEON ARCADE <i>/ ALL GAMES ↗</i></a><div class="top-actions"><button id="sound" aria-label="Toggle sound">SOUND ON</button><button id="settings-button" aria-label="Open settings">⚙</button></div></header>
+
+  <section id="loading" class="screen"><div class="load-box"><p class="eyebrow">BREAK THE SKY</p><h1 class="logo small">WILDFALL</h1><div class="bar"><i id="load-bar"></i></div><p id="load-text">Raising the islands…</p></div></section>
+
+  <main id="title" class="screen" hidden>
+    <div class="title-block"><p class="eyebrow">A NEON ARCADE ORIGINAL · ACTION PLATFORMER</p><h1 class="logo">WILDFALL</h1><p class="sublogo">BREAK THE SKY</p><p class="verbs">GRAPPLE <span>/</span> JUMP <span>/</span> FIGHT <span>/</span> SURVIVE</p>
+      <p class="pitch">The Sky Engine broke, and the world went up with it. Cross the drifting islands, fight what the Engine left behind, and climb back to the thing that shattered the sky.</p>
+      <nav class="menu" id="title-menu"><button id="continue" class="primary" hidden><span>CONTINUE</span><small id="continue-note"></small></button><button id="new-game" class="primary"><span>BEGIN THE CLIMB</span><small>Chapter 1 · The Fallen Gate</small></button><button id="proving" class="secondary"><span>PROVING GROUNDS</span><small>Practice every technique · timed trial</small></button><button id="title-settings" class="ghost">SETTINGS</button></nav>
+    </div>
+    <footer class="title-foot"><span id="title-device">KEYBOARD + MOUSE · CONTROLLER</span><span>Chapter 1 of 6 playable</span><span>WILDFALL / v0.1</span></footer>
+  </main>
+
+  <section id="select" class="screen" hidden>
+    <div class="select-head"><p class="eyebrow" id="select-mode">BREAK THE SKY</p><h2>CHOOSE YOUR HERO</h2></div>
+    <div id="heroes" class="heroes" role="listbox" aria-label="Heroes"></div>
+    <div class="select-actions"><button id="select-back" class="ghost">BACK</button><button id="select-go" class="primary"><span id="select-go-label">PLAY AS VYX</span></button></div>
+  </section>
+
+  <div id="hud" hidden>
+    <div class="hud-top">
+      <div class="vitals"><div class="portrait" id="portrait"></div><div class="vital-bars"><b id="hero-name">VYX</b><div class="hp"><i id="hp-lag"></i><i id="hp-bar"></i></div><div class="flow" id="flow" aria-label="Flow"></div></div></div>
+      <div class="area"><b id="area-name">THE FALLEN GATE</b><span id="objective">Reach the Gate</span></div>
+      <div class="counters"><span class="shards"><svg viewBox="0 0 16 16"><path d="M8 1 13 8 8 15 3 8Z"/></svg><b id="shard-count">0 / 5</b></span><span class="motes"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="4"/></svg><b id="mote-count">0</b></span><span id="trial" hidden>00.00</span></div>
+    </div>
+    <div id="boss" class="boss" hidden><b id="boss-name">THE GATEWARDEN</b><div class="boss-bar"><i id="boss-lag"></i><i id="boss-hp"></i><em></em><em></em></div><div class="boss-poise"><i id="boss-poise"></i></div></div>
+    <div id="combo" class="combo" hidden><b id="combo-count">0</b><span>HITS</span></div>
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+    <div id="hint" class="hint" hidden></div>
+    <div id="dialogue" class="dialogue" hidden><b id="speaker"></b><p id="line"></p></div>
+    <div id="prompt" class="prompt" hidden></div>
+    <div class="abilities" id="abilities"></div>
+    <div id="banner" class="banner" hidden><p id="banner-eyebrow"></p><h2 id="banner-title"></h2></div>
+    <button id="pause-button" aria-label="Pause">Ⅱ</button>
+  </div>
+
+  <section id="cards" class="screen story" hidden><div class="story-box"><p class="eyebrow" id="card-eyebrow"></p><h2 id="card-title"></h2><p id="card-text"></p><div class="story-actions"><button id="card-skip" class="ghost">SKIP</button><button id="card-next" class="primary"><span>CONTINUE</span></button></div></div></section>
+
+  <section id="pause" class="screen overlay" hidden><div class="panel"><p class="eyebrow">PAUSED</p><h2>CATCH YOUR BREATH</h2><nav class="menu"><button id="resume" class="primary"><span>RESUME</span></button><button id="restart" class="secondary"><span>RETURN TO CHECKPOINT</span></button><button id="pause-settings" class="secondary"><span>SETTINGS &amp; CONTROLS</span></button><button id="quit" class="ghost">QUIT TO TITLE</button></nav></div></section>
+
+  <section id="results" class="screen overlay" hidden><div class="panel wide"><p class="eyebrow" id="results-eyebrow">CHAPTER COMPLETE</p><h2 id="results-title">THE FALLEN GATE</h2><div id="results-stats" class="stats"></div><p id="results-note" class="note"></p><nav class="menu row"><button id="results-again" class="secondary"><span>PLAY AGAIN</span></button><button id="results-title-button" class="primary"><span>RETURN TO TITLE</span></button></nav></div></section>
+
+  <section id="popup" class="screen overlay light" hidden><div class="panel"><p class="eyebrow" id="popup-eyebrow"></p><h2 id="popup-title"></h2><p id="popup-text" class="note"></p><nav class="menu"><button id="popup-ok" class="primary"><span>CONTINUE</span></button></nav></div></section>
+
+  <dialog id="settings"><form method="dialog"><div class="settings-head"><div><p class="eyebrow">SETTINGS</p><h2>MAKE IT YOURS</h2></div><button class="close" aria-label="Close settings">×</button></div>
+    <div class="row"><label for="difficulty">Challenge</label><select id="difficulty"><option value="story">Story — gentler enemies</option><option value="standard">Standard</option><option value="mastery">Mastery — harder hits</option></select></div>
+    <div class="row"><label for="volume">Volume</label><input id="volume" type="range" min="0" max="1" step="0.05"></div>
+    <div class="row"><label for="music">Wind and ambience</label><input id="music" type="checkbox"></div>
+    <div class="row"><label for="shake">Camera shake</label><input id="shake" type="range" min="0" max="1" step="0.1"></div>
+    <div class="row"><label for="reducedFlash">Reduce flashes</label><input id="reducedFlash" type="checkbox"></div>
+    <div class="row"><label for="quality">Visual quality</label><select id="quality"><option value="high">High — shadows and bloom</option><option value="low">Low — fastest</option></select></div>
+    <div class="row"><label for="gamepad">Controller <small id="gamepad-status"></small></label><input id="gamepad" type="checkbox"></div>
+    <h3>CONTROLS</h3><div id="controls" class="controls"></div>
+    <p class="credits">Characters, enemies and ruins: <a href="https://kaylousberg.com" target="_blank" rel="noreferrer">Kay Lousberg (KayKit)</a>, CC0. Sound: <a href="https://kenney.nl" target="_blank" rel="noreferrer">Kenney</a>, CC0. Engine: three.js, MIT.</p>
+    <div class="settings-foot"><button class="primary"><span>DONE</span></button></div>
+  </form></dialog>
+  <script>if (location.protocol === 'file:') document.getElementById('load-text').textContent = 'WILDFALL must be served over HTTP. Run "npm run serve" and open http://127.0.0.1:8127/wildfall.html';</script>
+  <noscript>WILDFALL needs JavaScript. <a href="index.html">Return to the arcade.</a></noscript>
+</body>
+</html>

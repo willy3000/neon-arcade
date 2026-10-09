@@ -3,6 +3,18 @@
   "use strict";
   const games = [
     {
+      title: "WILDFALL",
+      href: "wildfall.html",
+      genre: "ACTION PLATFORMER · BREAK THE SKY",
+      description:
+        "The sky broke and the world went up with it. Swing, wall-run and fight across drifting islands with three very different heroes.",
+      controls: "KEYBOARD + MOUSE / CONTROLLER · CAMPAIGN + TRIAL",
+      bestKey: "wildfall-save",
+      art: "wildfall",
+      caption: "GRAPPLE. JUMP. FIGHT. SURVIVE.",
+      climb: true,
+    },
+    {
       title: "BLACKOUT PROTOCOL",
       href: "blackout-protocol.html",
       genre: "TACTICAL ACTION · OPENING MISSION",
@@ -93,6 +105,14 @@
     games.length,
   ).padStart(2, "0");
   function bestLabel(game) {
+    if (game.climb) {
+      try {
+        const chapter = JSON.parse(localStorage.getItem(game.bestKey))?.campaign?.chapter1;
+        if (chapter?.best?.rank) return `THE FALLEN GATE / RANK ${String(chapter.best.rank).slice(0, 1)}`;
+        if (chapter?.checkpoint) return "CHECKPOINT SAVED";
+      } catch {}
+      return "CHAPTER 1 · THE FALLEN GATE";
+    }
     if (game.campaign) {
       try {
         const saved = JSON.parse(localStorage.getItem(game.bestKey));
