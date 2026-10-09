@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#11212d" />
+    <meta
+      name="description"
+      content="AFTERSTRIKE: Echoes of War. Become Nyx, fight alongside your own past, and break the Clockwork Heart. An original action roguelite."
+    />
+    <title>AFTERSTRIKE · Echoes of War</title>
+    <link rel="stylesheet" href="afterstrike/style.css" />
+  </head>
+  <body>
+    <header>
+      <a href="index.html" class="brand"><span>N</span> NEON ARCADE</a>
+      <div>
+        <span class="header-edition">A FRACTURED TIMELINE / 006</span
+        ><a href="index.html">← THE ARCADE</a>
+      </div>
+    </header>
+    <main>
+      <section id="after-title" class="screen title-screen">
+        <div class="title-copy">
+          <p class="eyebrow"><i></i> AN ORIGINAL TEMPORAL ACTION ROGUELITE</p>
+          <h1>
+            AFTER<span>STRIKE<span class="title-dot">.</span></span>
+          </h1>
+          <p class="subtitle">E C H O E S &nbsp; O F &nbsp; W A R</p>
+          <div class="title-rule"></div>
+          <p class="description">
+            You are not alone.<br />You are who you were three seconds ago.
+          </p>
+          <p class="synopsis">
+            Reconstruct your past. Fight beside it.<br />Choose what survives
+            the next moment.
+          </p>
+          <button id="after-start" class="primary">
+            START RUN <span>↗</span>
+          </button>
+          <div class="title-actions">
+            <button id="after-weapons">WEAPON</button
+            ><button id="after-practice">PRACTICE</button
+            ><button id="after-how">FIELD GUIDE</button>
+          </div>
+          <nav class="title-nav" aria-label="Game navigation">
+            <button id="after-challenges">CHALLENGES</button
+            ><button id="after-collection">COLLECTION</button
+            ><button id="after-settings">SETTINGS</button>
+          </nav>
+          <p id="after-personal-best" class="personal-best"></p>
+        </div>
+        <div class="cover-panel">
+          <canvas
+            id="after-cover"
+            width="500"
+            height="600"
+            aria-label="Nyx and a temporal echo standing in the Fallen City"
+          ></canvas
+          ><span class="cover-eyebrow">NYX / THE FRACTURED BLADE</span>
+          <div class="cover-caption">
+            <b>THE PAST<br />STRIKES BACK.</b
+            ><span
+              >A COMPLETE FALLEN CITY RUN<br />THREE WEAPONS / ONE MAJOR
+              GUARDIAN</span
+            >
+          </div>
+          <span class="cover-counter">RECONSTRUCTION / 03.00 SEC</span>
+        </div>
+      </section>
+      <section id="after-weapon-screen" class="screen" hidden>
+        <div class="screen-heading">
+          <div>
+            <p class="eyebrow">CHOOSE YOUR LANGUAGE OF VIOLENCE</p>
+            <h2>THE ARSENAL.</h2>
+          </div>
+          <button class="back-button" id="after-weapons-back">← BACK</button>
+        </div>
+        <div id="after-weapon-grid" class="card-grid"></div>
+        <p class="screen-note">
+          Rift Gauntlets unlock after the first encounter. Phantom Chain unlocks
+          before the guardian. Every weapon is available in practice.
+        </p>
+        <button id="after-weapons-play" class="primary">
+          ENTER THE TIMELINE ↗
+        </button>
+      </section>
+      <section id="after-how-screen" class="screen" hidden>
+        <div class="screen-heading">
+          <div>
+            <p class="eyebrow">REMEMBER WHAT YOU CAN BECOME</p>
+            <h2>A FIELD GUIDE.</h2>
+          </div>
+          <button id="after-how-back" class="back-button">← BACK</button>
+        </div>
+        <div class="guide-grid">
+          <article>
+            <span>01 / MOVEMENT</span>
+            <h3>Make empty space feel alive.</h3>
+            <p>
+              <kbd>A D</kbd> or <kbd>← →</kbd> move. <kbd>Space</kbd> /
+              <kbd>W</kbd> jumps twice. Hold for height. Jump off walls; press
+              toward a wall to slide. <kbd>Shift</kbd> dashes. Hold up or down
+              to aim an air dash. <kbd>S</kbd> crouches, slides while moving, or
+              fast-falls.
+            </p>
+            <p>
+              <kbd>Q</kbd> attaches or releases a gold temporal anchor. Hold
+              toward it to shorten the tether; steer to swing. Dash within 0.16
+              seconds after release for Momentum Snap.
+            </p>
+          </article>
+          <article>
+            <span>02 / COMBAT</span>
+            <h3>Timing gives a blade meaning.</h3>
+            <p>
+              <kbd>J</kbd> or left click slashes. Tap near recovery to chain
+              three hits. Hold <kbd>K</kbd> or right mouse for a charged heavy;
+              release to strike. Heavy in the air slams down.
+              <kbd>W + J</kbd> launches. Slash during a dash for a dash attack.
+            </p>
+            <p>
+              <kbd>F</kbd> parries briefly. <kbd>L</kbd> spends 30 special for
+              Zero Hour, damaging and slowing enemies. <kbd>U</kbd> triggers
+              Afterstorm at full ultimate. <kbd>H</kbd> heals once per run.
+              <kbd>1 2 3</kbd> switch unlocked weapons outside attacks.
+            </p>
+          </article>
+          <article>
+            <span>03 / ECHO SHIFT</span>
+            <h3>Your past is a tactical partner.</h3>
+            <p>
+              <kbd>E</kbd> spends 35 echo energy to replay the last three
+              seconds. The ice-blue echo follows your recorded path, but its
+              strikes hit enemies where they are now. You remain free to act.
+              Energy regenerates; cooldown is 4.5 seconds.
+            </p>
+            <p>
+              Strike from the other side for Crossfire. Connect almost
+              simultaneously for Perfect Sync. Echo parries and dashes can
+              intercept projectiles. <kbd>C</kbd> spends 20 special to collapse
+              active echoes into nearby enemies.
+            </p>
+            <p>
+              At a relay, stand still for a moment, summon, then move. The
+              replay can hold the door for you. Echo hunters can disrupt
+              replays. Echoes phase through scenery and never copy your resource
+              costs.
+            </p>
+          </article>
+          <article>
+            <span>04 / THE RUN</span>
+            <h3>Failure changes the next attempt.</h3>
+            <p>
+              Clear each sealed encounter. Choose one temporary mutation between
+              scenes. Defeat the Clockwork Titan and reach the final portal.
+              Repeated attacks work; varied attacks, parries and sync build
+              style faster.
+            </p>
+            <p>
+              <kbd>R</kbd> instantly restarts. <kbd>Escape</kbd> pauses. Hidden
+              tabs pause too. Standard gamepads: left stick moves; A jumps; X
+              slashes; Y heavy; B dash; LB parry; RB echo; LT anchor; RT
+              special; D-pad right collapse; D-pad down heal; right stick click
+              ultimate; D-pad left switches weapons; Start pauses.
+            </p>
+            <p>
+              Touch solo offers movement, jump, attack, dash, heavy, echo, parry
+              and an expandable ability row. Landscape gives more room. Assist
+              reduces incoming damage; challenge records remain separate.
+            </p>
+          </article>
+        </div>
+        <button id="after-how-play" class="primary">MAKE A MOMENT ↗</button>
+      </section>
+      <section id="after-challenge-screen" class="screen" hidden>
+        <div class="screen-heading">
+          <div>
+            <p class="eyebrow">MASTERY IS ITS OWN REWARD</p>
+            <h2>CHOOSE THE PRESSURE.</h2>
+          </div>
+          <button id="after-challenges-back" class="back-button">← BACK</button>
+        </div>
+        <div id="after-challenge-grid" class="card-grid"></div>
+        <button id="after-challenges-play" class="primary">
+          START CHOSEN RUN ↗
+        </button>
+      </section>
+      <section id="after-collection-screen" class="screen" hidden>
+        <div class="screen-heading">
+          <div>
+            <p class="eyebrow">THINGS THAT OUTLIVE A TIMELINE</p>
+            <h2>THE COLLECTION.</h2>
+          </div>
+          <button id="after-collection-back" class="back-button">← BACK</button>
+        </div>
+        <div id="after-collection-content"></div>
+      </section>
+      <section id="after-settings-screen" class="screen" hidden>
+        <div class="screen-heading">
+          <div>
+            <p class="eyebrow">A WORLD THAT FITS YOU</p>
+            <h2>SETTINGS.</h2>
+          </div>
+          <button id="after-settings-back" class="back-button">← BACK</button>
+        </div>
+        <div class="settings-grid">
+          <fieldset>
+            <legend>PRESENTATION</legend>
+            <label
+              >Visual quality<select id="after-setting-quality">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select></label
+            ><label
+              >Screen shake<input
+                id="after-setting-shake"
+                type="range"
+                min="0"
+                max="1"
+                step=".05" /></label
+            ><label
+              >Reduced motion<input
+                id="after-setting-reducedMotion"
+                type="checkbox" /></label
+            ><label
+              >Reduced flash<input
+                id="after-setting-reducedFlash"
+                type="checkbox" /></label
+            ><label
+              >Assist: reduced damage<input
+                id="after-setting-assist"
+                type="checkbox"
+            /></label>
+          </fieldset>
+          <fieldset>
+            <legend>AUDIO</legend>
+            <label
+              >Sound effects<input
+                id="after-setting-sfx"
+                type="range"
+                min="0"
+                max="1"
+                step=".05" /></label
+            ><label
+              >Synth soundtrack<input
+                id="after-setting-musicEnabled"
+                type="checkbox" /></label
+            ><label
+              >Music volume<input
+                id="after-setting-music"
+                type="range"
+                min="0"
+                max="1"
+                step=".05"
+            /></label>
+            <p class="screen-note">
+              Volume zero mutes a channel. Audio begins after you interact. No
+              sound is needed to read an attack warning.
+            </p>
+          </fieldset>
+        </div>
+        <p class="screen-note">
+          This release is a complete Fallen City vertical slice. Further
+          environments and major guardians are planned; they are not unlocked
+          content in this build.
+        </p>
+      </section>
+      <section id="after-gameplay" hidden>
+        <div class="mission-heading">
+          <div>
+            <p id="after-scene-label" class="eyebrow"></p>
+            <h2 id="after-scene-title"></h2>
+          </div>
+          <div class="mission-tools">
+            <span id="after-timer"></span
+            ><button id="after-story" class="back-button compact">MEMORY</button
+            ><button
+              id="after-restart"
+              class="icon-button"
+              aria-label="Restart run"
+            >
+              ↻</button
+            ><button
+              id="after-pause"
+              class="icon-button"
+              aria-label="Pause game"
+            >
+              Ⅱ
+            </button>
+          </div>
+        </div>
+        <div class="hud">
+          <div class="vitals">
+            <span>NYX <b id="after-health-number">100</b></span>
+            <div class="meter health"><i id="after-health"></i></div>
+          </div>
+          <div class="echo-vitals">
+            <span>ECHO <b id="after-energy-number">100</b></span>
+            <div class="meter echo-meter"><i id="after-energy"></i></div>
+            <small id="after-echo-status">RECORDING</small>
+          </div>
+          <div class="special-vitals">
+            <span>ZERO HOUR <b id="after-special-number">70</b></span>
+            <div class="meter special-meter"><i id="after-special"></i></div>
+          </div>
+          <div class="weapon-status">
+            <b id="after-current-weapon"></b
+            ><span id="after-ultimate">AFTERSTORM 0%</span>
+          </div>
+          <div class="style-status">
+            <b id="after-style">D</b>
+            <div>
+              <span id="after-style-name">ROOKIE</span
+              ><small id="after-combo">FIND YOUR FLOW</small>
+            </div>
+          </div>
+        </div>
+        <div id="after-boss-hud" class="boss-hud" hidden>
+          <span>THE CLOCKWORK TITAN</span>
+          <div class="meter"><i id="after-boss-hp"></i></div>
+          <span id="after-boss-phase">PHASE I</span>
+        </div>
+        <div class="arena">
+          <canvas
+            id="after-world"
+            width="960"
+            height="540"
+            tabindex="0"
+            aria-label="AFTERSTRIKE gameplay. The Field Guide describes controls."
+          ></canvas>
+          <p id="after-notice" role="status" aria-live="polite"></p>
+          <div
+            id="after-overlay"
+            class="overlay"
+            hidden
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="after-modal-title"
+          >
+            <div class="modal">
+              <p id="after-modal-label" class="eyebrow"></p>
+              <h2 id="after-modal-title"></h2>
+              <p id="after-modal-description"></p>
+              <div id="after-upgrade-cards" class="upgrade-cards" hidden></div>
+              <div id="after-modal-stats"></div>
+              <button id="after-modal-primary" class="primary"></button>
+              <div class="modal-links">
+                <button id="after-modal-retry">TRY AGAIN</button
+                ><button id="after-modal-settings">SETTINGS</button
+                ><button id="after-modal-title-button">TITLE</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="under-arena">
+          <span id="after-objective">CLEAR THE TIMELINE HOSTILES</span
+          ><span id="after-score">000000</span>
+        </div>
+        <div id="after-touch" class="touch-controls" hidden>
+          <div class="movement-controls">
+            <button data-action="left" aria-label="Move left">←</button
+            ><button data-action="right" aria-label="Move right">→</button>
+          </div>
+          <div class="main-actions">
+            <button data-action="jump" aria-label="Jump">
+              ↑<span>JUMP</span></button
+            ><button data-action="light" aria-label="Slash">
+              ╱<span>SLASH</span></button
+            ><button data-action="dash" aria-label="Dash">
+              »<span>DASH</span></button
+            ><button data-action="echo" aria-label="Echo Shift">
+              ◈<span>ECHO</span></button
+            ><button
+              data-action="heavy"
+              aria-label="Heavy attack, hold to charge"
+            >
+              ⇣<span>HEAVY</span></button
+            ><button data-action="parry" aria-label="Parry">
+              ◇<span>PARRY</span></button
+            ><button id="after-more-actions" aria-expanded="false">
+              ＋<span>ABILITIES</span>
+            </button>
+          </div>
+        </div>
+        <div id="after-extra-touch" class="extra-touch" hidden>
+          <button data-action="anchor">⌁ ANCHOR</button
+          ><button data-action="special">ZERO HOUR</button
+          ><button data-action="collapse">COLLAPSE</button
+          ><button data-action="ultimate">AFTERSTORM</button
+          ><button data-action="heal">HEAL</button
+          ><button data-action="nextWeapon">WEAPON</button>
+        </div>
+        <p class="quick-controls">
+          J · SLASH / K · HEAVY / E · ECHO / F · PARRY / Q · ANCHOR
+          <span>R · RETRY / ESC · PAUSE</span>
+        </p>
+      </section>
+    </main>
+    <footer>
+      <span>AFTERSTRIKE / REMEMBER THE NEXT MOMENT.</span
+      ><span>THE FALLEN CITY · PLAYABLE VERTICAL SLICE</span>
+    </footer>
+    <script src="afterstrike/config.js"></script>
+    <script src="afterstrike/physics.js"></script>
+    <script src="afterstrike/combat.js"></script>
+    <script src="afterstrike/echo.js"></script>
+    <script src="afterstrike/ai.js"></script>
+    <script src="afterstrike/simulation.js"></script>
+    <script src="afterstrike/save.js"></script>
+    <script src="afterstrike/assets/rig.js"></script>
+    <script src="afterstrike/effects.js"></script>
+    <script src="afterstrike/audio.js"></script>
+    <script src="afterstrike/render.js"></script>
+    <script src="afterstrike/game.js"></script>
+    <script src="afterstrike/input.js"></script>
+  </body>
+</html>

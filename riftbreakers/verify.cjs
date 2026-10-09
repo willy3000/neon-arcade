@@ -29,7 +29,10 @@ function controller(s, h) {
   a.left = dx < -55;
   a.right = dx > 55;
   if (e && P.dist(h, e) < 150) {
-    h.facing = dx > 0 ? 1 : -1;
+    if (!h.action && h.facing !== (dx > 0 ? 1 : -1)) {
+      a.left = dx < 0;
+      a.right = dx > 0;
+    }
     if (!h.action) {
       a.heavy = e.type === "guard" || s.time % 2 < 0.8;
       a.light = !a.heavy;
@@ -43,7 +46,10 @@ function controller(s, h) {
     P.dist(h, s.generator) < 145 &&
     !h.action
   ) {
-    h.facing = s.generator.x > h.x ? 1 : -1;
+    if (h.facing !== (s.generator.x > h.x ? 1 : -1)) {
+      a.left = s.generator.x < h.x;
+      a.right = s.generator.x > h.x;
+    }
     a.heavy = true;
   }
   if (s.generator.hp <= 0) {

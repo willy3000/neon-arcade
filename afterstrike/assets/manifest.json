@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "license": "Original project artwork; no third-party assets",
+  "character": {
+    "name": "Nyx",
+    "source": "rig.js",
+    "format": "Procedural articulated Canvas polygons, rendered live",
+    "registration": "Center of feet; fixed limb lengths",
+    "diagnosticCell": { "width": 240, "height": 260 },
+    "weapons": ["blade", "gauntlets", "chain"],
+    "poses": ["idle", "run", "jump", "fall", "crouch", "slide", "dash", "grapple", "light", "heavy", "charged", "launcher", "parry", "special", "ultimate", "hit", "land", "inspect", "rest", "weapon-swap", "heal"],
+    "echo": "Same registered rig with translucent ice-blue palette",
+    "preview": "../qa/rig-atlas.png"
+  },
+  "environment": "Original procedural Canvas scenery in render.js",
+  "effects": "Original bounded procedural particles, rings and trails",
+  "sound": "Original Web Audio synthesis in audio.js",
+  "fonts": "System font stacks; no downloaded fonts",
+  "notes": "Poses share a layered rig, rather than separate sprite sheets. Diagnostic PNGs are development artifacts, not runtime dependencies."
+}

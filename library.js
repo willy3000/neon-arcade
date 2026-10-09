@@ -3,6 +3,18 @@
   "use strict";
   const games = [
     {
+      title: "AFTERSTRIKE",
+      href: "afterstrike.html",
+      genre: "ACTION ROGUELITE · ECHOES OF WAR",
+      description:
+        "Your past strikes back. Reconstruct your last three seconds, fight beside your echo, and shape a new build through the Fallen City.",
+      controls: "KEYBOARD / MOUSE / GAMEPAD / TOUCH",
+      bestKey: "afterstrike-progress",
+      art: "afterstrike",
+      caption: "REMEMBER THE NEXT MOMENT.",
+      run: true,
+    },
+    {
       title: "RIFTBREAKERS",
       href: "riftbreakers.html",
       genre: "CO-OP ACTION · 9 BREACHES",
@@ -69,6 +81,15 @@
     games.length,
   ).padStart(2, "0");
   function bestLabel(game) {
+    if (game.run) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(game.bestKey));
+        const time = saved?.best?.standard?.time;
+        if (Number.isFinite(time) && time >= 0)
+          return `${time.toFixed(1)}s BEST RUN`;
+      } catch {}
+      return "THE FALLEN CITY";
+    }
     if (game.progress) {
       let stars = 0;
       try {

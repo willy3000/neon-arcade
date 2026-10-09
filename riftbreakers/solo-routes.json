@@ -2,21 +2,21 @@
   {
     "won": true,
     "failed": false,
-    "time": 9.500000000000101,
-    "score": 2100.95,
+    "time": 7.808333333333511,
+    "score": 1434.65,
     "kills": 5,
-    "damage": 12,
+    "damage": 24,
     "checkpoint": -1,
     "heroes": [
       {
-        "x": 1806,
+        "x": 1792,
         "y": 516,
         "hp": 88
       },
       {
-        "x": 1781,
+        "x": 1711,
         "y": 516,
-        "hp": 100
+        "hp": 88
       }
     ],
     "waves": [
@@ -134,7 +134,7 @@
         }
       },
       {
-        "frames": 17,
+        "frames": 23,
         "actions": {
           "blaze": {
             "jump": true,
@@ -144,7 +144,39 @@
         }
       },
       {
-        "frames": 73,
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 7,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 13,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 12,
         "actions": {
           "blaze": {
             "jump": true,
@@ -165,7 +197,62 @@
         }
       },
       {
-        "frames": 103,
+        "frames": 17,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 40,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": true,
+            "light": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 27,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 24,
         "actions": {
           "blaze": {
             "jump": true,
@@ -186,7 +273,19 @@
         }
       },
       {
-        "frames": 42,
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": false,
+            "light": true
+          }
+        }
+      },
+      {
+        "frames": 45,
         "actions": {
           "blaze": {
             "jump": true,
@@ -228,7 +327,7 @@
         }
       },
       {
-        "frames": 61,
+        "frames": 45,
         "actions": {
           "blaze": {
             "jump": true,
@@ -239,326 +338,6 @@
       },
       {
         "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 15,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 9,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": true,
-            "light": false,
-            "special": true
-          }
-        }
-      },
-      {
-        "frames": 17,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 15,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 9,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 26,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": true,
-            "light": false
-          }
-        }
-      },
-      {
-        "frames": 9,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 22,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 21,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": true,
-            "light": false
-          }
-        }
-      },
-      {
-        "frames": 5,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": true,
-            "light": false,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 9,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": true,
-            "light": false,
-            "jumpPressed": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 5,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 14,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 8,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 64,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "heavy": true,
-            "light": false
-          }
-        }
-      },
-      {
-        "frames": 22,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 30,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "heavy": true,
-            "light": false,
-            "ultimate": true
-          }
-        }
-      },
-      {
-        "frames": 4,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 9,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 4,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 25,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 77,
         "actions": {
           "blaze": {
             "jump": true,
@@ -590,49 +369,7 @@
         }
       },
       {
-        "frames": 29,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 61,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 10,
+        "frames": 18,
         "actions": {
           "blaze": {
             "jump": true,
@@ -652,12 +389,55 @@
         }
       },
       {
-        "frames": 19,
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "heavy": true,
+            "light": false
+          }
+        }
+      },
+      {
+        "frames": 11,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 7,
         "actions": {
           "blaze": {
             "jump": true,
             "left": true,
             "right": false
+          }
+        }
+      },
+      {
+        "frames": 27,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 7,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true
           }
         }
       },
@@ -666,19 +446,45 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false,
-            "heavy": true
+            "left": false,
+            "right": true,
+            "heavy": true,
+            "light": false
           }
         }
       },
       {
-        "frames": 32,
+        "frames": 27,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false
+            "left": false,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 20,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": true,
+            "light": false
+          }
+        }
+      },
+      {
+        "frames": 6,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": true,
+            "light": false
           }
         }
       },
@@ -688,7 +494,72 @@
           "blaze": {
             "jump": true,
             "left": false,
+            "right": true,
+            "heavy": true,
+            "light": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 19,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 159,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": true
+          }
+        }
+      },
+      {
+        "frames": 34,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 42,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
             "right": false
+          }
+        }
+      },
+      {
+        "frames": 35,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
           }
         }
       }
@@ -697,21 +568,21 @@
   {
     "won": true,
     "failed": false,
-    "time": 12.958333333333238,
-    "score": 2223.15,
+    "time": 15.399999999999766,
+    "score": 1986,
     "kills": 7,
-    "damage": 75,
-    "checkpoint": -1,
+    "damage": 52,
+    "checkpoint": 0,
     "heroes": [
       {
-        "x": 2195,
+        "x": 2194,
         "y": 516,
-        "hp": 65
+        "hp": 80
       },
       {
-        "x": 2113,
+        "x": 2112,
         "y": 516,
-        "hp": 60
+        "hp": 86
       }
     ],
     "waves": [
@@ -828,7 +699,7 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
+            "left": true,
             "right": false,
             "heavy": false,
             "light": true,
@@ -869,7 +740,7 @@
         }
       },
       {
-        "frames": 16,
+        "frames": 6,
         "actions": {
           "blaze": {
             "jump": true,
@@ -880,7 +751,7 @@
         }
       },
       {
-        "frames": 4,
+        "frames": 8,
         "actions": {
           "blaze": {
             "jump": true,
@@ -890,7 +761,7 @@
         }
       },
       {
-        "frames": 5,
+        "frames": 11,
         "actions": {
           "blaze": {
             "jump": true,
@@ -901,7 +772,7 @@
         }
       },
       {
-        "frames": 9,
+        "frames": 7,
         "actions": {
           "blaze": {
             "jump": true,
@@ -911,7 +782,7 @@
         }
       },
       {
-        "frames": 15,
+        "frames": 17,
         "actions": {
           "blaze": {
             "jump": true,
@@ -925,7 +796,7 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
+            "left": true,
             "right": false,
             "heavy": true,
             "light": false
@@ -933,7 +804,29 @@
         }
       },
       {
-        "frames": 45,
+        "frames": 3,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 24,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 18,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1127,7 +1020,7 @@
         }
       },
       {
-        "frames": 96,
+        "frames": 91,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1148,7 +1041,7 @@
         }
       },
       {
-        "frames": 95,
+        "frames": 92,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1159,29 +1052,6 @@
       },
       {
         "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "heavy": false,
-            "light": true,
-            "special": true
-          }
-        }
-      },
-      {
-        "frames": 30,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 10,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1192,20 +1062,7 @@
         }
       },
       {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "heavy": false,
-            "light": true,
-            "special": true
-          }
-        }
-      },
-      {
-        "frames": 4,
+        "frames": 42,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1215,7 +1072,28 @@
         }
       },
       {
-        "frames": 6,
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 16,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 13,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1225,42 +1103,69 @@
         }
       },
       {
-        "frames": 4,
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 22,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 39,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
             "right": false,
             "dash": true
           }
         }
       },
       {
-        "frames": 3,
+        "frames": 6,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true,
-            "dash": true
+            "left": true,
+            "right": false
           }
         }
       },
       {
-        "frames": 19,
+        "frames": 23,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
-            "right": true,
-            "jumpPressed": true,
-            "dash": true
+            "right": false
           }
         }
       },
       {
-        "frames": 2,
+        "frames": 44,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1270,13 +1175,58 @@
         }
       },
       {
-        "frames": 2,
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": false,
+            "light": true,
+            "special": true
+          }
+        }
+      },
+      {
+        "frames": 46,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
             "right": true,
             "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 58,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true,
+            "dash": true
           }
         }
       },
@@ -1297,14 +1247,12 @@
             "jump": true,
             "left": false,
             "right": true,
-            "heavy": false,
-            "light": true,
-            "ultimate": true
+            "jumpPressed": true
           }
         }
       },
       {
-        "frames": 52,
+        "frames": 50,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1314,17 +1262,104 @@
         }
       },
       {
-        "frames": 7,
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 42,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
           }
         }
       },
       {
         "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 80,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": true,
+            "light": false,
+            "special": true
+          }
+        }
+      },
+      {
+        "frames": 10,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 2,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 2,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 31,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 2,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1335,23 +1370,12 @@
         }
       },
       {
-        "frames": 61,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
         "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
-            "right": true,
+            "right": false,
             "heavy": true,
             "light": false
           }
@@ -1369,28 +1393,7 @@
         }
       },
       {
-        "frames": 30,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 26,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
+        "frames": 25,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1464,16 +1467,6 @@
         }
       },
       {
-        "frames": 2,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
         "frames": 19,
         "actions": {
           "blaze": {
@@ -1504,7 +1497,7 @@
         }
       },
       {
-        "frames": 2,
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1514,7 +1507,27 @@
         }
       },
       {
-        "frames": 20,
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 3,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 19,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1535,7 +1548,7 @@
         }
       },
       {
-        "frames": 24,
+        "frames": 26,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1545,7 +1558,7 @@
         }
       },
       {
-        "frames": 18,
+        "frames": 15,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1555,7 +1568,7 @@
         }
       },
       {
-        "frames": 38,
+        "frames": 39,
         "actions": {
           "blaze": {
             "jump": true,
@@ -1570,7 +1583,7 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false,
+            "right": true,
             "heavy": true
           }
         }
@@ -1621,20 +1634,20 @@
   {
     "won": true,
     "failed": false,
-    "time": 13.449999999999877,
-    "score": 3719.15,
+    "time": 20.29999999999949,
+    "score": 3254.8500000000004,
     "kills": 1,
-    "damage": 44,
+    "damage": 24,
     "checkpoint": -1,
     "heroes": [
       {
-        "x": 1074,
-        "y": 473,
-        "hp": 74
+        "x": 1072,
+        "y": 516,
+        "hp": 94
       },
       {
-        "x": 1011,
-        "y": 319,
+        "x": 1082,
+        "y": 516,
         "hp": 100
       }
     ],
@@ -2133,7 +2146,266 @@
         }
       },
       {
-        "frames": 24,
+        "frames": 10,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "heavy": false,
+            "light": true
+          }
+        }
+      },
+      {
+        "frames": 30,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "heavy": false,
+            "light": true
+          }
+        }
+      },
+      {
+        "frames": 29,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "heavy": false,
+            "light": true
+          }
+        }
+      },
+      {
+        "frames": 7,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 16,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 2,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 13,
         "actions": {
           "blaze": {
             "jump": true,
@@ -2148,9 +2420,308 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
             "heavy": false,
-            "light": true
+            "light": true,
+            "special": true,
+            "ultimate": true
+          }
+        }
+      },
+      {
+        "frames": 48,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 29,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 3,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 49,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "heavy": true,
+            "light": false,
+            "special": true
+          }
+        }
+      },
+      {
+        "frames": 45,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 19,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
           }
         }
       },
@@ -2169,18 +2740,7 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
+            "left": false,
             "right": false,
             "heavy": false,
             "light": true
@@ -2188,11 +2748,31 @@
         }
       },
       {
-        "frames": 29,
+        "frames": 13,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 19,
         "actions": {
           "blaze": {
             "jump": true,
             "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 4,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
             "right": false
           }
         }
@@ -2202,164 +2782,9 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "heavy": false,
-            "light": true
-          }
-        }
-      },
-      {
-        "frames": 23,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 2,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 24,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 5,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true,
-            "special": true,
-            "ultimate": true
-          }
-        }
-      },
-      {
-        "frames": 25,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 17,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 29,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 58,
-        "actions": {
-          "blaze": {
-            "jump": true,
             "left": false,
             "right": false,
             "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": true,
-            "light": false,
-            "special": true
-          }
-        }
-      },
-      {
-        "frames": 17,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 8,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 15,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 28,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
           }
         }
       },
@@ -2376,7 +2801,7 @@
         }
       },
       {
-        "frames": 24,
+        "frames": 41,
         "actions": {
           "blaze": {
             "jump": true,
@@ -2386,7 +2811,28 @@
         }
       },
       {
-        "frames": 24,
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 9,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
@@ -2401,15 +2847,132 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": true,
-            "heavy": false,
-            "light": true,
-            "special": true
+            "right": false
           }
         }
       },
       {
-        "frames": 13,
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 2,
         "actions": {
           "blaze": {
             "jump": true,
@@ -2429,7 +2992,7 @@
         }
       },
       {
-        "frames": 23,
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
@@ -2440,19 +3003,48 @@
         }
       },
       {
-        "frames": 1,
+        "frames": 39,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true
+            "right": false
           }
         }
       },
       {
-        "frames": 48,
+        "frames": 22,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 3,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 18,
         "actions": {
           "blaze": {
             "jump": true,
@@ -2467,21 +3059,27 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false,
-            "heavy": true,
-            "light": false
+            "right": true
           }
         }
       },
       {
-        "frames": 13,
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false,
-            "jumpPressed": true,
-            "dash": true
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
           }
         }
       },
@@ -2491,8 +3089,17 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false,
-            "jumpPressed": true
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 6,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
           }
         }
       },
@@ -2501,30 +3108,7 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": true,
-            "light": false
-          }
-        }
-      },
-      {
-        "frames": 56,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
+            "left": true,
             "right": false,
             "heavy": false,
             "light": true
@@ -2532,143 +3116,12 @@
         }
       },
       {
-        "frames": 48,
+        "frames": 25,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
+            "left": true,
             "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true,
-            "special": true
-          }
-        }
-      },
-      {
-        "frames": 5,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 34,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 14,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true,
-            "ultimate": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 7,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true,
-            "ultimate": true,
-            "dash": true,
-            "fusion": true
-          }
-        }
-      },
-      {
-        "frames": 2,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true,
-            "ultimate": true,
-            "fusion": true
-          }
-        }
-      },
-      {
-        "frames": 5,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true,
-            "ultimate": true,
-            "dash": true,
-            "fusion": true
-          }
-        }
-      },
-      {
-        "frames": 9,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true,
-            "ultimate": true,
-            "jumpPressed": true,
-            "dash": true,
-            "fusion": true
-          }
-        }
-      },
-      {
-        "frames": 10,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 66,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "dash": true
           }
         }
       },
@@ -2683,7 +3136,7 @@
         }
       },
       {
-        "frames": 87,
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
@@ -2707,7 +3160,7 @@
         }
       },
       {
-        "frames": 17,
+        "frames": 45,
         "actions": {
           "blaze": {
             "jump": true,
@@ -2717,7 +3170,624 @@
         }
       },
       {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 2,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 29,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "heavy": true,
+            "light": false
+          }
+        }
+      },
+      {
+        "frames": 7,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 6,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 67,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": false,
+            "light": true
+          }
+        }
+      },
+      {
+        "frames": 40,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": false,
+            "light": true
+          }
+        }
+      },
+      {
+        "frames": 40,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": false,
+            "light": true
+          }
+        }
+      },
+      {
+        "frames": 40,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": true,
+            "light": false
+          }
+        }
+      },
+      {
         "frames": 8,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 26,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 11,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 18,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 24,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 9,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 37,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 24,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
@@ -2728,14 +3798,626 @@
         }
       },
       {
-        "frames": 15,
+        "frames": 3,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 19,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 49,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "heavy": true,
+            "light": false
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 16,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 73,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": false,
+            "light": true
+          }
+        }
+      },
+      {
+        "frames": 4,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 21,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 9,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 5,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
             "right": true,
-            "jumpPressed": true,
-            "dash": true
+            "fusion": true
+          }
+        }
+      },
+      {
+        "frames": 2,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": false,
+            "light": true
+          }
+        }
+      },
+      {
+        "frames": 41,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": false,
+            "light": true,
+            "special": true,
+            "ultimate": true
+          }
+        }
+      },
+      {
+        "frames": 17,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 21,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 131,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "heavy": false,
+            "light": true,
+            "special": true
+          }
+        }
+      },
+      {
+        "frames": 77,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": false,
+            "light": true
+          }
+        }
+      },
+      {
+        "frames": 52,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": true,
+            "light": false
           }
         }
       },
@@ -2745,7 +4427,7 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": true
+            "right": false
           }
         }
       }
@@ -2754,21 +4436,21 @@
   {
     "won": true,
     "failed": false,
-    "time": 11.491666666666655,
-    "score": 1870.7000000000003,
+    "time": 8.383333333333498,
+    "score": 1779.9,
     "kills": 6,
-    "damage": 52,
-    "checkpoint": 1,
+    "damage": 36,
+    "checkpoint": -1,
     "heroes": [
       {
-        "x": 2291,
+        "x": 2295,
         "y": 516,
-        "hp": 98
+        "hp": 88
       },
       {
-        "x": 2210,
+        "x": 2212,
         "y": 516,
-        "hp": 80
+        "hp": 88
       }
     ],
     "waves": [
@@ -2853,7 +4535,7 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
+            "left": true,
             "right": false,
             "heavy": false,
             "light": true,
@@ -3012,157 +4694,13 @@
         }
       },
       {
-        "frames": 5,
+        "frames": 30,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
             "right": false,
             "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 11,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": true,
-            "light": false
-          }
-        }
-      },
-      {
-        "frames": 13,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "heavy": false,
-            "light": true
-          }
-        }
-      },
-      {
-        "frames": 9,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true
-          }
-        }
-      },
-      {
-        "frames": 20,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 4,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 28,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": true,
-            "light": false
-          }
-        }
-      },
-      {
-        "frames": 9,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 8,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 17,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 25,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 10,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
           }
         }
       },
@@ -3183,14 +4721,131 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
+            "left": false,
             "right": false,
             "jumpPressed": true
           }
         }
       },
       {
-        "frames": 25,
+        "frames": 8,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": true,
+            "light": false
+          }
+        }
+      },
+      {
+        "frames": 14,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": true,
+            "light": false,
+            "special": true
+          }
+        }
+      },
+      {
+        "frames": 3,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "heavy": true,
+            "light": false,
+            "special": true
+          }
+        }
+      },
+      {
+        "frames": 10,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": true,
+            "light": false,
+            "special": true
+          }
+        }
+      },
+      {
+        "frames": 16,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 7,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "jumpPressed": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 19,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 50,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
@@ -3243,178 +4898,6 @@
         }
       },
       {
-        "frames": 45,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 42,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 91,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 91,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 91,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 91,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 42,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 6,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 24,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "heavy": false,
-            "light": true,
-            "special": true
-          }
-        }
-      },
-      {
-        "frames": 8,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "heavy": true,
-            "light": false,
-            "special": true
-          }
-        }
-      },
-      {
         "frames": 61,
         "actions": {
           "blaze": {
@@ -3431,12 +4914,12 @@
             "jump": true,
             "left": false,
             "right": true,
-            "heavy": true
+            "dash": true
           }
         }
       },
       {
-        "frames": 34,
+        "frames": 12,
         "actions": {
           "blaze": {
             "jump": true,
@@ -3446,7 +4929,7 @@
         }
       },
       {
-        "frames": 44,
+        "frames": 4,
         "actions": {
           "blaze": {
             "jump": true,
@@ -3456,7 +4939,167 @@
         }
       },
       {
-        "frames": 35,
+        "frames": 8,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": true,
+            "light": false,
+            "ultimate": true
+          }
+        }
+      },
+      {
+        "frames": 7,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 40,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 19,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 4,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 3,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 2,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 19,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": true
+          }
+        }
+      },
+      {
+        "frames": 14,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 8,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 72,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": true
+          }
+        }
+      },
+      {
+        "frames": 27,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 36,
         "actions": {
           "blaze": {
             "jump": true,
@@ -3470,21 +5113,21 @@
   {
     "won": true,
     "failed": false,
-    "time": 8.950000000000133,
-    "score": 2747.1499999999996,
+    "time": 10.383333333333384,
+    "score": 2917.8500000000004,
     "kills": 7,
-    "damage": 27,
+    "damage": 12,
     "checkpoint": -1,
     "heroes": [
       {
-        "x": 2094,
+        "x": 2055,
         "y": 516,
         "hp": 100
       },
       {
-        "x": 1962,
+        "x": 2124,
         "y": 516,
-        "hp": 73
+        "hp": 100
       }
     ],
     "waves": [
@@ -3602,21 +5245,141 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
+            "left": true,
             "right": false,
-            "heavy": true,
-            "light": false,
+            "heavy": false,
+            "light": true,
             "special": true
           }
         }
       },
       {
-        "frames": 17,
+        "frames": 23,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
             "right": false
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 16,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "heavy": false,
+            "light": true
+          }
+        }
+      },
+      {
+        "frames": 19,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 6,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "heavy": true,
+            "light": false
+          }
+        }
+      },
+      {
+        "frames": 7,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 7,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 25,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 10,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 11,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
           }
         }
       },
@@ -3637,64 +5400,8 @@
             "jump": true,
             "left": false,
             "right": true,
-            "heavy": true,
-            "light": false,
-            "special": true
-          }
-        }
-      },
-      {
-        "frames": 36,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 4,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "heavy": true,
-            "light": false
-          }
-        }
-      },
-      {
-        "frames": 6,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 21,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true
+            "jumpPressed": true,
+            "dash": true
           }
         }
       },
@@ -3704,13 +5411,23 @@
           "blaze": {
             "jump": true,
             "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
             "right": true,
             "jumpPressed": true
           }
         }
       },
       {
-        "frames": 2,
+        "frames": 49,
         "actions": {
           "blaze": {
             "jump": true,
@@ -3726,18 +5443,124 @@
             "jump": true,
             "left": false,
             "right": true,
-            "heavy": false,
-            "light": true
+            "jumpPressed": true
           }
         }
       },
       {
-        "frames": 9,
+        "frames": 42,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
             "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 91,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 46,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 44,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 12,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 12,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": false,
+            "light": true,
+            "special": true
           }
         }
       },
@@ -3747,20 +5570,108 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 36,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": false,
+            "light": true
+          }
+        }
+      },
+      {
+        "frames": 40,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": true,
+            "light": false
+          }
+        }
+      },
+      {
+        "frames": 17,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
             "dash": true
           }
         }
       },
       {
-        "frames": 8,
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 19,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 22,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
             "right": true,
-            "jumpPressed": true,
-            "dash": true
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": true,
+            "light": false,
+            "ultimate": true
           }
         }
       },
@@ -3775,7 +5686,7 @@
         }
       },
       {
-        "frames": 21,
+        "frames": 12,
         "actions": {
           "blaze": {
             "jump": true,
@@ -3785,19 +5696,30 @@
         }
       },
       {
-        "frames": 1,
+        "frames": 4,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
             "right": false,
-            "heavy": false,
-            "light": true
+            "dash": true
           }
         }
       },
       {
-        "frames": 22,
+        "frames": 29,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
@@ -3807,50 +5729,41 @@
         }
       },
       {
-        "frames": 3,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
         "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
+            "left": false,
             "right": false,
             "jumpPressed": true
           }
         }
       },
       {
-        "frames": 1,
+        "frames": 5,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false,
-            "heavy": false,
-            "light": true
+            "left": false,
+            "right": true,
+            "jumpPressed": true,
+            "fusion": true
           }
         }
       },
       {
-        "frames": 13,
+        "frames": 84,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false
+            "left": false,
+            "right": true,
+            "jumpPressed": true
           }
         }
       },
       {
-        "frames": 32,
+        "frames": 57,
         "actions": {
           "blaze": {
             "jump": true,
@@ -3913,7 +5826,7 @@
         }
       },
       {
-        "frames": 16,
+        "frames": 2,
         "actions": {
           "blaze": {
             "jump": true,
@@ -3923,7 +5836,7 @@
         }
       },
       {
-        "frames": 35,
+        "frames": 18,
         "actions": {
           "blaze": {
             "jump": true,
@@ -3934,19 +5847,6 @@
       },
       {
         "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true,
-            "special": true
-          }
-        }
-      },
-      {
-        "frames": 7,
         "actions": {
           "blaze": {
             "jump": true,
@@ -3956,36 +5856,6 @@
         }
       },
       {
-        "frames": 10,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 25,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 6,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
         "frames": 1,
         "actions": {
           "blaze": {
@@ -4000,27 +5870,13 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true
+            "left": true,
+            "right": false
           }
         }
       },
       {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": true,
-            "light": false,
-            "ultimate": true
-          }
-        }
-      },
-      {
-        "frames": 45,
+        "frames": 2,
         "actions": {
           "blaze": {
             "jump": true,
@@ -4030,105 +5886,38 @@
         }
       },
       {
-        "frames": 19,
+        "frames": 29,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
             "right": false,
-            "jumpPressed": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 11,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 16,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 3,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 162,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
             "heavy": true
           }
         }
       },
       {
-        "frames": 35,
+        "frames": 24,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
-            "right": true
+            "left": true,
+            "right": false
           }
         }
       },
       {
-        "frames": 45,
+        "frames": 56,
         "actions": {
           "blaze": {
             "jump": true,
@@ -4157,47 +5946,27 @@
             "right": false
           }
         }
-      },
-      {
-        "frames": 52,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 18,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
       }
     ]
   },
   {
     "won": true,
     "failed": false,
-    "time": 16.116666666666394,
-    "score": 4324.35,
+    "time": 16.708333333333027,
+    "score": 4529.75,
     "kills": 1,
-    "damage": 64,
+    "damage": 99,
     "checkpoint": -1,
     "heroes": [
       {
         "x": 1174,
-        "y": 516,
-        "hp": 74
+        "y": 506,
+        "hp": 54
       },
       {
-        "x": 1010,
-        "y": 414,
-        "hp": 80
+        "x": 1011,
+        "y": 290,
+        "hp": 65
       }
     ],
     "waves": [],
@@ -4568,7 +6337,7 @@
         }
       },
       {
-        "frames": 24,
+        "frames": 15,
         "actions": {
           "blaze": {
             "jump": true,
@@ -4582,7 +6351,97 @@
         "actions": {
           "blaze": {
             "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
             "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
             "right": false,
             "heavy": false,
             "light": true
@@ -4590,7 +6449,7 @@
         }
       },
       {
-        "frames": 25,
+        "frames": 34,
         "actions": {
           "blaze": {
             "jump": true,
@@ -4600,21 +6459,11 @@
         }
       },
       {
-        "frames": 9,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
         "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
+            "left": false,
             "right": false,
             "jumpPressed": true
           }
@@ -4625,8 +6474,8 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false,
+            "left": false,
+            "right": true,
             "heavy": false,
             "light": true,
             "special": true
@@ -4638,17 +6487,17 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
+            "left": false,
             "right": false
           }
         }
       },
       {
-        "frames": 25,
+        "frames": 20,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
+            "left": false,
             "right": false,
             "heavy": false,
             "light": true
@@ -4656,12 +6505,12 @@
         }
       },
       {
-        "frames": 2,
+        "frames": 7,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false,
+            "right": true,
             "heavy": false,
             "light": true
           }
@@ -4673,7 +6522,7 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false,
+            "right": true,
             "heavy": true,
             "light": false
           }
@@ -4685,7 +6534,7 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false,
+            "right": true,
             "heavy": true,
             "light": false,
             "jumpPressed": true
@@ -4698,12 +6547,23 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false
+            "right": true
           }
         }
       },
       {
-        "frames": 50,
+        "frames": 20,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 30,
         "actions": {
           "blaze": {
             "jump": true,
@@ -4782,7 +6642,7 @@
         }
       },
       {
-        "frames": 28,
+        "frames": 19,
         "actions": {
           "blaze": {
             "jump": true,
@@ -4796,7 +6656,97 @@
         "actions": {
           "blaze": {
             "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
             "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
             "right": false,
             "heavy": false,
             "light": true
@@ -4804,7 +6754,7 @@
         }
       },
       {
-        "frames": 28,
+        "frames": 42,
         "actions": {
           "blaze": {
             "jump": true,
@@ -4814,21 +6764,11 @@
         }
       },
       {
-        "frames": 14,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
         "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
+            "left": false,
             "right": false,
             "jumpPressed": true
           }
@@ -4839,53 +6779,30 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false,
+            "left": false,
+            "right": true,
             "heavy": false,
             "light": true
           }
         }
       },
       {
-        "frames": 22,
+        "frames": 16,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
+            "left": false,
             "right": false
           }
         }
       },
       {
-        "frames": 3,
+        "frames": 11,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "heavy": false,
-            "light": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
+            "left": false,
+            "right": true
           }
         }
       },
@@ -4894,51 +6811,76 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false,
+            "left": false,
+            "right": true,
             "fusion": true
           }
         }
       },
       {
-        "frames": 30,
+        "frames": 46,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false
+            "left": false,
+            "right": true
           }
         }
       },
       {
-        "frames": 8,
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false,
+            "left": false,
+            "right": true,
+            "heavy": true,
+            "light": false
+          }
+        }
+      },
+      {
+        "frames": 10,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true,
             "dash": true
           }
         }
       },
       {
-        "frames": 14,
+        "frames": 11,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
             "right": false,
+            "jumpPressed": true,
             "dash": true
           }
         }
       },
       {
-        "frames": 32,
+        "frames": 2,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
             "right": false
+          }
+        }
+      },
+      {
+        "frames": 41,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true
           }
         }
       },
@@ -4957,7 +6899,7 @@
         }
       },
       {
-        "frames": 25,
+        "frames": 50,
         "actions": {
           "blaze": {
             "jump": true,
@@ -4967,28 +6909,51 @@
         }
       },
       {
-        "frames": 15,
+        "frames": 2,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
-            "right": true
+            "right": false,
+            "jumpPressed": true,
+            "dash": true
           }
         }
       },
       {
-        "frames": 32,
+        "frames": 3,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
-            "right": true,
-            "jumpPressed": true
+            "right": false
           }
         }
       },
       {
-        "frames": 65,
+        "frames": 12,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 2,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 69,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5012,7 +6977,7 @@
         }
       },
       {
-        "frames": 18,
+        "frames": 49,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5022,7 +6987,7 @@
         }
       },
       {
-        "frames": 8,
+        "frames": 5,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5033,7 +6998,7 @@
         }
       },
       {
-        "frames": 18,
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5061,13 +7026,13 @@
             "jump": true,
             "left": false,
             "right": false,
-            "heavy": false,
-            "light": true
+            "heavy": true,
+            "light": false
           }
         }
       },
       {
-        "frames": 29,
+        "frames": 15,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5077,21 +7042,11 @@
         }
       },
       {
-        "frames": 1,
+        "frames": 45,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
+            "left": false,
             "right": false,
             "jumpPressed": true
           }
@@ -5102,40 +7057,7 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false,
-            "heavy": false,
-            "light": true
-          }
-        }
-      },
-      {
-        "frames": 26,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 3,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
+            "left": false,
             "right": false,
             "heavy": true,
             "light": false
@@ -5143,12 +7065,13 @@
         }
       },
       {
-        "frames": 7,
+        "frames": 10,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false
+            "left": false,
+            "right": false,
+            "jumpPressed": true
           }
         }
       },
@@ -5157,35 +7080,15 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
+            "left": false,
             "right": false,
+            "jumpPressed": true,
             "fusion": true
           }
         }
       },
       {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 39,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 41,
+        "frames": 82,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5210,7 +7113,7 @@
         }
       },
       {
-        "frames": 10,
+        "frames": 45,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5220,18 +7123,7 @@
         }
       },
       {
-        "frames": 4,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 27,
+        "frames": 2,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5243,7 +7135,7 @@
         }
       },
       {
-        "frames": 4,
+        "frames": 3,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5253,7 +7145,29 @@
         }
       },
       {
-        "frames": 12,
+        "frames": 16,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 6,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 25,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5264,7 +7178,7 @@
         }
       },
       {
-        "frames": 61,
+        "frames": 9,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5275,7 +7189,72 @@
         }
       },
       {
-        "frames": 12,
+        "frames": 17,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 14,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 57,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 19,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 23,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5296,7 +7275,7 @@
         }
       },
       {
-        "frames": 165,
+        "frames": 174,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5432,7 +7411,7 @@
         }
       },
       {
-        "frames": 105,
+        "frames": 41,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5446,21 +7425,21 @@
   {
     "won": true,
     "failed": false,
-    "time": 14.458333333333153,
-    "score": 3669.7999999999997,
+    "time": 13.0249999999999,
+    "score": 3523.6,
     "kills": 9,
-    "damage": 42,
+    "damage": 12,
     "checkpoint": -1,
     "heroes": [
       {
-        "x": 2459,
+        "x": 2443,
         "y": 516,
         "hp": 100
       },
       {
-        "x": 2524,
+        "x": 2363,
         "y": 516,
-        "hp": 88
+        "hp": 100
       }
     ],
     "waves": [
@@ -5644,7 +7623,7 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
+            "left": true,
             "right": false,
             "heavy": false,
             "light": true
@@ -5652,7 +7631,7 @@
         }
       },
       {
-        "frames": 20,
+        "frames": 14,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5662,7 +7641,7 @@
         }
       },
       {
-        "frames": 28,
+        "frames": 34,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5705,7 +7684,7 @@
         }
       },
       {
-        "frames": 9,
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5716,7 +7695,7 @@
         }
       },
       {
-        "frames": 9,
+        "frames": 18,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5727,7 +7706,7 @@
         }
       },
       {
-        "frames": 12,
+        "frames": 11,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5750,18 +7729,7 @@
         }
       },
       {
-        "frames": 2,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 5,
+        "frames": 3,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5783,7 +7751,7 @@
         }
       },
       {
-        "frames": 8,
+        "frames": 7,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5794,7 +7762,7 @@
         }
       },
       {
-        "frames": 1,
+        "frames": 4,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5805,7 +7773,7 @@
         }
       },
       {
-        "frames": 12,
+        "frames": 14,
         "actions": {
           "blaze": {
             "jump": true,
@@ -5890,7 +7858,7 @@
         }
       },
       {
-        "frames": 88,
+        "frames": 89,
         "actions": {
           "blaze": {
             "jump": true,
@@ -6012,7 +7980,7 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
+            "left": true,
             "right": false,
             "heavy": false,
             "light": true
@@ -6121,506 +8089,7 @@
         }
       },
       {
-        "frames": 13,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 5,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "fusion": true
-          }
-        }
-      },
-      {
-        "frames": 25,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true
-          }
-        }
-      },
-      {
-        "frames": 23,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 36,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 55,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 17,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 17,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 49,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 42,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 26,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 3,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true,
-            "special": true,
-            "ultimate": true
-          }
-        }
-      },
-      {
-        "frames": 2,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 39,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 9,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 2,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 10,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 37,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 22,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 42,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 14,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 2,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 4,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 66,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 9,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 34,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 57,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 3,
+        "frames": 27,
         "actions": {
           "blaze": {
             "jump": true,
@@ -6642,12 +8111,119 @@
         }
       },
       {
-        "frames": 25,
+        "frames": 10,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
             "right": false
+          }
+        }
+      },
+      {
+        "frames": 11,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 2,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true,
+            "fusion": true
+          }
+        }
+      },
+      {
+        "frames": 50,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 17,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 29,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 61,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "dash": true
           }
         }
       },
@@ -6668,12 +8244,77 @@
             "jump": true,
             "left": false,
             "right": true,
+            "heavy": true,
+            "light": false,
+            "special": true,
+            "ultimate": true
+          }
+        }
+      },
+      {
+        "frames": 54,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 2,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 45,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 16,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
             "jumpPressed": true
           }
         }
       },
       {
-        "frames": 42,
+        "frames": 12,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 27,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 19,
         "actions": {
           "blaze": {
             "jump": true,
@@ -6694,7 +8335,7 @@
         }
       },
       {
-        "frames": 12,
+        "frames": 29,
         "actions": {
           "blaze": {
             "jump": true,
@@ -6704,43 +8345,23 @@
         }
       },
       {
-        "frames": 17,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
         "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false,
+            "right": true,
             "jumpPressed": true
           }
         }
       },
       {
-        "frames": 10,
+        "frames": 61,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 50,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
+            "right": true
           }
         }
       },
@@ -6750,33 +8371,13 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
+            "right": true,
             "dash": true
           }
         }
       },
       {
-        "frames": 17,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
+        "frames": 5,
         "actions": {
           "blaze": {
             "jump": true,
@@ -6786,7 +8387,7 @@
         }
       },
       {
-        "frames": 1,
+        "frames": 19,
         "actions": {
           "blaze": {
             "jump": true,
@@ -6796,104 +8397,12 @@
         }
       },
       {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 43,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 17,
+        "frames": 55,
         "actions": {
           "blaze": {
             "jump": true,
             "left": true,
             "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "heavy": true
-          }
-        }
-      },
-      {
-        "frames": 6,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 12,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "dash": true
           }
         }
       },
@@ -6902,18 +8411,102 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
+            "left": false,
             "right": false
           }
         }
       },
       {
-        "frames": 6,
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": true
+          }
+        }
+      },
+      {
+        "frames": 8,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
             "right": false
+          }
+        }
+      },
+      {
+        "frames": 12,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 60,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": true
+          }
+        }
+      },
+      {
+        "frames": 80,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "heavy": true
+          }
+        }
+      },
+      {
+        "frames": 27,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 22,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
           }
         }
       }
@@ -6922,21 +8515,21 @@
   {
     "won": true,
     "failed": false,
-    "time": 12.658333333333255,
-    "score": 4771.149999999999,
+    "time": 10.933333333333353,
+    "score": 4820.4,
     "kills": 11,
-    "damage": 12,
-    "checkpoint": -1,
+    "damage": 24,
+    "checkpoint": 1,
     "heroes": [
       {
-        "x": 2296,
+        "x": 2290,
         "y": 516,
-        "hp": 100
+        "hp": 88
       },
       {
-        "x": 2318,
+        "x": 2210,
         "y": 516,
-        "hp": 100
+        "hp": 88
       }
     ],
     "waves": [
@@ -7058,7 +8651,7 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
+            "left": true,
             "right": false,
             "heavy": true,
             "light": false,
@@ -7077,7 +8670,118 @@
         }
       },
       {
-        "frames": 52,
+        "frames": 42,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": false,
+            "light": true,
+            "special": true
+          }
+        }
+      },
+      {
+        "frames": 10,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 2,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 2,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 3,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 19,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 141,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 19,
         "actions": {
           "blaze": {
             "jump": true,
@@ -7099,7 +8803,7 @@
         }
       },
       {
-        "frames": 17,
+        "frames": 22,
         "actions": {
           "blaze": {
             "jump": true,
@@ -7109,12 +8813,56 @@
         }
       },
       {
-        "frames": 12,
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
-            "right": true,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 24,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "heavy": false,
+            "light": true,
+            "special": true
+          }
+        }
+      },
+      {
+        "frames": 4,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 36,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
             "jumpPressed": true
           }
         }
@@ -7125,15 +8873,91 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": true,
+            "right": false,
             "heavy": true,
             "light": false,
-            "special": true
+            "ultimate": true
           }
         }
       },
       {
-        "frames": 65,
+        "frames": 45,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 21,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 8,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true,
+            "fusion": true
+          }
+        }
+      },
+      {
+        "frames": 81,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "jumpPressed": true
+          }
+        }
+      },
+      {
+        "frames": 22,
         "actions": {
           "blaze": {
             "jump": true,
@@ -7149,7 +8973,6 @@
             "jump": true,
             "left": false,
             "right": true,
-            "jumpPressed": true,
             "dash": true
           }
         }
@@ -7176,7 +8999,126 @@
         }
       },
       {
-        "frames": 45,
+        "frames": 61,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 42,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": true,
+            "light": false,
+            "special": true
+          }
+        }
+      },
+      {
+        "frames": 16,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 33,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "heavy": false,
+            "light": true,
+            "ultimate": true
+          }
+        }
+      },
+      {
+        "frames": 41,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 13,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false,
+            "dash": true
+          }
+        }
+      },
+      {
+        "frames": 3,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 64,
         "actions": {
           "blaze": {
             "jump": true,
@@ -7218,7 +9160,7 @@
         }
       },
       {
-        "frames": 91,
+        "frames": 29,
         "actions": {
           "blaze": {
             "jump": true,
@@ -7229,123 +9171,6 @@
       },
       {
         "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 46,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 19,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "heavy": false,
-            "light": true
-          }
-        }
-      },
-      {
-        "frames": 22,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 2,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 24,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true
-          }
-        }
-      },
-      {
-        "frames": 4,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 17,
         "actions": {
           "blaze": {
             "jump": true,
@@ -7356,19 +9181,7 @@
         }
       },
       {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": false,
-            "light": true
-          }
-        }
-      },
-      {
-        "frames": 13,
+        "frames": 50,
         "actions": {
           "blaze": {
             "jump": true,
@@ -7378,12 +9191,12 @@
         }
       },
       {
-        "frames": 27,
+        "frames": 11,
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
-            "right": true
+            "left": true,
+            "right": false
           }
         }
       },
@@ -7392,30 +9205,8 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
-            "right": true,
-            "heavy": false,
-            "light": true
-          }
-        }
-      },
-      {
-        "frames": 3,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 22,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
+            "left": true,
+            "right": false,
             "dash": true
           }
         }
@@ -7425,213 +9216,8 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 22,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "heavy": true,
-            "light": false
-          }
-        }
-      },
-      {
-        "frames": 31,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 25,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "heavy": true,
-            "light": false,
-            "special": true
-          }
-        }
-      },
-      {
-        "frames": 17,
-        "actions": {
-          "blaze": {
-            "jump": true,
             "left": true,
             "right": false
-          }
-        }
-      },
-      {
-        "frames": 5,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false,
-            "fusion": true
-          }
-        }
-      },
-      {
-        "frames": 51,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 7,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 7,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 25,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 147,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "heavy": true,
-            "light": false,
-            "ultimate": true
-          }
-        }
-      },
-      {
-        "frames": 25,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 16,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 5,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 64,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 10,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": true,
-            "jumpPressed": true
           }
         }
       },
@@ -7641,204 +9227,12 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": true
-          }
-        }
-      },
-      {
-        "frames": 24,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
             "right": false
           }
         }
       },
       {
         "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 9,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 2,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 2,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 2,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 4,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "jumpPressed": true
-          }
-        }
-      },
-      {
-        "frames": 30,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 30,
         "actions": {
           "blaze": {
             "jump": true,
@@ -7848,7 +9242,7 @@
         }
       },
       {
-        "frames": 5,
+        "frames": 1,
         "actions": {
           "blaze": {
             "jump": true,
@@ -7863,18 +9257,7 @@
           "blaze": {
             "jump": true,
             "left": false,
-            "right": false,
-            "dash": true
-          }
-        }
-      },
-      {
-        "frames": 19,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
+            "right": true
           }
         }
       },
@@ -7883,93 +9266,13 @@
         "actions": {
           "blaze": {
             "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
             "left": false,
             "right": false
           }
         }
       },
       {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 1,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 51,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": true,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 24,
+        "frames": 50,
         "actions": {
           "blaze": {
             "jump": true,
@@ -7985,12 +9288,12 @@
             "jump": true,
             "left": false,
             "right": true,
-            "dash": true
+            "heavy": true
           }
         }
       },
       {
-        "frames": 16,
+        "frames": 4,
         "actions": {
           "blaze": {
             "jump": true,
@@ -8000,7 +9303,7 @@
         }
       },
       {
-        "frames": 8,
+        "frames": 11,
         "actions": {
           "blaze": {
             "jump": true,
@@ -8010,18 +9313,18 @@
         }
       },
       {
-        "frames": 1,
+        "frames": 2,
         "actions": {
           "blaze": {
             "jump": true,
             "left": false,
             "right": false,
-            "heavy": true
+            "dash": true
           }
         }
       },
       {
-        "frames": 80,
+        "frames": 63,
         "actions": {
           "blaze": {
             "jump": true,
@@ -8048,6 +9351,16 @@
             "jump": true,
             "left": false,
             "right": false
+          }
+        }
+      },
+      {
+        "frames": 20,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": true
           }
         }
       }
@@ -8063,7 +9376,7 @@
     "checkpoint": -1,
     "heroes": [
       {
-        "x": 1094,
+        "x": 1101,
         "y": 516,
         "hp": 78
       },
@@ -8995,28 +10308,7 @@
         }
       },
       {
-        "frames": 15,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false
-          }
-        }
-      },
-      {
-        "frames": 5,
-        "actions": {
-          "blaze": {
-            "jump": true,
-            "left": false,
-            "right": false,
-            "fusion": true
-          }
-        }
-      },
-      {
-        "frames": 32,
+        "frames": 13,
         "actions": {
           "blaze": {
             "jump": true,
@@ -9030,7 +10322,338 @@
         "actions": {
           "blaze": {
             "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
             "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 5,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false,
+            "fusion": true
+          }
+        }
+      },
+      {
+        "frames": 3,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": false,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
+            "right": false
+          }
+        }
+      },
+      {
+        "frames": 1,
+        "actions": {
+          "blaze": {
+            "jump": true,
+            "left": true,
             "right": false,
             "heavy": false,
             "light": true

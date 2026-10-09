@@ -1,6 +1,6 @@
 # NEON ARCADE
 
-A browser game library featuring NEON RUSH (arcade survival), GRAVITY HEIST (gravity puzzles), and ECHO FORGE (soundwave physics puzzles). All use HTML5 Canvas, vanilla JavaScript, CSS, and synthesized Web Audio. No build step or runtime dependencies.
+A six-game browser arcade: NEON RUSH, GRAVITY HEIST, ECHO FORGE, PHASEBOUND, RIFTBREAKERS, and the AFTERSTRIKE vertical slice. All use HTML5 Canvas, vanilla JavaScript, CSS, and synthesized Web Audio. No build step or runtime dependencies.
 
 ## Run
 
@@ -101,3 +101,55 @@ Select **PHASEBOUND** from the library, or open `phasebound.html` directly. Guid
 PHASEBOUND uses separate `phasebound/{levels,physics,render,audio,game,input}.js` modules, original canvas artwork, a 120 Hz simulation, dimension-filtered collisions, coyote time, buffered variable-height jumps, moving platforms, and a capped particle pool. Input packets remain separate from simulation; multiplayer is local on one device.
 
 Run `node phasebound/test.cjs` to replay all 12 cooperative and solo three-star routes and check mechanisms, collision rules, independent/simultaneous input, checkpoints, touch cancellation, pause, saves/reload, progression, rendering, and synthesized audio. Run `node phasebound/verify.cjs` and `node phasebound/verify.cjs --solo` to regenerate the test-only action recordings. The solo verifier sends actions to only one selected character at a time. Live visual, speaker, and physical touch checks require a browser.
+
+## Play RIFTBREAKERS
+
+Open `riftbreakers.html` or select it from the arcade. Nine authored stages span three chapters, each ending in a distinct boss. Choose Blaze or Volt for solo play with an AI partner, or use local two-player mode.
+
+| Action | Blaze | Volt |
+|---|---|---|
+| Move | A / D | Left / Right |
+| Jump / double jump | W | Up |
+| Dash | S | Down |
+| Light attack | F | K |
+| Heavy / aerial slam | T | O |
+| Special | G | L |
+| Ultimate | J | P |
+| Attach / release grapple | Y | I |
+| Confirm fusion | H | ; |
+
+Tap attacks; holding a key does not continually hit. Specials cost 35 energy. Ultimates require full charge. Dash cancels light/heavy recovery and grants brief immunity after startup. Volt can dash upward while holding jump. Alternate hero hits and electrify Blaze's fire with Volt's special to earn fusion. Both heroes confirm a full meter within two seconds while nearby; solo AI confirms automatically.
+
+Stand close to a downed teammate without attacking for 1.45 seconds to revive them within 20 seconds. Clear arena waves, destroy the exposed rift generator, and bring both to extraction. Checkpoints save encounter state and restore team health on retry. R restarts the entire stage, Escape pauses, and X switches solo heroes. Mobile solo includes multi-touch movement and all combat actions.
+
+Settings include unique keyboard rebinding, effects/music toggles, three quality levels, adjustable shake, reduced motion/flash, a shorter fusion cinematic, and touch sizing. Unlocks, stars, relics, best time/score and preferences save locally. The third rating star requires meeting the displayed stage time, ≤100 team damage, and no falls.
+
+`node riftbreakers/test.cjs` checks deterministic campaign replays, combat, movement, mechanisms, AI, input, persistence and rendering. `node riftbreakers/verify.cjs` and `node riftbreakers/verify.cjs --coop` regenerate action-only completion routes. UI/render checks mock browser APIs. Live browser/speaker/touch testing is still required.
+
+On HTTPS or localhost, `riftbreakers-sw.js` caches RIFTBREAKERS and library navigation for offline use after installation. Other games' requests pass through unchanged. Opening local HTML files also works without a service worker. No runtime fonts, downloaded artwork, or dependencies are needed.
+
+RIFTBREAKERS has isolated modules for authored levels, physics, combat, enemy/boss/companion AI, simulation, persistence, rendering, audio, UI and input. Original procedural character artwork, inline SVG cover artwork, and synthesized audio require no third-party attribution.
+
+## Play AFTERSTRIKE
+
+Open `afterstrike.html` or select it from the arcade. This complete vertical slice links three Fallen City scenes, two mutation selections and the Clockwork Titan boss. Practice provides all three weapons and replenishing resources. The proposed later worlds and two additional bosses remain expansion work; see [release scope and QA](afterstrike/QA.md).
+
+| Action | Desktop |
+|---|---|
+| Move / crouch | A/D or arrows / S or Down |
+| Jump / double jump | Space or W |
+| Dash | Shift |
+| Light / hold charged heavy | J or left mouse / K or right mouse |
+| Parry / summon echo | F / E |
+| Grapple / collapse echoes | Q / C |
+| Heal / special / ultimate | H / L / U |
+| Weapon selection | 1 / 2 / 3 |
+| Restart / pause | R / Escape |
+
+Echoes replay the last three seconds of committed movement and combat, strike live enemies, intercept projectiles during recorded defensive actions, and hold relay plates. They phase through terrain so changed scenery cannot trap recordings. Synchronize attacks from opposite sides for extra rewards. Weapon unlocks, discoveries, cosmetics, records and challenge results save locally; assisted records stay separate.
+
+Touch controls expose movement and combat, with an expandable ability tray. Standard gamepads use left stick to move, A jump, B dash, X light, Y charged heavy, LB parry, RB echo, LT grapple, RT special, right-stick press ultimate, D-pad down heal/left cycle weapon/right collapse, and Start pause. Settings include audio levels, quality, shake, reduced motion/flash and assist mode.
+
+The isolated `afterstrike/` modules implement fixed-step physics, combat, echo recording, AI, simulation, persistence, original articulated artwork, bounded effects, audio, rendering, UI and input. No runtime dependencies or external assets are required. See [design](afterstrike/GAME_DESIGN.md) and [asset manifest](afterstrike/assets/manifest.json).
+
+Run `node afterstrike/test.cjs` for the verification suite and `node afterstrike/verify.cjs` to regenerate real-action completion routes for every weapon. Canvas snapshots and hardware-testing limitations are documented in [QA](afterstrike/QA.md).

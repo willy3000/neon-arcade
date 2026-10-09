@@ -30,9 +30,9 @@
       generatorReady: false,
       gates: level.waves.map((w, i) => ({
         x: w.gate,
-        y: 0,
+        y: -600,
         w: 18,
-        h: 560,
+        h: 1160,
         id: "gate" + i,
         open: false,
       })),
@@ -360,8 +360,8 @@
     });
   }
   function step(s, packets = {}, dt = P.DT) {
-    s.events = [];
     if (s.won || s.failed) return;
+    s.events = [];
     if (s.hitstop > 0) {
       s.hitstop = Math.max(0, s.hitstop - dt);
       return;

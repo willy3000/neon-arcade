@@ -23,3 +23,13 @@
 .riftbreakers .obstacle.two,.riftbreakers .obstacle.three,.riftbreakers .art-trail{display:none}
 .riftbreakers .energy{background:#b68cff;box-shadow:0 0 15px #b68cff;border-radius:0;transform:rotate(45deg)}
 .riftbreakers .art-status{color:#ffad72}
+.game-art.afterstrike{background:radial-gradient(ellipse at 70% 55%,#345465,#152936 75%)}
+.afterstrike .art-title{color:#e6e5d9;font-size:clamp(40px,4.5vw,66px);top:80px;text-shadow:none}
+.afterstrike .art-orbit{border-color:#96e6f233;box-shadow:none;animation:echo-card 5s ease-in-out infinite}
+.afterstrike .art-ball{width:27px;height:38px;border-radius:5px;background:#3c5363;border:1px solid #7a95a3;left:74%;top:60%;box-shadow:none}
+.afterstrike .art-ball:after{content:'';position:absolute;height:5px;width:55px;left:18px;top:0;background:#ffa89b;box-shadow:0 0 10px #ffa89b44;transform:rotate(-50deg);transform-origin:left}
+.afterstrike .art-trail{background:#a76666;width:36px;height:9px;left:68%;top:61%;transform:rotate(-25deg);border-radius:0}
+.afterstrike .obstacle.one{width:25px;height:37px;border-radius:5px;left:62%;top:62%;background:#608b9b44;border:1px solid #96e6f233;transform:none;box-shadow:none}
+.afterstrike .obstacle.two,.afterstrike .obstacle.three{display:none}
+.afterstrike .energy{background:#e8d49f;box-shadow:0 0 15px #e8d49f33;border-radius:0;transform:rotate(45deg)}
+.afterstrike .art-status{color:#96e6f2}
