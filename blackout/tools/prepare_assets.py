@@ -75,6 +75,18 @@ copies = {
     'flow.ogg': 'residue/residue-sfx/points.ogg',
     'wind.ogg': 'residue/residue-sfx/ventilator.ogg',
     'ambience.ogg': 'residue/residue-sfx/quietship.ogg',
+    'laser.ogg': 'scifi/Audio/laserSmall_001.ogg',
+    'laser-large.ogg': 'scifi/Audio/laserLarge_000.ogg',
+    'forcefield.ogg': 'scifi/Audio/forceField_001.ogg',
+    'door.ogg': 'scifi/Audio/doorOpen_001.ogg',
+    'footstep-snow-0.ogg': 'impact/Audio/footstep_snow_000.ogg',
+    'footstep-snow-1.ogg': 'impact/Audio/footstep_snow_002.ogg',
+    'bell.ogg': 'impact/Audio/impactBell_heavy_000.ogg',
+    'plate.ogg': 'impact/Audio/impactPlate_heavy_000.ogg',
+    'punch.ogg': 'impact/Audio/impactPunch_heavy_000.ogg',
+    'boom.ogg': 'residue/residue-sfx/boom.ogg',
+    'points.ogg': 'residue/residue-sfx/ptplus.ogg',
+    'healthpack.ogg': 'residue/residue-sfx/healthpack.ogg',
 }
 for name, source in copies.items():
     p = SOURCE / source

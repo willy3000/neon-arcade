@@ -1,31 +1,19 @@
-# Development progress — 9 October 2026
+# Development progress
 
-Delivered: an isolated Phaser game, a complete opening mission and a live-fire training range, integrated as the seventh NEON ARCADE card. This is the first campaign vertical slice, not a claim that the entire nine-mission brief is complete.
+## 10 October 2026 — campaign, Insane, economy
 
-## Foundation
+Delivered: five new operations (Acts I–II complete), HOLDOUT, the Insane tier, 17 guns with field drops and two-slot loadouts, eight gadgets, eleven new enemy types including three bosses, the armory economy with ranks, medals, daily contracts and streaks, an operations board with briefings and recommended gear, an animated debrief, and situational audio/visual feedback (low-health pulse with heartbeat and breathing, flashbang white-out, bullet whiz, damage-direction arcs, combo banners, slow-motion kills, weather, subway darkness).
 
-Inspected the static root deployment, library registry, prior save patterns and existing engine-free games. Researched Phaser and PixiJS, retrieved verified character/environment/audio assets and built a real atlas pipeline. Implemented distance-driven foot/torso animation and deterministic movement.
+Fixed: sprint was blocked after a reload or stim until a melee or roll, because the timers ended slightly negative and still read as active. Timers now settle at zero; a unit test and a real-browser test cover it. Controller Y now toggles weapons.
 
-Weakest three: character differentiation, transition continuity, asset provenance. Improved with Rook's olive/amber treatment and separate enemy shoulder markings, independent feet and 70ms clip crossfades, and source/license/modification records in the manifest. Dedicated action artwork remains a production gap.
+Found while testing: a THE CRASH reinforcement fallback point overlapped a crate (moved); resuming a checkpoint at a boss stage would throw on the first boss-health threshold (fixed, every checkpoint of every mission is now exercised on every difficulty); laser grids re-damaged every 0.32s (now a .7s contact cooldown).
 
-## Combat and advanced movement
-
-Implemented eight distinct range firearms, three campaign firearms, magazine/reserve transfer, deterministic recoil, startup/active/recovery knife combos, heavy/finishing hits, real destruction, frags/stims and five ordinary enemy types plus a commander. Slides, rolls, dives, vaults, underpasses and optional flow timing are live. Director warns before reinforcements and accounts for density, health, damage recovery and low ammunition.
-
-Weakest three: collision fidelity, repeated shield/commander pressure, animation-event synchronization. Added swept bullet tests and muzzle obstruction tests, real destruction/removal and validated vault landings. Shield facing protection can be bypassed by melee/explosives. The commander resists gunfire interruption, throws a telegraphed grenade at its first phase transition and uses a spread in its last phase. Melee active frames and buffered hitstop use simulation time. Automated normal-control replays verify actual campaign completion.
-
-## Opening mission
-
-Authored crash streets, relay patrol, supply alley and extraction courtyard, with dialogue, in-world shotgun/frag unlocks, four checkpoint positions, two reinforcement groups and a betrayal ending. Continue Campaign restores current progress. Training never overwrites the campaign. Later missions remain design work.
-
-Weakest three: checkpoint safety, equipment availability after restoration, narrative clarity. Rebuilt checkpoint encounters at verified clear positions, derived story equipment from the checkpoint stage, handled corrupt/blocked saves and displayed explicit opening-slice scope at the ending. The supply unlock and failed extraction are narrated in context.
-
-## QA, performance and polish
-
-27 core checks, three difficulty playthroughs, 15 production Chromium input/audio/graphics/settings/persistence checks, actual screenshots and the existing six games' test suites passed. A full browser control-driven playthrough reached the saved ending; live sprint → slide → vault triggered perfect flow. Failures were resolved; the report records the final outcome. Added static resource and SHA-256 validation and an explicit dist/ packaging script for Netlify; its output preserves all seven game routes and excludes source archives, QA and dependencies.
-
-Weakest three: costly static geometry rendering, software-WebGL performance and missing art/audio specificity. Baked permanent street/roof geometry into a texture. Profiled both Phaser renderers: this host uses SwiftShader software WebGL, so automatic detection selects Phaser's faster Canvas path on software-only systems while retaining hardware WebGL support. Kept sampled effects distinct and licensed, and documented adapted versus dedicated animation clips.
+Balance evidence: the control-packet bot completes every operation on standard (Convoy and Meridian with the modest upgrades a player owns by then). A human-limited open-field bot dies on Insane in THE CRASH (42.6s), NO SAFE GROUND (11.4s) and DEAD FREQUENCY (13.4s). A separate cover-using bot (`tests/tactical.cjs`) completes THE CRASH on standard and intense and reaches the final hold on Insane, but has not beaten Insane — Insane winnability is plausible, not proven by automation, and needs human playtesting.
 
 ## Remaining production work
 
-Human movement/combat playtesting and physical-speaker review; a bespoke Rook outfit and dedicated grenade, tumble and death clips; broader desktop/browser hardware profiling; additional surfaces/weather and richer destruction art; full gadget, upgrade/cosmetic and mastery presentation; chapters 2–9. Do not start campaign expansion before reviewing the slice's feel with real players.
+Human playtests of Insane and of the later operations' pacing; physical-controller testing; real speakers for the synthesized heartbeat/breathing mix; bespoke enemy and boss art (bosses and machines are drawn in code, soldiers reuse the licensed survivor rig with tints and overlays); Act III.
+
+## 9 October 2026 — opening slice
+
+Isolated Phaser game with THE CRASH and the training range; movement, combat, destruction, director and checkpoints; controller support with aim assist; static build and QA pipeline. See the git history for detail.

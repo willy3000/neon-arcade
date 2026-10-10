@@ -1,6 +1,6 @@
 # NEON ARCADE
 
-A nine-game browser arcade: BLOOD OATH, WILDFALL, BLACKOUT PROTOCOL, NEON RUSH, GRAVITY HEIST, ECHO FORGE, PHASEBOUND, RIFTBREAKERS, and AFTERSTRIKE. BLOOD OATH is a 2D one-on-one fighting game with local versus on two controllers, drawn entirely in code with CC0 sound and music. WILDFALL is a 2.5D action-platformer using locally vendored three.js with CC0 animated characters. BLACKOUT PROTOCOL is a top-down combat vertical slice using locally vendored Phaser, licensed sprite atlases and sampled audio. The other games use HTML5 Canvas and vanilla JavaScript. Deployment needs no compilation or backend.
+A nine-game browser arcade: BLOOD OATH, WILDFALL, BLACKOUT PROTOCOL, NEON RUSH, GRAVITY HEIST, ECHO FORGE, PHASEBOUND, RIFTBREAKERS, and AFTERSTRIKE. BLOOD OATH is a 2D one-on-one fighting game with local versus on two controllers, drawn entirely in code with CC0 sound and music. WILDFALL is a 2.5D action-platformer using locally vendored three.js with CC0 animated characters. BLACKOUT PROTOCOL is a top-down tactical campaign (six operations, endless HOLDOUT, armory economy, insane tier) using locally vendored Phaser, licensed sprite atlases and sampled audio. The other games use HTML5 Canvas and vanilla JavaScript. Deployment needs no compilation or backend.
 
 ## Run
 
@@ -187,21 +187,21 @@ Run `node afterstrike/test.cjs` for the verification suite and `node afterstrike
 
 ## Play BLACKOUT PROTOCOL
 
-Open `blackout-protocol.html` from a local server or choose its card in the library. **Deploy into campaign / Continue campaign** plays THE CRASH: recover the radio, reach the supply cache, cross Vesper City, hold extraction and survive the betrayal. Four checkpoints restore equipment and safely restart encounters. This release contains the opening mission and a live-fire range; the other eight chapters are planned, not playable.
+Open `blackout-protocol.html` from a local server or choose its card in the library. **Deploy into campaign** opens the operations board: six operations across Acts I–II (THE CRASH, NO SAFE GROUND, DEAD FREQUENCY, UNDERGROUND, IRON CONVOY, GHOST SIGNAL), each with a briefing, recommended gear, four difficulty tiers (story / standard / high intensity / **insane**) and a loadout of one primary, one secondary, one lethal and one tactical gadget. **Armory** spends credits on weapons, gadgets and upgrades and shows your rank, daily contracts and medals. **HOLDOUT** (after THE CRASH) is endless waves. The **training range** has every weapon and gadget and never changes progress.
 
-| Action | Default control |
-|---|---|
-| Move / aim / fire | WASD / mouse / left click |
-| Steady aim / sprint | Right click / Shift |
-| Roll / combat dive | Space / Shift + Space while moving |
-| Slide / vault / interact | Ctrl while sprinting / E |
-| Reload / rifle, shotgun, pistol | R / 1, 2, 3 |
-| Knife combo / heavy knife | Tap F / hold F |
-| Stim / frag | Q / G |
-| Pause | Escape |
+| Action | Keyboard / mouse | Controller |
+|---|---|---|
+| Move / aim / fire | WASD / mouse / left click | Left stick / right stick / RT |
+| Steady aim / sprint | Right click / Shift | LT (aim assist lock) / LB |
+| Roll / combat dive | Space / Shift + Space while moving | A |
+| Slide | Ctrl while sprinting | B |
+| Interact / vault | E | X (reloads when nothing is in reach) |
+| Reload | R (or fire an empty magazine) | D-pad left (or X) |
+| Swap weapon / select | X or mouse wheel / 1, 2 | **Y** |
+| Knife combo / heavy knife | Tap F / hold F | R3 |
+| Stim / lethal / tactical | Q / G / C | D-pad down / RB / D-pad up |
+| Pause | Escape | Start |
 
-Sprint → slide → vault during the first 0.44 seconds of the slide earns PERFECT FLOW: shorter traversal and stamina restoration. Sliding melee and melee → roll cancels also reward timing. Rolls have a short invulnerability window and stamina cost; damage interrupts healing. Barrels, vehicles, glass, crates, weak walls, low cover and electrical panels have real damage and collision changes. Infantry, rushers, snipers, shields and the staged commander use perception and readable attack preparation. Training adds a drone and all eight firearm definitions; select its slot-1 firearm in settings. Resupply at the southern locker with E. Training does not change campaign progress.
+Enemies drop their guns: walk over one you don't own to unlock it for good, press interact to swap it in now. Kills pay bounties, chained kills raise a combo multiplier, and the debrief adds completion, rating, medal, first-clear, contract, streak and difficulty bonuses (insane pays ×2.2). Low health brings a pulsing red vignette with heartbeat and breathing until you heal. All controls rebind in settings.
 
-Settings provide keyboard rebinding, story/standard/high intensity pressure, sampled effects volume, optional ambient music, shake strength, reduced flash and visual detail. Focus loss and hidden tabs pause play. Saves are versioned and tolerate unavailable storage. Desktop keyboard and mouse are the supported target.
-
-`npm ci` installs QA dependencies only. `npm test` runs deterministic systems and full campaign control-packet replays across all three difficulties; `npm run build` validates and packages the static distributable in `dist/`. `npm run test:browser` launches its own temporary server for real Chromium input, graphics, audio context, pause, settings and persistence checks. Install its browser with `npx playwright install chromium` if needed. See [game design](blackout/GAME_DESIGN.md), [asset licenses](blackout/ASSET_MANIFEST.md), [animation scope](blackout/ANIMATION_SPEC.md), [campaign plan](blackout/CAMPAIGN_PLAN.md), [testing](blackout/TEST_REPORT.md), and [progress](blackout/DEVELOPMENT_PROGRESS.md).
+`npm ci` installs QA dependencies only. `npm test` runs deterministic systems and control-packet replays of every operation (and checks that insane punishes open-field play); `npm run build` validates and packages the static distributable in `dist/`. `npm run test:browser` launches its own temporary server for real Chromium input, graphics, audio context, pause, settings and persistence checks. Install its browser with `npx playwright install chromium` if needed. See [game design](blackout/GAME_DESIGN.md), [asset licenses](blackout/ASSET_MANIFEST.md), [animation scope](blackout/ANIMATION_SPEC.md), [campaign plan](blackout/CAMPAIGN_PLAN.md), [testing](blackout/TEST_REPORT.md), and [progress](blackout/DEVELOPMENT_PROGRESS.md).

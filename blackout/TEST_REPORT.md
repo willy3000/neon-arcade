@@ -1,32 +1,18 @@
-# QA report — 9 October 2026
+# QA report — 10 October 2026
 
 ## Verified
 
-Final results: **27 core checks, three deterministic campaign completions, and 15 browser checks against the production `dist/` output passed**. The final production browser run completed the opening mission in 69.4 simulation seconds with all 15 hostiles defeated. Local asset requests returned successfully and no uncaught browser errors occurred.
+- **45 deterministic core checks** (`node blackout/tests/core.cjs`): the original movement/combat/destruction/save checks, plus sprint after reload and stim, empty-magazine reload, primary/secondary swap, 17 distinct firearms, rail breaching, gun drops → unlock → field equip, bounties and combos, Insane density/damage/bursts/anti-camp grenades, smoke/flash/decoy/EMP/mines/deployable cover, Bulwark armour and Warden generators, every map's spawn/enemy/pickup/objective placement, per-target checkpoints, every checkpoint of every mission on every difficulty, economy (rewards, medals, first clears, contracts, streaks, rank-ups, purchases, loadout validation), version-1 save migration and HOLDOUT waves.
+- **Campaign replays** (`node blackout/tests/walkthrough.cjs`): ordinary control packets only. THE CRASH completes on story/standard/intense; NO SAFE GROUND, DEAD FREQUENCY and UNDERGROUND on standard; IRON CONVOY and GHOST SIGNAL on standard with plating 1 + medic 1. A human-limited open-field model (0.3s reaction, finite turn rate, aim wobble) dies on Insane in the first three operations. Bot times reflect fast scripted aim, not human mission length.
+- **19 real-Chromium checks** (`npm run test:browser`), against the working tree and the `dist/` build: assets, WASD/slide/vault/roll/dive, fire/reload, 1/2/X/mouse-wheel swaps, sprint after reload, grenades and tactical gadgets, melee, pause, rebinding/persistence, all 17 range weapons, operations board + loadout picker + armory purchase + deploy, a stubbed controller swapping with **Y** and reloading with **X**, the low-health vignette clearing after a stim, v1 save migration and checkpoint restore, corrupt saves/offline fonts, a full keyboard-and-mouse playthrough of THE CRASH through the debrief, small-screen layout, library card and blocked storage. No uncaught page errors; median 55 FPS headless at 1366×768.
+- Other NEON ARCADE suites (WILDFALL, BLOOD OATH) still pass under `npm test`.
 
-- Deterministic Node system checks: movement response/normalization/braking, slide momentum, roll/dive protection and recovery, real vault landings and underpasses, eight firearms, reserve transfer, swept hit detection, muzzle obstruction, melee timing/combos/heavy shields, chain destruction, interrupted healing, line-of-sight perception, enemy telegraphs/reloads, story unlocks, warning distance/timing, checkpoint spawn safety, corrupt/outdated/blocked saves, bounded projectiles/effects, buffered hitstop, death/completion and bounded training respawns.
-- Full control-packet campaign replays: story, standard and high intensity all reach extraction and the ending through the actual simulation. The verifier never removes enemies or teleports Rook; its pathfinder sends ordinary movement, fire, reload, stim, grenade and interact inputs. Automated completion times around 46 seconds represent accurate bot aim, not a human mission-length estimate.
-- Real Chromium checks: title, local assets, keyboard motion/roll/dive/slide/vault, mouse fire, reload, shotgun, all eight range weapon choices, grenade effects, melee animation state, audio unlock/running context, frozen pause and released input, focus-loss handler, rebinding, settings persistence, checkpoint/equipment restoration, corrupt/blocked storage, optional fonts offline, responsive menus and seven-game library integration.
-- A full opening mission was completed in the actual rendered browser using only keyboard and mouse events, reading cloned diagnostics to choose the next action. It cleared all 15 hostiles, exercised the commander, reached the betrayal ending and wrote a valid completion record. One verified run took 77.1 simulation seconds. No simulation mutation, instant enemy kill or checkpoint bypass was used in this playthrough.
-- Existing NEON RUSH, GRAVITY HEIST, ECHO FORGE, PHASEBOUND, RIFTBREAKERS and AFTERSTRIKE suites all pass. Their game files are unchanged.
-- Static validation checks entry references, required atlas frames, essential audio, engine/license files and all seven game routes. Netlify packaging copies runtime files into `dist/`, excluding source archives, development dependencies and QA tools. Production browser checks serve that exact output folder.
+## Not verified
 
-Commands: `npm test`, `npm run build`, `npm run test:browser`, and `npm run test:browser -- --production` after building. The browser suite starts and stops its own localhost server; tests use isolated Chromium contexts and do not alter the user's saved progress. `npx playwright install chromium` installs the optional QA browser.
-
-## Performance and fixes
-
-The initial live render pass was limited by repeatedly submitting detailed street/roof graphics. Those permanent details now bake once into a texture. Profiling this Windows host found software WebGL (SwiftShader) at roughly 33–54 FPS depending on viewport; the equivalent Phaser Canvas path reached 59–60. Software detection selects the faster compatibility renderer while hardware WebGL remains available.
-
-The final production-browser sample at 1366 × 768 measured median **60 FPS**, with ten samples of 59–60. This is measured headless-host evidence, not a guarantee for every device. Effects and projectile counts are capped. Low visual detail reduces particles. Audio voices are capped and cached, ambient nodes are disconnected on scene exit, and static textures/scene objects are replaced on reset.
-
-Initial QA corrections: healing interruption test waited for post-heal immunity before applying damage; browser readiness uses a hidden loading element rather than asking it to become visible; reserved localhost port 8000 was avoided; sprite visibility is restored after camera culling; static rendering was baked; saved equipment is derived from the checkpoint; muzzle origins test intervening cover; commander gunfire interruption was reduced; training replacements reuse enemy records and get warnings. A first live automation route died; refining ordinary navigation and using Story for the browser completion scenario produced the verified full run. Standard/intense remain covered by deterministic control-packet replays.
+- Insane completion by a human. The cover-using model in `tests/tactical.cjs` reaches THE CRASH's final hold on Insane but has not won it. It is an optional QA tool, not part of `npm test`.
+- Physical controllers (only a stubbed `navigator.getGamepads`), real speakers for the synthesized heartbeat/breathing, other browsers and GPUs.
+- Later-operation pacing with real players.
 
 ## Visual artifacts
 
-Actual screenshots are under `blackout/qa/`: `title.png`, `training.png` when generated by the screenshot helper, `combat.png`, `crash.png`, `courtyard-route.png`, `extraction.png`, `ending.png`, `small-screen.png` and `library.png`. `browser-report.json` contains the latest machine results and FPS sample. QA files are deliberately excluded from production packaging.
-
-## Limits
-
-No connected in-app browser was available; local headless Chromium was used after checking the Browser skill's connection and recovery instructions. Actual clips decoded and the running audio context was checked, but physical speakers and subjective mix quality require a human listening pass. Automated inputs verify mechanics; they do not certify that every player will find the game feel satisfying. Other browser engines, touch/gamepad devices and dedicated GPU hardware were not certified. Desktop keyboard/mouse is the supported target.
-
-This release is one complete opening slice, not all nine chapters. The adapted roll/dive/death/throw art limitations and unimplemented later gadgets are recorded in ANIMATION_SPEC.md and DEVELOPMENT_PROGRESS.md. Those gaps should be reviewed before expansion.
+`blackout/qa/campaign-shots.cjs` and `effects-shots.cjs` (QA only, `?qa=1` hook) capture every screen, every mission, the low-health state, both mechanical bosses, the subway darkness and the debrief into `blackout/qa/`. QA files are excluded from the production build.

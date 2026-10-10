@@ -29,10 +29,10 @@
     {
       title: "BLACKOUT PROTOCOL",
       href: "blackout-protocol.html",
-      genre: "TACTICAL ACTION · OPENING MISSION",
+      genre: "TACTICAL ACTION · SIX-MISSION CAMPAIGN",
       description:
-        "Shot down. Cut off. Left for dead. Master slides, vaults and close-quarters combat in the occupied streets of Vesper City.",
-      controls: "KEYBOARD + MOUSE · CAMPAIGN + TRAINING",
+        "Shot down. Cut off. Left for dead. Fight through six operations, earn credits, build your loadout and survive INSANE.",
+      controls: "KEYBOARD + MOUSE / CONTROLLER · CAMPAIGN · HOLDOUT",
       bestKey: "blackout-protocol-progress",
       art: "blackout",
       caption: "THE MISSION IS OVER. YOUR WAR HAS JUST BEGUN.",
@@ -135,6 +135,11 @@
     if (game.campaign) {
       try {
         const saved = JSON.parse(localStorage.getItem(game.bestKey));
+        if (saved?.version === 2) {
+          const done = Object.values(saved.missions || {}).filter((m) => m?.done).length;
+          if (done) return `OPERATIONS ${Math.min(6, done)} / 6 · ${Math.max(0, Math.floor(Number(saved.credits) || 0))} CR`;
+          if (saved.run) return "CHECKPOINT SAVED";
+        }
         if (saved?.completed) return `THE CRASH / ${saved.best?.rating || "COMPLETE"}`;
         if (saved?.checkpoint) return `CHECKPOINT ${Math.min(4, Math.max(1, Number(saved.checkpoint.stage) + 1))} / 4`;
       } catch {}

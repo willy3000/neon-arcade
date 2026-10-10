@@ -1,0 +1,24 @@
+'use strict';
+// Visual QA for moments that are slow to reach by play: low health, gadgets, bosses, darkness, debrief. Uses the ?qa=1 hook.
+const {chromium}=require('playwright'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'../..'),out=__dirname,errors=[];
+const types={'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.svg':'image/svg+xml','.ogg':'audio/ogg','.wav':'audio/wav'};
+const server=http.createServer((req,res)=>{let f=path.join(root,decodeURIComponent(new URL(req.url,'http://x').pathname));fs.readFile(f,(e,d)=>{if(e){res.writeHead(404).end();return;}res.setHeader('Content-Type',types[path.extname(f)]||'application/octet-stream');res.end(d);});});
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const url=`http://127.0.0.1:${server.address().port}/blackout-protocol.html?qa=1`;const browser=await chromium.launch();const page=await browser.newPage({viewport:{width:1366,height:768}});
+ page.on('pageerror',e=>errors.push(e.stack));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+ await page.addInitScript(()=>{localStorage.setItem('blackout-protocol-progress',JSON.stringify({version:2,credits:900,xp:300,owned:{weapons:['rifle','pistol','shotgun','rocket','pulse'],gear:['frag','smoke','flash','emp','decoy','cover']},missions:{crash:{done:true,medals:['complete'],diffs:['standard']},ruins:{done:true},kestrel:{done:true},underground:{done:true},convoy:{done:true}},loadout:{primary:'rifle',secondary:'pistol',lethal:'frag',tactical:'smoke'},settings:{volume:0}}));});
+ await page.goto(url);await page.waitForFunction(()=>document.getElementById('loading')?.hidden,{timeout:30000});
+ const shot=async n=>{await page.screenshot({path:path.join(out,n+'.png')});console.log('shot',n);};
+ const deploy=async id=>{await page.click('#continue');await page.click(`[data-mission="${id}"]`);await page.click('#deploy');await page.waitForFunction(()=>BPApp.snapshot().mode==='playing');await page.waitForTimeout(400);};
+ await deploy('crash');
+ await page.evaluate(()=>{const s=BPQA.sim();s.enemies=[];s.player.health=18;s.player.armor=0;s.zones.push({kind:'smoke',x:s.player.x+180,y:s.player.y,r:170,life:10});s.zones.push({kind:'fire',x:s.player.x+20,y:s.player.y+160,r:95,life:6,tick:0});s.mines.push({x:s.player.x-80,y:s.player.y+40,arm:0});s.decoy={id:'decoy',x:s.player.x-140,y:s.player.y-60,radius:16,life:7,vx:0,vy:0};s.pickups.push({id:'qa-gun',x:s.player.x+70,y:s.player.y-50,type:'weapon',weapon:'precision',taken:false,ttl:0});s.events.push({type:'kill',x:s.player.x+60,y:s.player.y-20,credits:45,combo:3,enemy:'infantry'},{type:'damage',x:s.player.x,y:s.player.y,amount:10,fromX:s.player.x+400,fromY:s.player.y-100});});
+ await page.waitForTimeout(700);await shot('effects-lowhealth');
+ await page.keyboard.press('Escape');await page.click('#exit');
+ await deploy('meridian');await page.evaluate(()=>{const s=BPQA.sim(),core=s.map.stages[3];s.stage=3;s.player.x=1820;s.player.y=560;s.enemies=s.enemies.filter(e=>e.zone===2);for(const w of s.walls)if(w.gate)w.dead=true;});await page.waitForTimeout(5200);await shot('boss-warden');
+ await page.keyboard.press('Escape');await page.click('#exit');
+ await deploy('convoy');await page.evaluate(()=>{const s=BPQA.sim();s.stage=2;s.player.x=2560;s.player.y=700;s.enemies=[];});await page.waitForTimeout(5200);await shot('boss-bulwark');
+ await page.keyboard.press('Escape');await page.click('#exit');
+ await deploy('underground');await page.evaluate(()=>{const s=BPQA.sim();s.player.x=1580;s.player.y=1360;s.player.angle=-1.2;});await page.waitForTimeout(900);await shot('dark-tunnel');
+ await page.keyboard.press('Escape');await page.click('#exit');
+ await deploy('crash');await page.evaluate(()=>{const s=BPQA.sim();s.stats.kills=15;s.stats.flows=4;s.stats.credits=640;s.stats.intel=1;s.stats.bestCombo=5;s.stats.damage=12;s.mastery={rifle:22};s.completed=true;s.time=150;BPQA.end({type:'complete',rating:'S',score:9850,time:150});});await page.waitForTimeout(5200);await shot('debrief');
+ console.log('errors',JSON.stringify(errors));await browser.close();server.close();})().catch(e=>{console.error(e);process.exit(1);});

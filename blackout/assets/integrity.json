@@ -6,9 +6,24 @@
       "sha256": "4965baaab0d922993bd17931b7e9e57cddfb270d179febb20b6b99eaff3ae379"
     },
     {
+      "file": "audio/bell.ogg",
+      "bytes": 13915,
+      "sha256": "94b8bb5f2d43ab65e4bcc32b28562416e9bc2c51d9fd4be1e333660ee52f977f"
+    },
+    {
       "file": "audio/body.ogg",
       "bytes": 5351,
       "sha256": "7d3ba0bb5e60a11b5d3e558c141303dcf494256675fbf753c0d252d2cf0481e3"
+    },
+    {
+      "file": "audio/boom.ogg",
+      "bytes": 22435,
+      "sha256": "b8017e4ada1f5061779e202fb71545e8752a0602f0077dbc99d68d39cac900ae"
+    },
+    {
+      "file": "audio/door.ogg",
+      "bytes": 21442,
+      "sha256": "8c204ca94eb722d3af95f29221f4551938ca3c217fda32c14dabe2cf6a9c782b"
     },
     {
       "file": "audio/empty.ogg",
@@ -36,9 +51,24 @@
       "sha256": "b21fa546d74941196b25da8a20b7010abd8c05c4fcf93545d1f344e66a664e13"
     },
     {
+      "file": "audio/footstep-snow-0.ogg",
+      "bytes": 7880,
+      "sha256": "c05fa4a9dc9a7aabc04996466fb589537e49af76de9998d8f9e6270ec92dcef7"
+    },
+    {
+      "file": "audio/footstep-snow-1.ogg",
+      "bytes": 7694,
+      "sha256": "db52bafdc66304f3b999f2c29227826c65993916e630ac2ffbca17d07b263178"
+    },
+    {
       "file": "audio/footstep-wood.ogg",
       "bytes": 5895,
       "sha256": "9ff095b05cee5eec40b081defe3f0eef7232bb16d4865ce03b9f6dbab875cfdd"
+    },
+    {
+      "file": "audio/forcefield.ogg",
+      "bytes": 28947,
+      "sha256": "5574e69dd04e5f59322c5ddffde5978f077b09170ae5e29cec0bd9901828cd90"
     },
     {
       "file": "audio/glass.ogg",
@@ -49,6 +79,21 @@
       "file": "audio/heal.ogg",
       "bytes": 7889,
       "sha256": "e9bf081206e392e07c9b6208e5440b5244e58fd4b37d41990d0b9872b499f66d"
+    },
+    {
+      "file": "audio/healthpack.ogg",
+      "bytes": 9489,
+      "sha256": "33a4effe94c5ea62ee205d466b15f1c946339bb3f53916c0483f238f0ba8a1ef"
+    },
+    {
+      "file": "audio/laser-large.ogg",
+      "bytes": 25566,
+      "sha256": "a56d95794cd732d6c2d66ce488c14cf557fe526c282897c9a77675c2bd9b77e6"
+    },
+    {
+      "file": "audio/laser.ogg",
+      "bytes": 7448,
+      "sha256": "ab87913aba9790a0c5fa173d086267ba521ad522fcad2252271db49988313cf5"
     },
     {
       "file": "audio/metal.ogg",
@@ -64,6 +109,21 @@
       "file": "audio/pistol.ogg",
       "bytes": 12504,
       "sha256": "49b5954f78ef55b10b884b62b95f01650834d8104a7667b900203dd5c1023c30"
+    },
+    {
+      "file": "audio/plate.ogg",
+      "bytes": 10032,
+      "sha256": "112d4f93ddcc370b410630f971c0f5d991856102da9c76bc5c5540d388e75aaa"
+    },
+    {
+      "file": "audio/points.ogg",
+      "bytes": 12935,
+      "sha256": "e3553cac59df1ee38fcf0ae60c25b022e25ea3ace7ece9a83a6cdf15f1048de2"
+    },
+    {
+      "file": "audio/punch.ogg",
+      "bytes": 11617,
+      "sha256": "b33a8f14068aec24ec69ba85e5e87fdc41228975f6a1a3e44a6e7d6fc3d9f8d8"
     },
     {
       "file": "audio/radio.ogg",

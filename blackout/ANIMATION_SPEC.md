@@ -25,3 +25,7 @@ Animation events and simulation share state age: firing frame immediately accomp
 Missing from the original full-campaign animation list: dedicated lowered-ready/scanning/equipment-adjusting variants, authored landing/stumble/death/grenade/weapon-swap clips, climbing, revive, gadget-specific deployment, surface-specific clothing foley, foot IK and custom skeletal exports. The current clip blending is not a general skeletal blend-tree or inverse-kinematics implementation. These are explicit production gaps, not hidden placeholders.
 
 Next art pass should prioritize a dedicated grenade throw, ground tumble/death and a clearer bespoke Rook helmet/outfit before producing later chapters.
+
+## Campaign additions (10 October 2026)
+
+New soldier types reuse the same licensed rig with their gun's torso set (handgun, rifle or shotgun frames) or the knife set for rushers and ghosts, plus per-type tints and code-drawn overlays: breacher plates, grenadier bandolier, gunner ammo box, rocketeer launch tube, elite visor lights, Wraith visor and shimmer. Ghosts fade with distance and become solid up close, mid-strike, when hit or flashed. Sentry guns, bomb drones, the Bulwark carrier and the Warden mech are drawn entirely in code (rotating turrets and barrels, stepping legs, barrier hex ring, EMP sparks); they are not sprite animations. Two-slot weapon swaps, mines, decoys (a cyan hologram of Rook's rig) and deployable cover reuse existing layers. No new authored character sheets were added.
