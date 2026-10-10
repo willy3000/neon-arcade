@@ -32,7 +32,7 @@ Unchanged from the opening slice: 250/360 run/sprint, slide → vault PERFECT FL
 - Reload and stim timers now settle at exactly zero. Before, a tiny negative remainder still read as "reloading", which blocked sprint (and slowed movement and later reloads) until a melee or roll reset it.
 - Two weapon slots (primary + secondary), toggled with X / mouse wheel / controller **Y**, or selected with 1 / 2.
 - Firing an empty magazine starts a reload.
-- Controller X interacts or vaults when something is in reach, otherwise reloads; D-pad left is a dedicated reload.
+- Controller X interacts or vaults when something is in reach, otherwise reloads; D-pad up is a dedicated reload, D-pad left injects a stim, D-pad right switches the selected gadget and RB deploys it. D-pad down is unbound because rocker pads report it by accident while right is pressed.
 
 ## Weapons, drops and loadouts
 

@@ -2,11 +2,13 @@
   'use strict';
   const KEY='blackout-protocol-progress',VERSION=2;
   const bindings={up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',sprint:'ShiftLeft',roll:'Space',slide:'ControlLeft',interact:'KeyE',reload:'KeyR',swap:'KeyX',gadget:'KeyQ',melee:'KeyF',grenade:'KeyG',tactical:'KeyC',slot1:'Digit1',slot2:'Digit2'};
-  // Y toggles weapons. X interacts/vaults and, when there is nothing to interact with, reloads; D-pad left is a dedicated reload.
-  const padBindings={fire:'rt',aim:'lt',sprint:'lb',roll:'a',slide:'b',interact:'x',swap:'y',reload:'left',gadget:'down',melee:'rs',grenade:'rb',tactical:'up'},padButtons=['a','b','x','y','lb','rb','lt','rt','back','ls','rs','up','down','left','right'];
-  const W=World.weapons,G=World.gear,U=World.upgrades,MISSIONS=World.missions.map(m=>m.id),DIFFS=World.order;
+  // Y toggles weapons. X interacts/vaults and, when there is nothing to interact with, reloads; D-pad up is a dedicated reload.
+  // D-pad left injects a stim, D-pad right switches the selected gadget (lethal <-> tactical) and RB deploys whichever is selected.
+  // D-pad down is deliberately unbound: rocker pads report it by accident while right is pressed. PAD_LAYOUT bumps reset saved pad bindings.
+  const padBindings={fire:'rt',aim:'lt',sprint:'lb',roll:'a',slide:'b',interact:'x',swap:'y',reload:'up',gadget:'left',melee:'rs',grenade:'rb',cycle:'right'},padButtons=['a','b','x','y','lb','rb','lt','rt','back','ls','rs','up','down','left','right'];
+  const PAD_LAYOUT=3,W=World.weapons,G=World.gear,U=World.upgrades,MISSIONS=World.missions.map(m=>m.id),DIFFS=World.order;
   function defaults(){return {version:VERSION,credits:0,xp:0,owned:{weapons:['rifle','pistol'],gear:[]},upgrades:{},loadout:{primary:'rifle',secondary:'pistol',lethal:null,tactical:null},missions:{},run:null,holdout:{},mastery:{},contracts:{day:-1,list:[]},daily:{day:-1,streak:0},stats:{kills:0,missions:0,deaths:0},seen:[],
-    settings:{difficulty:'standard',volume:.65,music:true,shake:.45,flash:false,quality:'high',muted:false,gamepad:true,aimAssist:true,bindings:{...bindings},padBindings:{...padBindings}}};}
+    settings:{difficulty:'standard',volume:.65,music:true,shake:.45,flash:false,quality:'high',muted:false,gamepad:true,aimAssist:true,bindings:{...bindings},padBindings:{...padBindings},padLayout:PAD_LAYOUT}};}
   const num=(v,lo,hi,d=0)=>Number.isFinite(Number(v))?Math.max(lo,Math.min(hi,Number(v))):d,ids=(a,max=200)=>Array.isArray(a)?a.filter(x=>typeof x==='string'&&/^[A-Za-z0-9_-]{1,24}$/.test(x)).slice(0,max):[];
   function checkpoint(c){if(!c||!Number.isInteger(c.stage)||c.stage<0||c.stage>9)return null;const out={stage:c.stage,time:num(c.time,0,86400),kills:num(c.kills,0,1e5),damage:num(c.damage,0,1e6),flows:num(c.flows,0,1e5),credits:num(c.credits,0,1e7),intel:num(c.intel,0,9),killed:ids(c.killed),dead:ids(c.dead,40)};
     if(Number.isFinite(c.x)&&Number.isFinite(c.y)){out.x=num(c.x,0,1e4);out.y=num(c.y,0,1e4);}if(Array.isArray(c.slots)&&c.slots.length===2&&W[c.slots[0]]?.slot===0&&W[c.slots[1]]?.slot===1)out.slots=[c.slots[0],c.slots[1]];
@@ -17,7 +19,7 @@
     const candidate={...bindings,...s.bindings};const seen=new Set();let valid=true;
     for(const k of Object.keys(bindings)){const code=candidate[k];if(typeof code!=='string'||!/^([A-Z][A-Za-z]+[A-Za-z0-9]*|Space|Digit[0-9])$/.test(code)||code==='Escape'||seen.has(code))valid=false;seen.add(code);}
     if(valid)d.settings.bindings=Object.fromEntries(Object.keys(bindings).map(k=>[k,candidate[k]]));
-    const padCandidate={...padBindings,...s.padBindings},padSeen=new Set();let padValid=true;
+    const padCandidate={...padBindings,...(s.padLayout===PAD_LAYOUT?s.padBindings:{})},padSeen=new Set();let padValid=true;
     for(const k of Object.keys(padBindings)){const name=padCandidate[k];if(!padButtons.includes(name)||padSeen.has(name))padValid=false;padSeen.add(name);}
     if(padValid)d.settings.padBindings=Object.fromEntries(Object.keys(padBindings).map(k=>[k,padCandidate[k]]));}
   // Version 1 held one mission. Its checkpoint, completion, best result and unlocks become THE CRASH in the campaign; pad layouts reset because Y now swaps weapons.

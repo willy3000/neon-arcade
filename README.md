@@ -196,10 +196,10 @@ Open `blackout-protocol.html` from a local server or choose its card in the libr
 | Roll / combat dive | Space / Shift + Space while moving | A |
 | Slide | Ctrl while sprinting | B |
 | Interact / vault | E | X (reloads when nothing is in reach) |
-| Reload | R (or fire an empty magazine) | D-pad left (or X) |
+| Reload | R (or fire an empty magazine) | D-pad up (or X) |
 | Swap weapon / select | X or mouse wheel / 1, 2 | **Y** |
 | Knife combo / heavy knife | Tap F / hold F | R3 |
-| Stim / lethal / tactical | Q / G / C | D-pad down / RB / D-pad up |
+| Stim / lethal / tactical | Q / G / C | D-pad left / RB deploys the selected gadget, D-pad right switches lethal ↔ tactical |
 | Pause | Escape | Start |
 
 Enemies drop their guns: walk over one you don't own to unlock it for good, press interact to swap it in now. Kills pay bounties, chained kills raise a combo multiplier, and the debrief adds completion, rating, medal, first-clear, contract, streak and difficulty bonuses (insane pays ×2.2). Low health brings a pulsing red vignette with heartbeat and breathing until you heal. All controls rebind in settings.
