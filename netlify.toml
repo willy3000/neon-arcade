@@ -1,3 +1,0 @@
-[build]
-  command = "node blackout/tools/build-static.cjs"
-  publish = "dist"
