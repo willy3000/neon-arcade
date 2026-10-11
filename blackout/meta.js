@@ -28,7 +28,10 @@
   function unlocked(save,id){const i=World.missions.findIndex(m=>m.id===id);return i<=0||!!save.missions[World.missions[i-1].id]?.done;}
   const nextMission=save=>World.missions.find(m=>!save.missions[m.id]?.done)||null;
   function summarize(sim,extra={}){const r=World.order.includes(sim.difficulty)?sim.difficulty:'standard',rate=sim.completed?(()=>{const p=World.missions.find(m=>m.id===sim.mission)?.par||240,score=Math.max(0,Math.round(10000+sim.stats.flows*200-sim.stats.damage*14-Math.max(0,sim.time-p)*10));return {score,rating:score>=9600?'S':score>=8200?'A':score>=6500?'B':'C'};})():{score:0,rating:null};
-    return {mode:sim.mission==='holdout'?'holdout':sim.training?'training':'campaign',mission:sim.mission,difficulty:r,completed:sim.completed,time:sim.time,stats:{...sim.stats},mastery:{...sim.mastery},rating:rate.rating,score:rate.score,deaths:0,...extra};}
+    // Any holdout killhouse (the default one, or an endless variant overlaid on a campaign map) has a single
+    // wave-survival stage; checking that instead of the literal id covers every unlocked killhouse.
+    const endless=sim.map.objectives[0]?.kind==='endless';
+    return {mode:endless?'holdout':sim.training?'training':'campaign',mission:sim.mission,difficulty:r,completed:sim.completed,time:sim.time,stats:{...sim.stats},mastery:{...sim.mastery},rating:rate.rating,score:rate.score,deaths:0,...extra};}
   // Applies one finished run to the save and returns the debrief: every line the tally screen counts up, plus rank, medals and contracts.
   function settle(save,run,day=0){const report={lines:[],credits:0,xp:0,medals:[],contracts:[],mastery:[],rankUps:[],newBest:false,rankBefore:rankOf(save.xp)};
     if(run.mode==='training')return report;const D=World.difficulties[run.difficulty]||World.difficulties.standard,meta=World.missions.find(m=>m.id===run.mission);let sub=0;const line=(label,value,note='')=>{if(value){report.lines.push({label,value:Math.round(value),note});sub+=value;}};

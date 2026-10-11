@@ -70,5 +70,5 @@
   };
   const order = ['story','standard','intense','insane'];
   const mission = id => Missions.build(id);
-  return {weapons,archetypes,gear,upgrades,difficulties,order,missions:Missions.list,mission,campaign:()=>mission('crash'),training:()=>mission('range')};
+  return {weapons,archetypes,gear,upgrades,difficulties,order,missions:Missions.list,mission,campaign:()=>mission('crash'),training:()=>mission('range'),holdoutMaps:Missions.holdoutMaps};
 });

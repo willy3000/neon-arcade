@@ -250,7 +250,15 @@
       areas:[{x:270,y:420,label:'MOVEMENT LAB'},{x:1050,y:230,label:'LIVE FIRE'},{x:900,y:825,label:'SLIDE UNDER'},{x:295,y:1010,label:'RESUPPLY'}]});
   }
 
-  const builders={crash,ruins,kestrel,underground,convoy,meridian,holdout,range};
+  // Endless variants of the campaign maps: same geometry, pickups and theme, but the scripted stages/enemies are
+  // replaced with a single wave-survival stage (as in holdout() above) so the existing director spawns every enemy.
+  function endlessVariant(build,baseId){const base=build(),start=at(base.start);
+    return finish({...base,id:'holdout-'+baseId,enemies:[],
+      stages:[{kind:'endless',zone:0,x:start.x,y:start.y,name:'Survive the waves',hint:'Supplies drop between waves. Every fifth wave brings a commander.',spawn:start}],
+      intro:radio('LARK','Killhouse simulation, overlaid on a live operation zone. They keep coming until you stop.',6)});}
+  const builders={crash,ruins,kestrel,underground,convoy,meridian,holdout,range,
+    'holdout-crash':()=>endlessVariant(crash,'crash'),'holdout-ruins':()=>endlessVariant(ruins,'ruins'),'holdout-kestrel':()=>endlessVariant(kestrel,'kestrel'),
+    'holdout-underground':()=>endlessVariant(underground,'underground'),'holdout-convoy':()=>endlessVariant(convoy,'convoy'),'holdout-meridian':()=>endlessVariant(meridian,'meridian')};
   // Campaign order, briefing copy and recommended equipment. "rec" items are what the mission is tuned around; the briefing offers to buy them.
   const list=[
     {id:'crash',outro:'Your extraction burns over Vesper City. The missile came from your own side. Rook disappears into the ruins with one question: who gave the order?',n:1,act:'ACT I / THE FALL',title:'THE CRASH',sector:'VESPER CITY / SECTOR 07',terrain:'URBAN STREETS / MIXED RANGE',brief:'Recover your radio. Find a way out. Trust no one on the other end.',threats:['infantry','rusher','sniper','shield','commander'],rec:{weapons:['rifle'],gear:[],note:'A forgiving first night. Learn to slide, vault and break line of sight.'},par:240,reward:400},
@@ -260,5 +268,9 @@
     {id:'convoy',outro:'The Bulwark burns on Highway Nine. Inside the hauler is not a server but a key — the only way into Site Meridian, where the Blackout Protocol lives.',n:5,act:'ACT II / THE HUNT',title:'IRON CONVOY',sector:'HIGHWAY 9 / SALT FLATS',terrain:'OPEN DESERT / ARMOUR',brief:'Stop the Blackout convoy on Highway Nine and take its cargo from a Bulwark armoured carrier.',threats:['gunner','rocketeer','sniper','breacher','apc'],rec:{weapons:['thumper','rocket'],gear:['mine'],note:'The Bulwark shrugs off bullets. Bring explosives — a launcher, rockets or mines — or you will not dent it.'},par:480,reward:1000},
     {id:'meridian',outro:'Every name on the Blackout list is now public. Voss has traced Lark. ACT III / THE TRUTH — the assault on the Citadel — is in development. Your record, gear and rank carry over.',n:6,act:'ACT II / THE HUNT',title:'GHOST SIGNAL',sector:'SITE MERIDIAN / BLACK SITE',terrain:'LAB CORRIDORS / SENTRIES / LASERS',brief:'Break into the Halcyon black site, crack the core and upload every name on the Blackout list.',threats:['turret','elite','shield','drone','mech'],rec:{weapons:['pulse','rail'],gear:['emp'],note:'Armoured sentries and a shielded Warden. An EMP opens every lock in this building.'},par:540,reward:1250}];
   function build(id){return (builders[id]||builders.crash)();}
-  return {CELL,list,build,builders,canvas,parse,box,enemy};
+  // Holdout map picker metadata. The Killhouse is always unlocked; every other killhouse is a campaign map,
+  // locked until that operation is marked done.
+  const holdoutMaps=[{id:'holdout',title:'KILLHOUSE',sector:'ENDLESS',locks:null},
+    ...list.map(m=>({id:'holdout-'+m.id,title:m.title,sector:m.sector,locks:m.id}))];
+  return {CELL,list,build,builders,canvas,parse,box,enemy,holdoutMaps};
 });
