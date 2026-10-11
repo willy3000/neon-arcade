@@ -1,20 +1,51 @@
 {
-  "name": "neon-arcade",
-  "version": "1.0.0",
+  "name": "blackout-protocol-windows",
+  "version": "0.2.0",
   "private": true,
-  "description": "Static Neon Arcade games; development dependencies are used only for QA.",
+  "description": "Blackout Protocol: standalone Windows desktop build (Electron shell around the unmodified Phaser game).",
   "type": "commonjs",
+  "main": "electron/main.js",
   "scripts": {
-    "test": "node blackout/tests/core.cjs && node blackout/tests/walkthrough.cjs && npm run test:wildfall && npm run test:bloodoath",
-    "test:bloodoath": "node bloodoath/tests/engine.test.mjs",
-    "test:bloodoath:browser": "node bloodoath/tests/browser.cjs",
-    "test:wildfall": "node wildfall/tests/sim.test.mjs && node wildfall/tests/playthrough.test.mjs",
-    "test:wildfall:browser": "node wildfall/tests/browser.cjs",
-    "build": "node blackout/tools/build-static.cjs",
+    "test": "node blackout/tests/core.cjs && node blackout/tests/walkthrough.cjs",
     "test:browser": "node blackout/tests/browser.cjs",
-    "serve": "python -m http.server 8127 --bind 127.0.0.1"
+    "test:tactical": "node blackout/tests/tactical.cjs",
+    "serve": "python -m http.server 8127 --bind 127.0.0.1",
+    "start": "electron .",
+    "dist:win": "electron-builder --win"
   },
   "devDependencies": {
-    "playwright": "1.58.2"
+    "playwright": "1.58.2",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.0"
+  },
+  "build": {
+    "appId": "com.neonarcade.blackoutprotocol",
+    "productName": "Blackout Protocol",
+    "copyright": "Copyright (c) Neon Arcade",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "blackout-protocol.html",
+      "blackout/**/*",
+      "!blackout/qa/**",
+      "!blackout/tests/**",
+      "!blackout/tools/**",
+      "!blackout/*.md",
+      "!blackout/assets/source/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
