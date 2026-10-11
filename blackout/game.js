@@ -6,6 +6,11 @@
  const holdoutMap=id=>HOLD.find(h=>h.id===id)||HOLD[0],holdoutOpen=h=>!h.locks||!!save.missions[h.locks]?.done;
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;if(reduced){settings.shake=0;settings.flash=true;}
  let scene=null,mode='menu',bindingTarget=null,lastHud=0,radioUntil=0,toastUntil=0,bannerUntil=0,comboUntil=0,mouseFire=false,mouseAim=false,wheelSwap=false,hadSaveFailure=false,selected=null,armoryTab='weapons',armoryItem=null,armoryFrom='menu',run=null,timeScale=1,slowUntil=0,debriefTimers=[];
+ // LAN co-op (host-authoritative, 2 players, LAN only - see WINDOWS_PACKAGING.md). NET is null outside Electron
+ // (npm run serve has no preload/window.BPNet), so every host/join code path below is unreachable in the web build.
+ const NET=(typeof window!=='undefined'&&window.BPNet&&window.BPNet.available)?window.BPNet:null;
+ let netRole='solo',netConnected=false,netGuestInput={},netBroadcastAt=0,netHostHandler=null,netGuestHandler=null,netPort=47321;
+ if(NET){NET.onHostEvent(msg=>netHostHandler?.(msg));NET.onGuestEvent(msg=>netGuestHandler?.(msg));}
  const labels={up:'Move up',down:'Move down',left:'Move left',right:'Move right',sprint:'Sprint',roll:'Roll / dive',slide:'Slide',interact:'Interact / vault',reload:'Reload',swap:'Swap weapon',gadget:'Stim injector',melee:'Melee',grenade:'Lethal gadget',tactical:'Tactical gadget',slot1:'Primary weapon',slot2:'Secondary weapon'};
  const pad=new BPGamepad(),padTaps=new Set(),PAD_REACH=300,PAD_TURN=14,ASSIST_TURN=45,ASSIST_CONE=.7,ASSIST_BREAK=.6,padActionLabel=key=>({grenade:'Deploy gadget',cycle:'Switch gadget',fire:'Fire',aim:'Steady aim'})[key]||labels[key];
  let padGadget='lethal',padState=null,padActive=false,padAngle=0,padTarget=0,padAimIdle=0,padMenuStick=0,padBindingTarget=null,padLock=null,padLockLost=0,padReach=PAD_REACH;
@@ -93,7 +98,7 @@
    <h4>MEDALS</h4><div class="medal-table">${MISSIONS.map(m=>`<span>${String(m.n).padStart(2,'0')} ${Meta.unlocked(save,m.id)?esc(m.title):'CLASSIFIED'}<b class="medals">${medalRow(m.id)}</b></span>`).join('')}</div>`;}
  // ---------- runs ----------
  function launch(o){if(!scene)return;scene.audio.unlock();scene.audio.stopAmbient();for(const t of debriefTimers)clearTimeout(t);debriefTimers=[];
-  scene.sim=BPCore.create({training:o.mode==='training',mission:o.mission,difficulty:o.difficulty,checkpoint:o.checkpoint||null,loadout:o.loadout,owned:[...save.owned.weapons],profile:Meta.profile(save),seed:o.seed||1701});
+  scene.sim=BPCore.create({training:o.mode==='training',mission:o.mission,difficulty:o.difficulty,checkpoint:o.checkpoint||null,loadout:o.loadout,owned:[...save.owned.weapons],profile:Meta.profile(save),seed:o.seed||1701,guest:o.guest?{}:undefined});
   const meta=missionMeta(o.mission),training=o.mode==='training',hold=o.mode==='holdout',hm=hold?holdoutMap(o.mission):null;padGadget=scene.sim.player.lethal||!scene.sim.player.tactical?'lethal':'tactical';
   scene.renderer.build(scene.sim);scene.accumulator=0;padAngle=padTarget=scene.sim.player.angle||0;padAimIdle=0;padReach=PAD_REACH;timeScale=1;scene.audio.startAmbient(scene.sim.map.theme);
   $('training-equipment').hidden=!training;$('range-weapon').value='rifle';$('chapter').textContent=training?'LIVE FIRE / ALL EQUIPMENT':hold?'HOLDOUT / '+DL[o.difficulty].label:meta.act+' · '+DL[o.difficulty].label;$('mission-title').textContent=training?'TRAINING RANGE':hold?hm.title:meta.title;$('sector').textContent=training?'FIELD LAB / SECTOR 00':hold?'SIMULATION / '+hm.sector:meta.sector;
@@ -104,13 +109,68 @@
  function startMission(id,resume=false){if(!Meta.unlocked(save,id))return;const lo=Meta.loadout(save);
   if(resume&&save.run?.mission===id){run={...save.run};launch({mode:'campaign',mission:id,difficulty:run.difficulty,checkpoint:run.checkpoint,loadout:lo});return;}
   run={mode:'campaign',mission:id,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};save.run={...run,checkpoint:freshCheckpoint()};persist();launch({mode:'campaign',mission:id,difficulty:run.difficulty,loadout:lo});}
- function startHoldout(mapId='holdout'){run={mode:'holdout',mission:mapId,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};launch({mode:'holdout',mission:mapId,difficulty:run.difficulty,loadout:Meta.loadout(save),seed:1701+Math.floor(Math.random()*1e6)});}
- function openHoldoutPicker(){
+ function startHoldout(mapId='holdout'){netRole='solo';run={mode:'holdout',mission:mapId,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};launch({mode:'holdout',mission:mapId,difficulty:run.difficulty,loadout:Meta.loadout(save),seed:1701+Math.floor(Math.random()*1e6)});}
+ // Entry point from the main menu: offers Solo (today's exact flow) or, in the Electron build only, hosting/joining
+ // a LAN game. The map choice (openHoldoutPicker) is shared between solo and host; join skips straight to a lobby.
+ function openHoldoutModeChoice(){if(!NET){openHoldoutPicker('solo');return;}
+  const list=$('picker-list');list.replaceChildren();$('picker-eyebrow').textContent='HOLDOUT';$('picker-title').textContent='HOW DO YOU WANT TO PLAY?';
+  const opt=(label,sub,fn)=>{const b=document.createElement('button');b.type='button';b.className='pick';b.innerHTML=`<div class="pick-art"></div><div><b>${esc(label)}</b><span>${esc(sub)}</span></div>`;b.addEventListener('click',()=>{scene.audio.ui('select');fn();});list.append(b);};
+  opt('SOLO','Play alone, same as always.',()=>openHoldoutPicker('solo'));
+  opt('HOST LAN GAME','Pick a killhouse, then wait for someone on your network to join.',()=>openHoldoutPicker('host'));
+  opt('JOIN LAN GAME','Connect to a host already running on your network.',openJoinLobby);
+  if(!$('picker').open)$('picker').showModal();list.querySelector('button')?.focus();}
+ function openHoldoutPicker(role='solo'){
   const list=$('picker-list');list.replaceChildren();$('picker-eyebrow').textContent='HOLDOUT';$('picker-title').textContent='CHOOSE A KILLHOUSE.';
   for(const h of HOLD){const open=holdoutOpen(h),b=document.createElement('button');b.type='button';b.className='pick'+(open?'':' locked');
    b.innerHTML=`<div class="pick-art"></div><div><b>${esc(h.title)}</b><span>${open?esc(h.sector):'LOCKED · COMPLETE '+esc(missionMeta(h.locks)?.title||'')+' TO UNLOCK'}</span></div>`;
-   b.addEventListener('click',()=>{if(!open){scene.audio.ui('deny');return;}$('picker').close();startHoldout(h.id);scene.audio.ui('select');});list.append(b);}
-  $('picker').showModal();list.querySelector('button:not(.locked)')?.focus();}
+   b.addEventListener('click',()=>{if(!open){scene.audio.ui('deny');return;}$('picker').close();scene.audio.ui('select');if(role==='host')openHostLobby(h.id);else startHoldout(h.id);});list.append(b);}
+  if(!$('picker').open)$('picker').showModal();list.querySelector('button:not(.locked)')?.focus();}
+ // ---------- LAN co-op: host side ----------
+ function openHostLobby(mapId){netRole='host';netConnected=false;let addresses=[];
+  const render=()=>{const list=$('picker-list');list.replaceChildren();$('picker-eyebrow').textContent='HOST LAN GAME';$('picker-title').textContent=netConnected?'PLAYER CONNECTED.':'WAITING FOR A PLAYER…';
+   const row=document.createElement('div');row.className='pick';row.innerHTML=`<div class="pick-art"></div><div><b>YOUR ADDRESS</b><span>${esc(addresses.join(', ')||'No LAN address found')} · PORT ${netPort}</span></div>`;list.append(row);
+   const deploy=document.createElement('button');deploy.type='button';deploy.className='pick'+(netConnected?'':' locked');deploy.innerHTML=`<div class="pick-art"></div><div><b>DEPLOY</b><span>${netConnected?'Start the mission for both of you.':'Enabled once a player connects.'}</span></div>`;
+   deploy.addEventListener('click',()=>{if(!netConnected)return;$('picker').close();beginHostedRun(mapId);});list.append(deploy);
+   const cancel=document.createElement('button');cancel.type='button';cancel.className='pick';cancel.innerHTML='<div class="pick-art"></div><div><b>CANCEL</b><span>Stop hosting and go back.</span></div>';
+   cancel.addEventListener('click',()=>{NET.hostStop();netRole='solo';$('picker').close();});list.append(cancel);};
+  netHostHandler=msg=>{if(msg.type==='guestJoined'){netConnected=true;render();scene.audio.ui('select');}
+   else if(msg.type==='guestLeft'){netConnected=false;if(mode==='playing'&&run?.mode==='holdout'){if(scene.sim.guest)scene.sim.guest.dead=true;toast('PLAYER DISCONNECTED / CONTINUING SOLO');}else render();}
+   else if(msg.type==='input')netGuestInput=msg.input;};
+  NET.listLocalAddresses().then(a=>{addresses=a;render();});
+  NET.hostStart().then(port=>{netPort=port;render();});
+  if(!$('picker').open)$('picker').showModal();}
+ function beginHostedRun(mapId){netRole='host';netGuestInput={};netBroadcastAt=0;
+  run={mode:'holdout',mission:mapId,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};const seed=1701+Math.floor(Math.random()*1e6);
+  launch({mode:'holdout',mission:mapId,difficulty:run.difficulty,loadout:Meta.loadout(save),seed,guest:true});
+  NET.hostSend({type:'start',mission:mapId,difficulty:run.difficulty,seed});}
+ function buildSnapshot(s){return {player:s.player,guest:s.guest,enemies:s.enemies,walls:s.walls,projectiles:s.projectiles.filter(b=>b.active),grenades:s.grenades,zones:s.zones,mines:s.mines,hazards:s.hazards,spawnWarnings:s.spawnWarnings,pickups:s.pickups,decoy:s.decoy,director:s.director,goal:s.goal,progress:s.progress,stage:s.stage,stats:s.stats,dark:s.dark,dead:s.dead,completed:s.completed,time:s.time,boss:s.boss};}
+ // ---------- LAN co-op: guest side ----------
+ function openJoinLobby(){const list=$('picker-list');list.replaceChildren();$('picker-eyebrow').textContent='JOIN LAN GAME';$('picker-title').textContent="ENTER THE HOST'S ADDRESS.";
+  const row=document.createElement('div');row.className='pick';const art=document.createElement('div');art.className='pick-art';const info=document.createElement('div');
+  info.innerHTML='<b>HOST ADDRESS</b>';const ipInput=document.createElement('input');ipInput.type='text';ipInput.placeholder='192.168.1.23';ipInput.style.cssText='display:block;margin-top:6px;background:#283126;color:#c9d3bb;border:1px solid #4a5540;padding:7px;font:11px monospace;width:90%';
+  info.appendChild(ipInput);row.append(art,info);list.append(row);
+  const status=document.createElement('p');status.className='difficulty-note';list.append(status);
+  const connect=document.createElement('button');connect.type='button';connect.className='pick';connect.innerHTML='<div class="pick-art"></div><div><b>CONNECT</b><span>Connect to that address.</span></div>';
+  connect.addEventListener('click',async()=>{status.textContent='CONNECTING…';
+   try{await NET.guestConnect(ipInput.value.trim(),netPort);}catch{status.textContent='COULD NOT CONNECT / CHECK THE ADDRESS';return;}
+   status.textContent='CONNECTED / WAITING FOR THE HOST TO DEPLOY…';
+   netGuestHandler=msg=>{if(msg.type==='start')beginGuestRun(msg);else if(msg.type==='hostClosed'){netRole='solo';toast('HOST DISCONNECTED');if(mode==='playing')menu();}};});
+  list.append(connect);
+  const cancel=document.createElement('button');cancel.type='button';cancel.className='pick';cancel.innerHTML='<div class="pick-art"></div><div><b>CANCEL</b><span>Go back.</span></div>';
+  cancel.addEventListener('click',()=>{NET.guestDisconnect();$('picker').close();});list.append(cancel);
+  if(!$('picker').open)$('picker').showModal();ipInput.focus();}
+ function applySnapshot(sim,payload){if(payload.walls&&sim.walls){const byId=new Map(sim.walls.map(w=>[w.id,w]));for(const w of payload.walls){const existing=byId.get(w.id);if(existing)Object.assign(existing,w);}}
+  const {walls,...rest}=payload;Object.assign(sim,rest);}
+ function beginGuestRun(o){$('picker').close();netRole='guest';run={mode:'holdout',mission:o.mission,difficulty:o.difficulty,floor:o.difficulty,deaths:0};
+  scene.sim=BPCore.create({mission:o.mission,difficulty:o.difficulty,loadout:Meta.loadout(save),seed:o.seed||1701});
+  const hm=holdoutMap(o.mission);scene.renderer.build(scene.sim,scene.sim.player);scene.accumulator=0;timeScale=1;scene.audio.startAmbient(scene.sim.map.theme);
+  $('training-equipment').hidden=true;$('chapter').textContent='HOLDOUT / '+DL[o.difficulty].label;$('mission-title').textContent=hm.title;$('sector').textContent='SIMULATION / '+hm.sector;
+  $('pause-copy').textContent='Waves resume when you do. Dying ends the run and banks its credits.';$('retry').textContent='RESTART HOLDOUT';
+  $('radio').hidden=true;radioUntil=0;$('banner').className='banner';setMode('playing');$('status').textContent='ROOK / SIGNAL ACTIVE';scene.scale.refresh();scene.game.canvas.focus();lastHud=0;
+  netGuestHandler=msg=>{if(msg.type==='snapshot')applySnapshot(scene.sim,msg.payload);
+   else if(msg.type==='events'){for(const e of msg.list){scene.renderer.event(e);scene.audio.event(e);onEvent(e,true);}}
+   else if(msg.type==='hostClosed'){netRole='solo';toast('HOST DISCONNECTED / RUN ENDED');menu();}};
+  banner('HOLDOUT',hm.title,'SURVIVE AS LONG AS YOU CAN',3);}
  function startTraining(){run={mode:'training',mission:'range',difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};launch({mode:'training',mission:'range',difficulty:settings.difficulty});}
  function retry(){if(!run)return;if(run.mode==='training')startTraining();else if(run.mode==='holdout')startHoldout(run.mission);else startMission(run.mission,!!save.run);}
  function pause(){if(mode!=='playing')return;setMode('paused');scene.audio.pause();$('resume').focus();}
@@ -141,7 +201,12 @@
   for(const m of report.mastery){later(()=>award('mastery','WEAPON MASTERY',W[m.weapon].short+' '+'★'.repeat(m.level),m.perk.toUpperCase(),'medal',ICON('weapon',m.weapon)),t);t+=380;}
   for(const c of report.contracts.filter(c=>c.done)){later(()=>award('contract','CONTRACT',c.text,'PAID','medal'),t);t+=300;}
   if(report.newBest)later(()=>award('best','NEW PERSONAL BEST','RECORD','SAVED TO YOUR SERVICE RECORD','medal'),t);}
- function onEvent(e){const s=scene.sim;switch(e.type){
+ function onEvent(e,isGuest=false){const s=scene.sim;
+  // A guest never owns save/run state (the host's save is authoritative for this pass), so it skips every
+  // branch below that would persist() or settle() a run, and shows a plain message instead of a full ending.
+  if(isGuest&&(e.type==='death'||e.type==='complete')){toast(e.type==='death'?'HOST WENT DOWN / RUN OVER':'RUN COMPLETE');setTimeout(()=>{if(netRole==='guest')menu();},2500);return;}
+  if(isGuest&&['checkpoint','unlock','weaponfound'].includes(e.type))return;
+  switch(e.type){
   case 'radio':radio(e);break;case 'toast':toast(e.text);break;case 'flow':toast('PERFECT FLOW / MOMENTUM RETAINED',1.5);break;
   case 'checkpoint':if(run?.mode==='campaign'){save.run={...run,checkpoint:e.checkpoint};persist();}break;
   case 'unlock':for(const k of e.items){if(W[k]&&!save.owned.weapons.includes(k))save.owned.weapons.push(k);if(G[k]&&!save.owned.gear.includes(k))save.owned.gear.push(k);}persist();banner('SUPPLY CACHE','M870 + FRAG GRENADES','SHOTGUN ON THE GROUND · '+keyLabel('interact')+' TO SWAP IT IN',4,'gold',ICON('weapon','shotgun'));break;
@@ -157,7 +222,7 @@
   case 'armorbreak':toast('ARMOR BROKEN',1.4);break;case 'bossphase':toast('THE '+A[s.enemies.find(x=>x.id===e.id)?.type||'commander'].name+' IS ADAPTING',2);break;
   case 'flash':if(e.self&&!settings.flash){$('flashout').style.transition='none';$('flashout').style.opacity='.85';requestAnimationFrame(()=>{$('flashout').style.transition='opacity 1.3s ease-out';$('flashout').style.opacity='0';});}break;
   case 'death':case 'complete':end(e);break;}}
- function drain(){if(!scene?.sim)return;const events=scene.sim.events.splice(0);for(const e of events){scene.renderer.event(e);scene.audio.event(e);onEvent(e);if(mode!=='playing'&&(e.type==='death'||e.type==='complete'))break;}}
+ function drain(){if(!scene?.sim)return;const events=scene.sim.events.splice(0);if(netRole==='host'&&netConnected&&events.length)NET.hostSend({type:'events',list:events});for(const e of events){scene.renderer.event(e);scene.audio.event(e);onEvent(e);if(mode!=='playing'&&(e.type==='death'||e.type==='complete'))break;}}
  function formatTime(time){return Math.floor(time/60).toString().padStart(2,'0')+':'+Math.floor(time%60).toString().padStart(2,'0');}
  function minimap(s){const sx=148/s.map.width,sy=114/s.map.height;let svg='<svg viewBox="0 0 148 114" aria-label="Mission map">';for(const b of s.walls)if(!b.dead&&(b.kind==='building'||b.kind==='rock'))svg+=`<rect x="${b.x*sx}" y="${b.y*sy}" width="${b.w*sx}" height="${b.h*sy}" fill="${b.kind==='rock'?'#4f5a4c':'#68755e'}" opacity=".55"/>`;else if(!b.dead&&b.kind==='gate')svg+=`<rect x="${b.x*sx}" y="${b.y*sy}" width="${Math.max(1.5,b.w*sx)}" height="${Math.max(1.5,b.h*sy)}" fill="#d18c72"/>`;
   for(const e of s.enemies)if(e.active&&!e.dead&&!(e.gone>0)&&BPCore.distance(e,s.player)<1000)svg+=`<circle cx="${e.x*sx}" cy="${e.y*sy}" r="${A[e.type].boss?2.6:1.4}" fill="#d18c72"/>`;if(!s.training&&BPCore.stageDef(s).kind!=='endless')svg+=`<rect x="${s.goal.x*sx-2}" y="${s.goal.y*sy-2}" width="4" height="4" fill="none" stroke="#e2b074" stroke-width="1"/>`;svg+=`<circle cx="${s.player.x*sx}" cy="${s.player.y*sy}" r="2" fill="#e3e6c9"/></svg>`;return svg;}
@@ -203,7 +268,7 @@
  function showSettings(){if(mode==='playing')pause();for(const id of ['difficulty','volume','shake','quality'])$(id).value=settings[id];for(const id of ['music','flash','gamepad','aimAssist'])$(id).checked=settings[id];padStatus();bindings();$('settings').showModal();$('settings').querySelector('button,select,input')?.focus({preventScroll:true});}
  function settingsChanged(){settings.difficulty=$('difficulty').value;settings.volume=Number($('volume').value);settings.shake=Number($('shake').value);settings.music=$('music').checked;settings.flash=$('flash').checked;settings.gamepad=$('gamepad').checked;settings.aimAssist=$('aimAssist').checked;settings.quality=$('quality').value;padStatus();
   if(scene){scene.settings=settings;if(scene.sim&&['playing','paused'].includes(mode)&&run){scene.sim.difficulty=settings.difficulty;if(DIFFS.indexOf(settings.difficulty)<DIFFS.indexOf(run.floor||run.difficulty))run.floor=settings.difficulty;if(save.run&&run.mode==='campaign')save.run.floor=run.floor;}scene.audio.settings=settings;scene.audio.stopAmbient();if(mode==='playing')scene.audio.startAmbient(scene.sim.map.theme);}if(mode==='ops')renderOps();persist();}
- $('continue').addEventListener('click',()=>openOps());$('training').addEventListener('click',startTraining);$('holdout').addEventListener('click',openHoldoutPicker);$('armory-button').addEventListener('click',()=>openArmory('weapons',null,'menu'));
+ $('continue').addEventListener('click',()=>openOps());$('training').addEventListener('click',startTraining);$('holdout').addEventListener('click',openHoldoutModeChoice);$('armory-button').addEventListener('click',()=>openArmory('weapons',null,'menu'));
  $('deploy').addEventListener('click',()=>startMission(selected,false));$('resume-run').addEventListener('click',()=>startMission(selected,true));$('ops-armory').addEventListener('click',()=>openArmory('weapons',null,'ops'));$('ops-back').addEventListener('click',menu);
  $('armory-back').addEventListener('click',()=>armoryFrom==='ops'?openOps(selected):menu());for(const b of $('armory-tabs').children)b.addEventListener('click',()=>{armoryTab=b.dataset.tab;armoryItem=null;renderArmory();});
  $('picker-close').addEventListener('click',()=>$('picker').close());
@@ -280,11 +345,22 @@
   constructor(){super('field');}
   preload(){this.load.on('progress',v=>{$('load-bar').style.width=Math.round(v*100)+'%';});this.load.on('loaderror',file=>{if(this.loadFailed)return;this.loadFailed=true;$('load-text').textContent=location.protocol==='file:'?'CANNOT RUN FROM A LOCAL FILE / RUN "NPM RUN SERVE" THEN OPEN HTTP://127.0.0.1:8127/BLACKOUT-PROTOCOL.HTML':'ASSET LOAD FAILED: '+file.key+' / REFRESH TO RETRY';});BPRender.preload(this);BPAudio.preload(this);}
   create(){scene=this;this.settings=settings;this.renderer=new BPRender(this);this.audio=new BPAudio(this,settings);this.accumulator=0;this.cameras.main.setZoom(1.03);this.game.canvas.tabIndex=0;this.game.canvas.setAttribute('aria-label','Top-down battlefield. Use WASD to move, mouse to aim, and left click to fire, or a controller: left stick to move, right stick to aim, right trigger to fire, Y to swap weapons.');this.input.mouse.disableContextMenu();this.input.on('pointerdown',pointer=>{if(mode!=='playing')return;this.audio.unlock();if(pointer.button===0)mouseFire=true;if(pointer.button===2)mouseAim=true;});this.input.on('pointerup',pointer=>{if(pointer.button===0)mouseFire=false;if(pointer.button===2)mouseAim=false;});this.game.canvas.addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('pointerup',e=>{if(e.button===0)mouseFire=false;if(e.button===2)mouseAim=false;});if(!this.loadFailed)$('loading').hidden=true;updateContinue();document.body.dataset.phase='menu';
-   const inspect=()=>({mode,camera:{scrollX:this.cameras.main.scrollX,scrollY:this.cameras.main.scrollY,zoom:this.cameras.main.zoom,width:this.cameras.main.width,height:this.cameras.main.height,originX:this.cameras.main.originX,originY:this.cameras.main.originY},world:JSON.parse(JSON.stringify({map:this.sim.map,walls:this.sim.walls,player:this.sim.player,enemies:this.sim.enemies,stage:this.sim.stage,goal:this.sim.goal,time:this.sim.time,completed:this.sim.completed,dead:this.sim.dead,stats:this.sim.stats,hazards:this.sim.hazards,grenades:this.sim.grenades,pickups:this.sim.pickups,difficulty:this.sim.difficulty,spawnWarnings:this.sim.spawnWarnings,zones:this.sim.zones,director:this.sim.director,progress:this.sim.progress,mission:this.sim.mission,training:this.sim.training}))});
+   const inspect=()=>({mode,camera:{scrollX:this.cameras.main.scrollX,scrollY:this.cameras.main.scrollY,zoom:this.cameras.main.zoom,width:this.cameras.main.width,height:this.cameras.main.height,originX:this.cameras.main.originX,originY:this.cameras.main.originY},world:JSON.parse(JSON.stringify({map:this.sim.map,walls:this.sim.walls,player:this.sim.player,guest:this.sim.guest,enemies:this.sim.enemies,stage:this.sim.stage,goal:this.sim.goal,time:this.sim.time,completed:this.sim.completed,dead:this.sim.dead,stats:this.sim.stats,hazards:this.sim.hazards,grenades:this.sim.grenades,pickups:this.sim.pickups,difficulty:this.sim.difficulty,spawnWarnings:this.sim.spawnWarnings,zones:this.sim.zones,director:this.sim.director,progress:this.sim.progress,mission:this.sim.mission,training:this.sim.training}))});
    if(new URLSearchParams(location.search).has('qa'))window.BPQA={sim:()=>this.sim,end:e=>end(e),settle:()=>Meta,save};
    window.BPApp={inspect,snapshot:()=>this.sim?{mode,training:this.sim.training,mission:this.sim.mission,time:this.sim.time,stage:this.sim.stage,health:this.sim.player.health,armor:this.sim.player.armor,stamina:this.sim.player.stamina,x:this.sim.player.x,y:this.sim.player.y,state:this.sim.player.state,weapon:this.sim.player.slots[this.sim.player.slot],slots:[...this.sim.player.slots],ammo:this.sim.player.ammo[this.sim.player.slots[this.sim.player.slot]],reload:this.sim.player.reload,stims:this.sim.player.stims,grenades:this.sim.player.grenades,tacticals:this.sim.player.tacticals,kills:this.sim.stats.kills,flows:this.sim.stats.flows,credits:this.sim.stats.credits,activeEnemies:this.sim.enemies.filter(e=>!e.dead&&e.active).length,projectiles:this.sim.projectiles.filter(p=>p.active).length,particles:this.renderer.particles.filter(p=>p.active).length,danger:Number($('danger').style.opacity||0),iconTextures:this.textures.getTextureKeys().filter(k=>/^[wgp]:/.test(k)).length,audioUnlocked:this.audio.unlocked,audioContext:this.sound.context?.state,averageFps:this.game.loop.actualFps,save:JSON.parse(JSON.stringify(save))}:{mode,save:JSON.parse(JSON.stringify(save))}};
   }
-  update(time,delta){let dt=Math.min(delta/1000,.05);pollPad(dt);if(mode!=='playing'||!this.sim)return;const now=performance.now();timeScale+=((now<slowUntil?.32:1)-timeScale)*Math.min(1,dt*(now<slowUntil?14:5));dt*=timeScale;this.accumulator+=dt;let frameInput=input();let steps=0;while(this.accumulator>=BPCore.DT&&steps<7&&mode==='playing'){BPCore.step(this.sim,frameInput);this.accumulator-=BPCore.DT;steps++;pressed.clear();padTaps.clear();frameInput={...frameInput,roll:false,slide:false,interact:false,reload:false,swap:false,gadget:false,melee:false,grenade:false,tactical:false,slot:undefined};}drain();if(mode==='playing'||mode==='dead')this.renderer.update(this.sim,dt,padActive?padPointer:this.input.activePointer);if(time-lastHud>70&&mode==='playing'){lastHud=time;hud();}}
+  update(time,delta){let dt=Math.min(delta/1000,.05);pollPad(dt);if(mode!=='playing'||!this.sim)return;
+   if(netRole==='guest'){const frameInput=input();NET?.guestSend({type:'input',input:frameInput});
+    this.renderer.update(this.sim,dt,padActive?padPointer:this.input.activePointer,this.sim.guest||this.sim.player);
+    if(time-lastHud>70){lastHud=time;hud();}return;}
+   const now=performance.now();timeScale+=((now<slowUntil?.32:1)-timeScale)*Math.min(1,dt*(now<slowUntil?14:5));dt*=timeScale;this.accumulator+=dt;
+   let frameInput=input();if(netRole==='host')frameInput={...frameInput,guest:netGuestInput};
+   let steps=0;while(this.accumulator>=BPCore.DT&&steps<7&&mode==='playing'){BPCore.step(this.sim,frameInput);this.accumulator-=BPCore.DT;steps++;pressed.clear();padTaps.clear();
+    frameInput={...frameInput,roll:false,slide:false,interact:false,reload:false,swap:false,gadget:false,melee:false,grenade:false,tactical:false,slot:undefined,
+      guest:netRole==='host'?{...frameInput.guest,swap:false,melee:false,reload:false,slot:undefined}:undefined};}
+   drain();
+   if(netRole==='host'&&netConnected){netBroadcastAt-=dt;if(netBroadcastAt<=0){netBroadcastAt=1/24;NET.hostSend({type:'snapshot',payload:buildSnapshot(this.sim)});}}
+   if(mode==='playing'||mode==='dead')this.renderer.update(this.sim,dt,padActive?padPointer:this.input.activePointer);if(time-lastHud>70&&mode==='playing'){lastHud=time;hud();}}
  }
  function renderType(){const choice=new URLSearchParams(location.search).get('renderer');if(choice==='canvas')return Phaser.CANVAS;if(choice==='webgl')return Phaser.WEBGL;
   try{const testCanvas=document.createElement('canvas'),gl=testCanvas.getContext('webgl',{failIfMajorPerformanceCaveat:true});if(!gl)return Phaser.CANVAS;const ext=gl.getExtension('WEBGL_debug_renderer_info'),name=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'';const software=/swiftshader|llvmpipe|software/i.test(name);gl.getExtension('WEBGL_lose_context')?.loseContext();return software?Phaser.CANVAS:Phaser.AUTO;}catch{return Phaser.CANVAS;}}

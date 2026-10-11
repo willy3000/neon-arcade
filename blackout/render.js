@@ -21,7 +21,7 @@
   // Pooled images for icon-textured world items; unused ones are destroyed at the end of each frame.
   sprite(id,key){if(!this.scene.textures.exists(key))return null;let o=this.sprites.get(id);if(!o){o=this.scene.add.image(0,0,key).setDepth(6);this.sprites.set(id,o);}else if(o.texture.key!==key)o.setTexture(key);o.used=this.frame;o.setVisible(true);return o;}
   sweep(){for(const [id,o] of this.sprites)if(o.used!==this.frame){o.destroy();this.sprites.delete(id);}}
-  build(s){this.clear();this.lastMap=s.map.id;const scene=this.scene,g=scene.add.graphics().setDepth(0);this.staticObjects.push(g);const map=s.map,T=this.T=THEMES[map.theme]||THEMES.city;g.fillStyle(map.theme==='range'?C.asphalt:T.ground).fillRect(0,0,map.width,map.height);
+  build(s,self=s.player){this.clear();this.lastMap=s.map.id;const scene=this.scene,g=scene.add.graphics().setDepth(0);this.staticObjects.push(g);const map=s.map,T=this.T=THEMES[map.theme]||THEMES.city;g.fillStyle(map.theme==='range'?C.asphalt:T.ground).fillRect(0,0,map.width,map.height);
    // Permanent wear is deterministic, baked once, and is not a frame-time effect.
    let seed=4103;const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
    const specks=T.specks||[0x91a38a,0x19261e];for(let i=0;i<Math.round(map.width*map.height/1240);i++){const x=rand()*map.width,y=rand()*map.height;g.fillStyle(rand()>.5?specks[0]:specks[1],.1+rand()*.1).fillRect(x,y,1+rand()*4,1+rand()*2);}
@@ -50,7 +50,7 @@
    this.staticObjects.push(scene.add.image(0,0,'battlefield').setOrigin(0).setDepth(0));
    for(const a of map.areas||[]){const text=scene.add.text(a.x,a.y,a.label,{fontFamily:'monospace',fontSize:'10px',color:map.theme==='snow'||map.theme==='desert'?'#2c3330':'#a9b499'}).setAlpha(.48).setDepth(1);this.staticObjects.push(text);}
    this.weather=[];const count=map.weather==='snow'?140:map.weather==='dust'?70:map.theme==='ruins'?45:0;for(let i=0;i<count;i++)this.weather.push({x:Math.random(),y:Math.random(),z:.4+Math.random()*.8,p:Math.random()*6});
-   const cam=scene.cameras.main;cam.setBackgroundColor(map.theme==='subway'?'#0e0f11':'#252d24');cam.setBounds(0,0,map.width,map.height);this.cameraX=s.player.x;this.cameraY=s.player.y;cam.centerOn(this.cameraX,this.cameraY);
+   const cam=scene.cameras.main;cam.setBackgroundColor(map.theme==='subway'?'#0e0f11':'#252d24');cam.setBounds(0,0,map.width,map.height);this.cameraX=self.x;this.cameraY=self.y;cam.centerOn(this.cameraX,this.cameraY);
   }
   floors(g,map,T,rand){const color={road:T.road,alt:T.alt,mark:T.mark};
    for(const f of map.floors){g.fillStyle(color[f.type]||T.road).fillRect(f.x,f.y,f.w,f.h);
@@ -177,12 +177,13 @@
     case 'pickup':this.emit(e.x,e.y,8,'dust');break;
    }if(this.decals.length>160)this.decals.splice(0,this.decals.length-160);}
   shake(duration,intensity){const strength=this.scene.settings.shake;if(strength>0)this.scene.cameras.main.shake(duration*1000,intensity*strength);}
-  update(s,dt,pointer){if(this.lastMap!==s.map.id)this.build(s);this.frame++;const g=this.effects,l=this.lines,cam=this.scene.cameras.main,p=s.player,t=s.time;g.clear();l.clear();this.smoke.clear();this.uiGraphics.clear();
+  update(s,dt,pointer,self=s.player){if(this.lastMap!==s.map.id)this.build(s,self);this.frame++;const g=this.effects,l=this.lines,cam=this.scene.cameras.main,p=self,t=s.time;g.clear();l.clear();this.smoke.clear();this.uiGraphics.clear();
    const aimX=Math.cos(p.angle)*(p.aiming?115:65),aimY=Math.sin(p.angle)*(p.aiming?115:65),targetX=p.x+p.vx*.14+aimX,targetY=p.y+p.vy*.14+aimY,lerp=1-Math.exp(-dt*6);
    this.cameraX+=(targetX-this.cameraX)*lerp;this.cameraY+=(targetY-this.cameraY)*lerp;cam.centerOn(this.cameraX,this.cameraY);
    for(const b of s.walls)if(b.deployed&&!this.props.has(b.id))this.prop(b);
    for(const {container,b} of this.props.values()){container.setVisible(!b.dead);if(!b.dead&&Number.isFinite(b.hp)&&b.hp<b.maxHp)container.setAlpha(.6+.4*b.hp/b.maxHp);if(container.blink&&!b.dead)container.list[0].setAlpha(Math.sin(t*6)>0?1:.85);if(container.pulse&&!b.dead)container.setScale(1+.04*Math.sin(t*5));}
-   this.drawActor(p,s,dt,true);
+   this.drawActor(s.player,s,dt,true);
+   if(s.guest&&!s.guest.vanished)this.drawActor({...s.guest,id:'guest'},s,dt,true);else{const a=this.actors.get('guest');if(a)this.hide(a);}
    if(s.decoy)this.drawActor({id:'decoy',decoy:true,x:s.decoy.x,y:s.decoy.y,vx:0,vy:0,angle:Math.sin(t*1.3)*1.4,slots:p.slots,slot:p.slot,state:'idle',shotAge:10,age:0,duration:1,reload:0,heal:0},s,dt,true);else{const a=this.actors.get('decoy');if(a)this.hide(a);}
    for(const e of s.enemies){const visible=e.x>cam.worldView.x-120&&e.x<cam.worldView.right+120&&e.y>cam.worldView.y-120&&e.y<cam.worldView.bottom+120;if(visible)this.drawActor(e,s,dt,false);else{const a=this.actors.get(e.id);if(a)this.hide(a);}
     if(visible&&e.active&&!e.dead&&!(e.gone>0)){const meta=BPWorld.archetypes[e.type];if(e.attack>0){const k=Math.min(1,e.attackAge/e.attack),d=Math.min(meta.range||950,BPCore.distance(e,p)+40),aim=meta.static?e.angle:e.aim;
@@ -210,7 +211,7 @@
    for(const q of this.texts){if(q.life<=0)continue;q.life-=dt;q.y-=dt*44;q.obj.setPosition(q.x,q.y).setAlpha(Math.min(1,q.life*2.2)).setScale(1+Math.max(0,q.life-.75));if(q.life<=0)q.obj.setVisible(false);}
    if(p.aiming){l.lineStyle(1,0xc3cbb0,.3).lineBetween(p.x+Math.cos(p.angle)*40,p.y+Math.sin(p.angle)*40,p.x+Math.cos(p.angle)*500,p.y+Math.sin(p.angle)*500);}
    if(p.state==='melee'){const k=p.age/p.duration;l.lineStyle(p.heavy?5:3,0xd6d3ac,.35);l.beginPath();l.arc(p.x,p.y,p.heavy?68:52,p.angle-1+k*2,p.angle-.3+k*2);l.strokePath();}
-   this.darkness(s,cam);this.drawWeather(s,cam,dt);
+   this.darkness(s,cam,self);this.drawWeather(s,cam,dt);
    for(const e of s.enemies)if(e.active&&!e.dead&&!(e.gone>0)&&BPCore.distance(p,e)<1000)this.marker(e,C.red,cam,true);
    // Damage direction: a red arc on the side the hit came from, so cover can be chosen without guessing.
    this.hurt=this.hurt.filter(h=>(h.life-=dt)>0);for(const h of this.hurt){const r=Math.min(cam.width,cam.height)*.32;this.uiGraphics.lineStyle(10,C.red,.55*Math.min(1,h.life*1.6));this.uiGraphics.beginPath();this.uiGraphics.arc(cam.width/2,cam.height/2,r,h.angle-.32,h.angle+.32);this.uiGraphics.strokePath();}
@@ -236,8 +237,8 @@
     g.fillStyle(PICKUP[pick.type]||0x797153).fillRoundedRect(x-11,y-9+bob,22,18,2);if(pick.type==='health'||pick.type==='supply'){g.fillStyle(0xd4d8b7,.9).fillRect(x-2,y-6+bob,4,12).fillRect(x-6,y-2+bob,12,4);}}
    for(let i=labels;i<this.labels.length;i++)this.labels[i].setVisible(false);}
   // Blacked-out maps: a full-screen dark layer with a forward flashlight cone, a small personal glow, lamps, gunfire and explosions erased out of it.
-  darkness(s,cam){const level=s.dark||0;if(!level){if(this.dark)this.dark.setVisible(false);return;}const w=cam.width,h=cam.height;if(!this.dark){this.dark=this.scene.add.renderTexture(0,0,w,h).setOrigin(0).setScrollFactor(0).setDepth(15000);}if(this.dark.width!==w||this.dark.height!==h)this.dark.resize(w,h);
-   const rt=this.dark,b=this.brush,p=s.player,ox=cam.scrollX,oy=cam.scrollY,light=(x,y,r,steps=4)=>{for(let i=0;i<steps;i++)b.fillStyle(0xffffff,.28).fillCircle(x-ox,y-oy,r*(1-i*.18));};rt.setVisible(true).clear().fill(0x05070a,level);b.clear();
+  darkness(s,cam,self=s.player){const level=s.dark||0;if(!level){if(this.dark)this.dark.setVisible(false);return;}const w=cam.width,h=cam.height;if(!this.dark){this.dark=this.scene.add.renderTexture(0,0,w,h).setOrigin(0).setScrollFactor(0).setDepth(15000);}if(this.dark.width!==w||this.dark.height!==h)this.dark.resize(w,h);
+   const rt=this.dark,b=this.brush,p=self,ox=cam.scrollX,oy=cam.scrollY,light=(x,y,r,steps=4)=>{for(let i=0;i<steps;i++)b.fillStyle(0xffffff,.28).fillCircle(x-ox,y-oy,r*(1-i*.18));};rt.setVisible(true).clear().fill(0x05070a,level);b.clear();
    light(p.x,p.y,135);const a=p.angle,len=p.aiming?560:470,spread=p.aiming?.32:.46;for(let i=0;i<4;i++){const k=1-i*.16,sp=spread*k,L=len*k;b.fillStyle(0xffffff,.27).fillTriangle(p.x-ox,p.y-oy,p.x+Math.cos(a-sp)*L-ox,p.y+Math.sin(a-sp)*L-oy,p.x+Math.cos(a+sp)*L-ox,p.y+Math.sin(a+sp)*L-oy);b.fillCircle(p.x+Math.cos(a)*L*.82-ox,p.y+Math.sin(a)*L*.82-oy,L*Math.tan(sp)*.8);}
    for(const l of s.map.lights||[])light(l.x,l.y,level<.7?190:130,3);for(const f of this.flashes)light(f.x,f.y,f.explosion?f.radius*1.1:f.ring?f.radius*.5:85,2);for(const z of s.zones)if(z.kind==='fire')light(z.x,z.y,z.r*1.6,3);
    for(const e of s.enemies)if(!e.dead&&e.attack>0&&BPWorld.archetypes[e.type].locked)light(e.x,e.y,40,2);for(const g of s.grenades)if(g.enemy&&g.age>=g.duration)light(g.x,g.y,70,2);

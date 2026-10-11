@@ -6,9 +6,10 @@
   "type": "commonjs",
   "main": "electron/main.js",
   "scripts": {
-    "test": "node blackout/tests/core.cjs && node blackout/tests/walkthrough.cjs",
+    "test": "node blackout/tests/core.cjs && node blackout/tests/walkthrough.cjs && node blackout/tests/coop.cjs && node electron/net/test.cjs",
     "test:browser": "node blackout/tests/browser.cjs",
     "test:tactical": "node blackout/tests/tactical.cjs",
+    "test:e2e": "node electron/net/e2e.cjs",
     "serve": "python -m http.server 8127 --bind 127.0.0.1",
     "start": "electron .",
     "dist:win": "electron-builder --win"
@@ -34,6 +35,8 @@
       "!blackout/tools/**",
       "!blackout/*.md",
       "!blackout/assets/source/**",
+      "!electron/net/test.cjs",
+      "!electron/net/e2e.cjs",
       "package.json"
     ],
     "win": {

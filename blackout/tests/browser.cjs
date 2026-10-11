@@ -52,7 +52,7 @@ await check('a detected PlayStation controller shows brand-correct glyphs, and t
   const tap=async i=>{await pp.evaluate(i=>{window.__pad.buttons[i]={pressed:true,value:1};},i);await pp.waitForTimeout(80);await pp.evaluate(i=>{window.__pad.buttons[i]={pressed:false,value:0};},i);await pp.waitForTimeout(80);};
   // A background tab's requestAnimationFrame loop can be throttled under headless Chromium, so a single 80ms tap
   // occasionally lands between polls; retry the tap a few times rather than relying on one window landing.
-  const tapUntil=async(i,predicate)=>{for(let n=0;n<8;n++){if(await pp.evaluate(predicate))return;await tap(i);}await pp.waitForFunction(predicate,null,{timeout:5000});};
+  const tapUntil=async(i,predicate)=>{for(let n=0;n<20;n++){if(await pp.evaluate(predicate))return;await tap(i);}await pp.waitForFunction(predicate,null,{timeout:8000});};
   await tapUntil(0,()=>document.body.classList.contains('pad'));
   assert.equal(await pp.locator('#menu-controls').innerText().then(t=>t.includes('LEFT STICK')&&t.includes('RIGHT STICK')),true,'main menu hint switches to stick glyphs once a pad is active');
   await tapUntil(12,()=>document.activeElement.id==='settings-button');
