@@ -33,7 +33,7 @@
   $('status').textContent=cur?'CHECKPOINT SECURED':done===MISSIONS.length?'ACT II COMPLETE':done?'OPERATIONS '+done+' / '+MISSIONS.length:'AWAITING DEPLOYMENT';
   const show=cur||next||MISSIONS[MISSIONS.length-1];$('dossier-act').textContent=String(show.n).padStart(2,'0')+' / '+show.act.replace(' / ',' · ');$('dossier-title').textContent=show.title;$('dossier-copy').textContent=show.brief;$('dossier-chapter').textContent='CHAPTER '+['ONE','TWO','THREE','FOUR','FIVE','SIX'][show.n-1];$('dossier-sector').textContent=show.sector.replace(' / ',' · ');
   $('dossier-progress').textContent=done+' / '+MISSIONS.length;$('dossier-medals').textContent=medals+' / '+MISSIONS.length*5;$('dossier-status').textContent=cur?'CHECKPOINT SAVED':done===MISSIONS.length?'HUNTING VOSS':done?'ON THE RUN':'MISSING IN ACTION';$('dossier-n').textContent=String(show.n).padStart(2,'0')+' / '+String(MISSIONS.length).padStart(2,'0');
-  const hold=!!save.missions.crash?.done,best=Math.max(0,...Object.values(save.holdout));$('holdout').innerHTML=hold?`HOLDOUT / ENDLESS WAVES <span>${best?'BEST WAVE '+best:'↗'}</span>`:'HOLDOUT <span>FINISH THE CRASH TO UNLOCK</span>';$('holdout').classList.toggle('locked',!hold);refreshWallet();}
+  const best=Math.max(0,...Object.values(save.holdout));$('holdout').innerHTML=`HOLDOUT / ENDLESS WAVES <span>${best?'BEST WAVE '+best:'↗'}</span>`;$('holdout').classList.remove('locked');refreshWallet();}
  const SCREENS=['menu','ops','armory'];
  function setMode(value){mode=value;document.body.dataset.phase=value;const game=['playing','paused','dead','complete'].includes(value);document.body.classList.toggle('playing',game);for(const id of SCREENS)$(id).hidden=value!==id;$('hud').hidden=!['playing','paused'].includes(value);$('pause').hidden=value!=='paused';$('ending').hidden=!['dead','complete'].includes(value);if(!game){$('danger').style.opacity='0';$('flashout').style.opacity='0';}clearInput();if(scene?.game?.canvas)scene.game.canvas.style.cursor=value==='playing'?'none':'default';}
  // ---------- operations board ----------
@@ -104,8 +104,8 @@
  function startMission(id,resume=false){if(!Meta.unlocked(save,id))return;const lo=Meta.loadout(save);
   if(resume&&save.run?.mission===id){run={...save.run};launch({mode:'campaign',mission:id,difficulty:run.difficulty,checkpoint:run.checkpoint,loadout:lo});return;}
   run={mode:'campaign',mission:id,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};save.run={...run,checkpoint:freshCheckpoint()};persist();launch({mode:'campaign',mission:id,difficulty:run.difficulty,loadout:lo});}
- function startHoldout(mapId='holdout'){if(!save.missions.crash?.done){toast('FINISH THE CRASH TO UNLOCK HOLDOUT');return;}run={mode:'holdout',mission:mapId,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};launch({mode:'holdout',mission:mapId,difficulty:run.difficulty,loadout:Meta.loadout(save),seed:1701+Math.floor(Math.random()*1e6)});}
- function openHoldoutPicker(){if(!save.missions.crash?.done){toast('FINISH THE CRASH TO UNLOCK HOLDOUT');return;}
+ function startHoldout(mapId='holdout'){run={mode:'holdout',mission:mapId,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};launch({mode:'holdout',mission:mapId,difficulty:run.difficulty,loadout:Meta.loadout(save),seed:1701+Math.floor(Math.random()*1e6)});}
+ function openHoldoutPicker(){
   const list=$('picker-list');list.replaceChildren();$('picker-eyebrow').textContent='HOLDOUT';$('picker-title').textContent='CHOOSE A KILLHOUSE.';
   for(const h of HOLD){const open=holdoutOpen(h),b=document.createElement('button');b.type='button';b.className='pick'+(open?'':' locked');
    b.innerHTML=`<div class="pick-art"></div><div><b>${esc(h.title)}</b><span>${open?esc(h.sector):'LOCKED · COMPLETE '+esc(missionMeta(h.locks)?.title||'')+' TO UNLOCK'}</span></div>`;
