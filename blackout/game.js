@@ -11,10 +11,13 @@
  const today=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*60000)/86400000),fmt=n=>Math.round(n).toLocaleString('en-US'),esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
  const missionMeta=id=>MISSIONS.find(m=>m.id===id),gearName=k=>k?G[k].name:'NONE';
  function displayKey(code){return code.replace(/^Key|^Digit/,'').replace('Left','').replace('Right','');}
- function keyLabel(action){return padActive?BPGamepad.labels[settings.padBindings[action]]||'—':displayKey(settings.bindings[action]||'');}
+ function keyLabel(action){return padActive?BPGamepad.glyphs[pad.brand||'generic'][settings.padBindings[action]]||'—':displayKey(settings.bindings[action]||'');}
  function strip(){$('controls-strip').textContent=`${keyLabel('sprint')} SPRINT / ${keyLabel('slide')} SLIDE / ${keyLabel('roll')} ROLL / ${keyLabel('interact')} VAULT / ${keyLabel('swap')} SWAP / ${keyLabel('reload')} RELOAD / ${keyLabel('melee')} MELEE / ${padActive?'START':'ESC'} PAUSE`;}
- function setPadActive(value){padActive=value;document.body.classList.toggle('pad',value);if(value&&scene?.sim)padAngle=padTarget=scene.sim.player.angle;padAimIdle=0;strip();}
- function padStatus(){const name=settings.gamepad?pad.name:null;$('gamepad-status').textContent=!BPGamepad.supported?'NOT SUPPORTED IN THIS BROWSER':!settings.gamepad?'OFF':name?name.slice(0,34):'PRESS ANY BUTTON ON THE CONTROLLER';}
+ // Mirrors the in-game controls-strip for the main menu footer, which otherwise never reflects rebinding or a connected controller.
+ function menuHint(){const move=padActive?'LEFT STICK':[settings.bindings.up,settings.bindings.left,settings.bindings.down,settings.bindings.right].map(displayKey).join(' '),aim=padActive?'RIGHT STICK':'MOUSE';
+  $('menu-controls').innerHTML=`<kbd>${esc(move)}</kbd> MOVE <span>·</span> <kbd>${esc(aim)}</kbd> AIM <span>·</span> <kbd>${esc(keyLabel('roll'))}</kbd> EVADE <span>·</span> <kbd>${esc(keyLabel('swap'))}</kbd> SWAP`;}
+ function setPadActive(value){padActive=value;document.body.classList.toggle('pad',value);if(value&&scene?.sim)padAngle=padTarget=scene.sim.player.angle;padAimIdle=0;strip();menuHint();}
+ function padStatus(){const name=settings.gamepad?pad.name:null;$('gamepad-status').textContent=!BPGamepad.supported?'NOT SUPPORTED IN THIS BROWSER':!settings.gamepad?'OFF':name?(BPGamepad.brandName[pad.brand]||'CONTROLLER')+' · '+name.slice(0,34):'PRESS ANY BUTTON ON THE CONTROLLER';}
  function persist(){const ok=BPSave.write(storage,save);if(!ok&&!hadSaveFailure){hadSaveFailure=true;toast('STORAGE UNAVAILABLE / PROGRESS LASTS THIS SESSION');}return ok;}
  function clearInput(){held.clear();pressed.clear();padTaps.clear();padState=null;padLock=null;mouseFire=false;mouseAim=false;wheelSwap=false;}
  function toast(text,duration=2.5){$('toast').textContent=text;$('toast').style.opacity='1';toastUntil=performance.now()+duration*1000;}
@@ -188,9 +191,9 @@
  function bindButton(list,label,value,listening,prompt,pick){const button=document.createElement('button');button.type='button';button.innerHTML=`<span>${label}</span><b>${listening?prompt:value}</b>`;button.classList.toggle('listening',listening);button.addEventListener('click',pick);list.append(button);return button;}
  function bindings(){const list=$('bindings'),padList=$('pad-bindings');list.replaceChildren();padList.replaceChildren();
   for(const [key,label] of Object.entries(labels))bindButton(list,label,displayKey(settings.bindings[key]),bindingTarget===key,'PRESS KEY',()=>{bindingTarget=key;padBindingTarget=null;bindings();}).dataset.action=key;
-  for(const key of Object.keys(BPSave.padBindings))bindButton(padList,padActionLabel(key),BPGamepad.labels[settings.padBindings[key]],padBindingTarget===key,'PRESS BUTTON',()=>{padBindingTarget=key;bindingTarget=null;bindings();}).dataset.padAction=key;
-  strip();}
- function showSettings(){if(mode==='playing')pause();for(const id of ['difficulty','volume','shake','quality'])$(id).value=settings[id];for(const id of ['music','flash','gamepad','aimAssist'])$(id).checked=settings[id];padStatus();bindings();$('settings').showModal();}
+  for(const key of Object.keys(BPSave.padBindings))bindButton(padList,padActionLabel(key),BPGamepad.glyphs[pad.brand||'generic'][settings.padBindings[key]],padBindingTarget===key,'PRESS BUTTON',()=>{padBindingTarget=key;bindingTarget=null;bindings();}).dataset.padAction=key;
+  strip();menuHint();}
+ function showSettings(){if(mode==='playing')pause();for(const id of ['difficulty','volume','shake','quality'])$(id).value=settings[id];for(const id of ['music','flash','gamepad','aimAssist'])$(id).checked=settings[id];padStatus();bindings();$('settings').showModal();$('settings').querySelector('button,select,input')?.focus({preventScroll:true});}
  function settingsChanged(){settings.difficulty=$('difficulty').value;settings.volume=Number($('volume').value);settings.shake=Number($('shake').value);settings.music=$('music').checked;settings.flash=$('flash').checked;settings.gamepad=$('gamepad').checked;settings.aimAssist=$('aimAssist').checked;settings.quality=$('quality').value;padStatus();
   if(scene){scene.settings=settings;if(scene.sim&&['playing','paused'].includes(mode)&&run){scene.sim.difficulty=settings.difficulty;if(DIFFS.indexOf(settings.difficulty)<DIFFS.indexOf(run.floor||run.difficulty))run.floor=settings.difficulty;if(save.run&&run.mode==='campaign')save.run.floor=run.floor;}scene.audio.settings=settings;scene.audio.stopAmbient();if(mode==='playing')scene.audio.startAmbient(scene.sim.map.theme);}if(mode==='ops')renderOps();persist();}
  $('continue').addEventListener('click',()=>openOps());$('training').addEventListener('click',startTraining);$('holdout').addEventListener('click',startHoldout);$('armory-button').addEventListener('click',()=>openArmory('weapons',null,'menu'));
@@ -200,7 +203,7 @@
  $('pause-button').addEventListener('click',pause);$('resume').addEventListener('click',resume);$('retry').addEventListener('click',retry);$('exit').addEventListener('click',menu);$('ending-menu').addEventListener('click',menu);$('ending-retry').addEventListener('click',()=>{if(mode==='complete'&&run.mode==='campaign'){startMission(run.mission,false);}else retry();});
  $('ending-next').addEventListener('click',()=>{const meta=missionMeta(run.mission),next=MISSIONS[meta.n];if(next)openOps(next.id);});$('ending-armory').addEventListener('click',()=>openArmory('weapons',null,'menu'));
  $('settings-button').addEventListener('click',showSettings);$('pause-settings').addEventListener('click',showSettings);$('settings').addEventListener('close',()=>{bindingTarget=padBindingTarget=null;settingsChanged();});$('settings').addEventListener('cancel',()=>{bindingTarget=padBindingTarget=null;});for(const id of ['difficulty','volume','shake','quality','music','flash','gamepad','aimAssist'])$(id).addEventListener('change',settingsChanged);
- $('reset-bindings').addEventListener('click',()=>{settings.bindings={...BPSave.bindings};settings.padBindings={...BPSave.padBindings};bindingTarget=padBindingTarget=null;bindings();persist();});$('sound').addEventListener('click',()=>{settings.muted=!settings.muted;$('sound').textContent=settings.muted?'SOUND OFF':'SOUND ON';persist();if(scene){scene.audio.unlock();scene.audio.stopAmbient();if(mode==='playing')scene.audio.startAmbient(scene.sim.map.theme);}});$('sound').textContent=settings.muted?'SOUND OFF':'SOUND ON';
+ $('reset-bindings').addEventListener('click',()=>{settings.bindings={...BPSave.bindings};settings.padBindings={...BPSave.padBindings};bindingTarget=padBindingTarget=null;bindings();persist();});$('sound').addEventListener('click',()=>{settings.muted=!settings.muted;$('sound').textContent=settings.muted?'SOUND OFF':'SOUND ON';persist();if(scene){scene.audio.unlock();scene.audio.stopAmbient();if(mode==='playing')scene.audio.startAmbient(scene.sim.map.theme);}});$('sound').textContent=settings.muted?'SOUND OFF':'SOUND ON';strip();menuHint();
  const option=(sel,value,text)=>{const o=document.createElement('option');o.value=value;o.textContent=text;$(sel).append(o);};
  for(const [key,w] of Object.entries(W))option('range-weapon',key,w.name);for(const [key,g] of Object.entries(G))option(g.slot==='lethal'?'range-lethal':'range-tactical',key,g.name);
  $('range-weapon').addEventListener('change',()=>{if(!scene.sim?.training)return;const key=$('range-weapon').value,p=scene.sim.player;p.slots[W[key].slot]=key;p.slot=W[key].slot;p.reload=0;hud();});
@@ -210,21 +213,40 @@
  window.addEventListener('keyup',e=>held.delete(e.code));window.addEventListener('blur',()=>{clearInput();pause();});document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();pause();}});window.addEventListener('pagehide',()=>{if(scene){scene.audio.destroy();scene.game.destroy(true);}});
  window.addEventListener('wheel',e=>{if(mode==='playing'&&Math.abs(e.deltaY)>4)wheelSwap=true;},{passive:true});
  window.addEventListener('pointermove',e=>{if(padActive&&Math.hypot(e.movementX,e.movementY)>3)setPadActive(false);});window.addEventListener('pointerdown',()=>{if(padActive)setPadActive(false);});
- window.addEventListener('gamepadconnected',()=>{padStatus();if(settings.gamepad&&mode==='playing')toast('CONTROLLER CONNECTED');});window.addEventListener('gamepaddisconnected',()=>{padStatus();if(padActive&&mode==='playing')pause();});
+ window.addEventListener('gamepadconnected',()=>{padStatus();if(settings.gamepad&&mode==='playing')toast((BPGamepad.brandName[pad.brand]||'CONTROLLER')+' CONNECTED');});window.addEventListener('gamepaddisconnected',()=>{padStatus();if(padActive&&mode==='playing')pause();});
  function menuRoot(){return $('picker').open?$('picker'):$(mode==='paused'?'pause':['dead','complete'].includes(mode)?'ending':mode);}
- function padMenu(state){const root=menuRoot(),buttons=[...root.querySelectorAll('button')].filter(b=>b.offsetParent!==null&&!b.disabled),at=buttons.indexOf(document.activeElement),flick=Math.abs(state.move.y)>.6?Math.sign(state.move.y):0;
+ function padMenu(state){const root=menuRoot(),header=$('picker').open?[]:[$('sound'),$('settings-button')],buttons=[...root.querySelectorAll('button'),...header].filter(b=>b&&b.offsetParent!==null&&!b.disabled),at=buttons.indexOf(document.activeElement),flick=Math.abs(state.move.y)>.6?Math.sign(state.move.y):0;
   let dir=Number(state.tap.has('down')||state.tap.has('right'))-Number(state.tap.has('up')||state.tap.has('left'));if(flick!==padMenuStick){padMenuStick=flick;dir=dir||flick;}
   if(mode==='armory'&&!$('picker').open&&(state.tap.has('lb')||state.tap.has('rb'))){const tabs=['weapons','gear','upgrades','record'];armoryTab=tabs[(tabs.indexOf(armoryTab)+(state.tap.has('rb')?1:3))%4];armoryItem=null;renderArmory();$('armory-list').querySelector('button')?.focus();return;}
   if(state.tap.has('b')){if($('picker').open)$('picker').close();else if(mode==='paused')resume();else if(mode==='ops')menu();else if(mode==='armory')armoryFrom==='ops'?openOps(selected):menu();return;}
   if(at<0){if(dir||state.tap.has('a'))buttons[0]?.focus();return;}
   if(dir){const nextBtn=buttons[(at+dir+buttons.length)%buttons.length];nextBtn.focus();nextBtn.scrollIntoView({block:'nearest'});}if(state.tap.has('a'))buttons[at].click();}
+ // Full controller navigation for the settings dialog: up/down moves between every control (buttons, selects,
+ // checkboxes, ranges); left/right adjusts the focused control's value when it has one, otherwise also navigates.
+ function padSettings(state){
+  if(padBindingTarget){if(state.tap.has('start')){padBindingTarget=null;bindings();return;}
+   const name=[...state.tap].find(n=>n!=='start');if(name){const b=settings.padBindings,other=Object.keys(b).find(k=>b[k]===name);if(other)b[other]=b[padBindingTarget];b[padBindingTarget]=name;padBindingTarget=null;bindings();persist();}
+   return;}
+  if(bindingTarget)return;
+  if(state.tap.has('b')||state.tap.has('start')){$('settings').close();return;}
+  const fields=[...$('settings').querySelectorAll('button,select,input')].filter(el=>el.offsetParent!==null&&!el.disabled),at=fields.indexOf(document.activeElement);
+  const flick=Math.abs(state.move.y)>.6?Math.sign(state.move.y):0;
+  let vdir=Number(state.tap.has('down'))-Number(state.tap.has('up'));if(flick!==padMenuStick){padMenuStick=flick;vdir=vdir||flick;}
+  const hdir=Number(state.tap.has('right'))-Number(state.tap.has('left'));
+  if(at<0){if(vdir||hdir||state.tap.has('a'))fields[0]?.focus();return;}
+  const field=fields[at],adjustable=field.tagName==='SELECT'||field.type==='range'||field.type==='checkbox';
+  if(hdir&&adjustable){
+   if(field.tagName==='SELECT')field.selectedIndex=Math.max(0,Math.min(field.options.length-1,field.selectedIndex+hdir));
+   else if(field.type==='range'){const step=Number(field.step)||.05,min=Number(field.min),max=Number(field.max);field.value=Math.round(Math.min(max,Math.max(min,Number(field.value)+step*hdir))*100)/100;}
+   else field.checked=!field.checked;
+   field.dispatchEvent(new Event('change',{bubbles:true}));return;}
+  const dir=vdir||hdir;
+  if(dir){const next=fields[(at+dir+fields.length)%fields.length];next.focus();next.scrollIntoView({block:'nearest'});return;}
+  if(state.tap.has('a')){if(field.tagName==='BUTTON')field.click();else if(field.type==='checkbox'){field.checked=!field.checked;field.dispatchEvent(new Event('change',{bubbles:true}));}}
+ }
  function pollPad(dt){const state=settings.gamepad?pad.poll():null;if(!state){padState=null;if(padActive)setPadActive(false);return;}
   if(state.active&&!padActive)setPadActive(true);
-  if($('settings').open){const name=[...state.tap].find(n=>n!=='start');
-   if(!padBindingTarget){if(state.tap.has('b')||state.tap.has('start'))$('settings').close();}
-   else if(state.tap.has('start')){padBindingTarget=null;bindings();}
-   else if(name){const b=settings.padBindings,other=Object.keys(b).find(k=>b[k]===name);if(other)b[other]=b[padBindingTarget];b[padBindingTarget]=name;padBindingTarget=null;bindings();persist();}
-   return;}
+  if($('settings').open){padSettings(state);return;}
   if(state.tap.has('start')&&mode==='playing'){pause();return;}if(state.tap.has('start')&&mode==='paused'){resume();return;}
   if(mode!=='playing'){padMenu(state);return;}
   padState=state;const pb=settings.padBindings,p=scene.sim.player,aimHeld=state.down.has(pb.aim),stick=state.aim.len?Math.atan2(state.aim.y,state.aim.x):null;for(const [action,name] of Object.entries(pb))if(state.tap.has(name))padTaps.add(action);
