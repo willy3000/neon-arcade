@@ -1,10 +1,16 @@
 (function(root){'use strict';
- const files=['footstep-concrete-0.ogg','footstep-concrete-1.ogg','footstep-wood.ogg','footstep-snow-0.ogg','footstep-snow-1.ogg','metal.ogg','body.ogg','wood.ogg','glass.ogg','explosion.ogg','rumble.ogg','boom.ogg','radio.ogg','reload-rifle.wav','reload-pistol.wav','reload-shotgun.wav','pistol.ogg','rifle.ogg','shotgun.ogg','smg.ogg','laser.ogg','laser-large.ogg','forcefield.ogg','door.ogg','bell.ogg','plate.ogg','punch.ogg','points.ogg','healthpack.ogg','empty.ogg','pickup.ogg','heal.ogg','flow.ogg','wind.ogg','ambience.ogg'];
+ const files=['footstep-concrete-0.ogg','footstep-concrete-1.ogg','footstep-wood.ogg','footstep-snow-0.ogg','footstep-snow-1.ogg','metal.ogg','body.ogg','wood.ogg','glass.ogg','explosion.ogg','rumble.ogg','boom.ogg','radio.ogg','reload-rifle.wav','reload-pistol.wav','reload-shotgun.wav','pistol.ogg','rifle.ogg','shotgun.ogg','smg.ogg','laser.ogg','laser-large.ogg','forcefield.ogg','door.ogg','bell.ogg','plate.ogg','punch.ogg','points.ogg','healthpack.ogg','empty.ogg','pickup.ogg','heal.ogg','flow.ogg','wind.ogg','ambience.ogg','vo-welcome.ogg','vo-mission.ogg','vo-stay-sharp.ogg','vo-watch-six.ogg','vo-move-out.ogg',
+  // Generated in the same voice (see blackout/tools/voice/): orders, direction between fights, and the quiet moments.
+  'vo-hostiles.ogg','vo-contact.ogg','vo-boss.ogg','vo-hold.ogg','vo-low-health.ogg','vo-dry.ogg','vo-mate-down.ogg','vo-on-your-feet.ogg','vo-objective.ogg','vo-failed.ogg','vo-squad.ogg','vo-range.ogg','vo-area-clear.ogg','vo-quiet.ogg','vo-complete.ogg','vo-armory.ogg','vo-mode-holdout.ogg','vo-mode-campaign.ogg',
+  // More ways of announcing each mode, and the commander's word on every gun (vo-w-<weapon>) and gadget (vo-g-<gadget>) as it is bought or equipped.
+  'vo-mode-holdout-2.ogg','vo-mode-holdout-3.ogg','vo-mode-holdout-4.ogg','vo-mode-campaign-2.ogg','vo-mode-campaign-3.ogg','vo-mode-campaign-4.ogg','vo-range-2.ogg','vo-range-3.ogg',
+  'vo-w-rifle.ogg','vo-w-shotgun.ogg','vo-w-pistol.ogg','vo-w-smg.ogg','vo-w-marksman.ogg','vo-w-battle.ogg','vo-w-precision.ogg','vo-w-lmg.ogg','vo-w-autoshotgun.ogg','vo-w-launcher.ogg','vo-w-pulse.ogg','vo-w-rail.ogg','vo-w-machinepistol.ogg','vo-w-magnum.ogg','vo-w-sawedoff.ogg','vo-w-thumper.ogg','vo-w-rocket.ogg',
+  'vo-g-frag.ogg','vo-g-incendiary.ogg','vo-g-mine.ogg','vo-g-flash.ogg','vo-g-smoke.ogg','vo-g-emp.ogg','vo-g-decoy.ogg','vo-g-cover.ogg'];
  // Per-theme ambience bed (sample, volume, rate) layered under the drone score.
  const BEDS={city:[['wind',.035,.7],['ambience',.055,.7]],ruins:[['wind',.05,.55],['ambience',.05,.6]],snow:[['wind',.09,.45]],subway:[['ambience',.07,.45],['wind',.02,1.3]],desert:[['wind',.07,.85]],facility:[['ambience',.06,.9],['wind',.02,1.6]],range:[['wind',.035,.7],['ambience',.055,.7]]};
  const MUSIC='blackout/assets/audio/menu-music.mp3',MUSIC_VOLUME=.5;
  class Audio {
-  constructor(scene,settings){this.scene=scene;this.settings=settings;this.pools=new Map();this.step=0;this.ambience=[];this.nodes=[];this.unlocked=false;this.beatAt=0;this.breathAt=0;this.vitalsOn=false;this.lastWhiz=0;this.uiAt=0;
+  constructor(scene,settings){this.scene=scene;this.settings=settings;this.pools=new Map();this.step=0;this.ambience=[];this.nodes=[];this.unlocked=false;this.beatAt=0;this.breathAt=0;this.vitalsOn=false;this.lastWhiz=0;this.uiAt=0;this.voice=null;this.voices=new Map();this.rested={};this.duckUntil=0;
    // Menu score state. Browsers refuse to start sound before the first click or key press, so a refused start is retried on the next one.
    this.track=null;this.musicOn=false;this.musicBlocked=false;this.fadeTimer=0;
    // It also goes quiet whenever the window is hidden or another window has focus, like the rest of the game's sound.
@@ -87,16 +93,24 @@
   // Menu and lobby score: one looping track for every screen outside a mission, where the per-theme ambience and drone take
   // over. It plays through a plain media element, so it is not decoded during the loading bar, and it is fetched whole
   // first so that looping does not depend on the server answering range requests. Follows the same switches as the drone.
-  music(on){this.musicOn=on;const want=on&&!this.away&&!this.settings.muted&&this.settings.music&&this.settings.volume>0,target=want?Math.min(1,MUSIC_VOLUME*this.settings.volume):0;
+  music(on){this.musicOn=on;const want=on&&!this.away&&!this.settings.muted&&this.settings.music&&this.settings.volume>0,ducked=performance.now()<this.duckUntil,target=want?Math.min(1,MUSIC_VOLUME*this.settings.volume*(ducked?.3:1)):0;
    if(!this.track){if(!want)return;const track=this.track=document.createElement('audio');track.loop=true;track.volume=0;
     fetch(MUSIC).then(r=>r.ok?r.blob():Promise.reject(new Error('missing'))).then(b=>{track.src=URL.createObjectURL(new Blob([b],{type:'audio/mpeg'}));if(this.track===track)this.music(this.musicOn);}).catch(()=>{});return;}
    const track=this.track;if(!track.src)return;
    if(want&&track.paused)track.play()?.catch(()=>{this.musicBlocked=true;});
-   clearInterval(this.fadeTimer);const from=track.volume,start=performance.now(),ms=want?900:350;
+   clearInterval(this.fadeTimer);const from=track.volume,start=performance.now(),ms=!want?350:ducked?180:900;
    this.fadeTimer=setInterval(()=>{const k=Math.min(1,(performance.now()-start)/ms);track.volume=from+(target-from)*k;if(k>=1){clearInterval(this.fadeTimer);if(!want)track.pause();}},40);}
+  // Commander voice-over. One line speaks at a time: a new line is dropped while another is playing unless it is one
+  // that should cut in (the order that opens a run). Each line then rests for a while, so call-outs tied to frequent
+  // events - every wave, every objective - never turn into a loop. The menu score dips under the voice. Returns whether
+  // the line was actually spoken.
+  say(key,{cut=false,rest=45}={}){const ctx=this.scene.sound.context,now=performance.now();if(!this.live||this.settings.voice===false||!ctx||ctx.state!=='running'||!this.scene.cache.audio.exists(key))return false;
+   if(now<(this.rested[key]||0))return false;if(this.voice&&this.voice.isPlaying){if(!cut)return false;this.voice.stop();}
+   let line=this.voices.get(key);if(!line){line=this.scene.sound.add(key);this.voices.set(key,line);}this.voice=line;this.rested[key]=now+rest*1000;line.play({volume:Math.min(1,this.settings.volume*1.25)});
+   const length=(line.duration||2)*1000;this.duckUntil=now+length+150;this.music(this.musicOn);setTimeout(()=>this.music(this.musicOn),length+200);return true;}
   pause(){this.scene.sound.pauseAll();if(this.musicGain)this.musicGain.gain.value=0;this.vitalsOn=false;}
   resume(){this.scene.sound.resumeAll();this.pressure(0);}
-  destroy(){window.removeEventListener('pointerdown',this.onGesture);window.removeEventListener('keydown',this.onGesture);document.removeEventListener('visibilitychange',this.onVisibility);window.removeEventListener('blur',this.onVisibility);window.removeEventListener('focus',this.onVisibility);clearInterval(this.fadeTimer);if(this.track){this.track.pause();if(this.track.src)URL.revokeObjectURL(this.track.src);this.track=null;}this.stopAmbient();for(const pool of this.pools.values())for(const a of pool)a.destroy();this.pools.clear();}
+  destroy(){window.removeEventListener('pointerdown',this.onGesture);window.removeEventListener('keydown',this.onGesture);document.removeEventListener('visibilitychange',this.onVisibility);window.removeEventListener('blur',this.onVisibility);window.removeEventListener('focus',this.onVisibility);clearInterval(this.fadeTimer);if(this.track){this.track.pause();if(this.track.src)URL.revokeObjectURL(this.track.src);this.track=null;}this.stopAmbient();for(const pool of this.pools.values())for(const a of pool)a.destroy();this.pools.clear();for(const line of this.voices.values())line.destroy();this.voices.clear();}
  }
  root.BPAudio=Audio;
 })(globalThis);

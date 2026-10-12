@@ -4,6 +4,9 @@
  const $=id=>document.getElementById(id),save=BPSave.load(storage),settings=save.settings,pressed=new Set(),held=new Set();
  const W=BPWorld.weapons,G=BPWorld.gear,A=BPWorld.archetypes,U=BPWorld.upgrades,MISSIONS=BPWorld.missions,DIFFS=BPWorld.order,DL=BPWorld.difficulties,Meta=BPMeta,HOLD=BPWorld.holdoutMaps;
  const holdoutMap=id=>HOLD.find(h=>h.id===id)||HOLD[0],holdoutOpen=h=>!h.locks||!!save.missions[h.locks]?.done;
+ // Developer shortcut for trying out the armory: ?credits=99999 on the page address sets the wallet to that amount. It only
+ // works on a local address, which is how 'npm run start:rich' and 'npm run serve' run the game; a hosted copy ignores it.
+ {const grant=Math.floor(Number(new URLSearchParams(location.search).get('credits')));if(grant>0&&['127.0.0.1','localhost'].includes(location.hostname)){save.credits=Math.min(1e8,grant);BPSave.write(storage,save);}}
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;if(reduced){settings.shake=0;settings.flash=true;}
  let scene=null,mode='menu',bindingTarget=null,lastHud=0,radioUntil=0,toastUntil=0,bannerUntil=0,comboUntil=0,mouseFire=false,mouseAim=false,wheelSwap=false,hadSaveFailure=false,selected=null,armoryTab='weapons',armoryItem=null,armoryFrom='menu',run=null,timeScale=1,slowUntil=0,debriefTimers=[];
  // Co-op is host-authoritative and two-player, and can travel two ways. NET is the LAN transport: direct sockets, only
@@ -46,8 +49,31 @@
   $('dossier-progress').textContent=done+' / '+MISSIONS.length;$('dossier-medals').textContent=medals+' / '+MISSIONS.length*5;$('dossier-status').textContent=cur?'CHECKPOINT SAVED':done===MISSIONS.length?'HUNTING VOSS':done?'ON THE RUN':'MISSING IN ACTION';$('dossier-n').textContent=String(show.n).padStart(2,'0')+' / '+String(MISSIONS.length).padStart(2,'0');
   const best=Math.max(0,...Object.values(save.holdout));$('holdout-chip').textContent=best?'BEST WAVE '+best:'';$('holdout').classList.remove('locked');refreshWallet();}
  const SCREENS=['menu','ops','armory','lobby'];
+ // The menu, the pre-game screens and dialogs are laid out for a 1366x768 window and scaled to fit whatever window they
+ // are in, larger or smaller (see the body.fit rules in style.css), so no screen ever needs to scroll as a page.
+ // --screen-w/h give the window's size in those scaled units. Below FIT_MIN the text would be too small to read (a
+ // phone-sized browser window), so the screens stay at their natural size there and scroll instead.
+ const FIT_MIN=.63;
+ function fitScreens(){const raw=Math.min(innerWidth/1366,innerHeight/768),fit=raw>=FIT_MIN,k=fit?Math.min(2.6,raw):1,root=document.documentElement.style;root.setProperty('--ui-scale',k.toFixed(3));root.setProperty('--screen-w',(innerWidth/k).toFixed(1));root.setProperty('--screen-h',(innerHeight/k).toFixed(1));
+  document.body.classList.toggle('fit',fit);document.body.classList.toggle('tall',fit&&innerHeight/k>=850);}
+ window.addEventListener('resize',fitScreens);fitScreens();
  // The menu score plays on every screen in SCREENS and hands over to the mission's own ambience once a run starts.
  function score(){scene?.audio?.music(SCREENS.includes(mode));}
+ // Commander voice-over cues. The welcome is spoken once per launch, the first time the main menu can make sound: at
+ // once in the desktop app, after the first click or key press in a browser. The rest are in launch(), beginGuestRun()
+ // and onEvent(); audio.js decides whether a line may actually speak.
+ let greeted=false,voiceHurt=false,voiceDry=false;
+ function greet(){if(!greeted&&scene&&mode==='menu')greeted=scene.audio.say('vo-welcome',{cut:true,rest:0});}
+ // Moments that come round often have several lines, spoken in turn, so the same cue does not always get the same words.
+ const VOICE={wave:['vo-hostiles','vo-stay-sharp','vo-contact','vo-hold'],lull:['vo-watch-six','vo-area-clear','vo-quiet'],stage:['vo-objective','vo-stay-sharp'],
+  holdout:['vo-mode-holdout','vo-mode-holdout-2','vo-mode-holdout-3','vo-mode-holdout-4'],campaign:['vo-mode-campaign','vo-mode-campaign-2','vo-mode-campaign-3','vo-mode-campaign-4'],range:['vo-range','vo-range-2','vo-range-3']},voiceTurn={},voiceLast={};
+ function voice(cue,opts){const lines=VOICE[cue];voiceTurn[cue]=((voiceTurn[cue]??-1)+1)%lines.length;return scene.audio.say(lines[voiceTurn[cue]],opts);}
+ // Opening a mode announces it every time, with one of that mode's lines picked at random and never the same one twice
+ // running. It cuts off whatever the commander was saying, so stepping from one mode to another never overlaps.
+ function voiceAny(cue){if(!scene)return false;const lines=VOICE[cue];let i;do i=Math.floor(Math.random()*lines.length);while(lines.length>1&&i===voiceLast[cue]);
+  const said=scene.audio.say(lines[i],{cut:true,rest:0});if(said)voiceLast[cue]=i;return said;}
+ // The commander's word on a gun or gadget as it is bought or equipped: what it is and how to use it in the field.
+ function itemVoice(kind,key){if(key&&(kind==='weapon'||kind==='gear'))scene?.audio.say('vo-'+(kind==='weapon'?'w-':'g-')+key,{cut:true,rest:90});}
  // The animated title-screen backdrop (fire over the cover painting, plus a small live battle run by the real
  // simulation - see menu-scene.js) only runs while the main menu is the screen in front and the window has focus.
  // Reduced motion leaves the painting still.
@@ -63,10 +89,10 @@
  function navLand(el){if(!el||el===navAt||el.disabled)return;navAt=el;if(navOn()&&performance.now()-navClick>50&&navQuiet()>90)scene.audio.ui('hover');}
  document.addEventListener('pointerover',e=>navLand(navOf(e)));document.addEventListener('pointerout',e=>{if(navAt&&!(e.relatedTarget instanceof Node&&navAt.contains(e.relatedTarget)))navAt=null;});document.addEventListener('focusin',e=>navLand(navOf(e)));
  document.addEventListener('click',()=>{navLive=navOn();navFrom=mode;navClick=performance.now();},true);
- document.addEventListener('click',e=>{const el=navOf(e);if(!navLive||!el||el.disabled||!el.matches('button,a')||scene.audio.uiAt>=navClick)return;scene.audio.ui(mode==='playing'&&navFrom!=='paused'?'launch':el.matches('.text-button,.close,#armory-back')?'back':'select');});
+ document.addEventListener('click',e=>{const el=navOf(e);if(!navLive||!el||el.disabled||!el.matches('button,a')||scene.audio.uiAt>=navClick)return;scene.audio.ui(mode==='playing'&&navFrom!=='paused'?'launch':el.matches('.text-button,.close,.back-button')?'back':'select');});
  document.addEventListener('change',e=>{if(navOn()&&navOf(e)&&navQuiet()>60)scene.audio.ui('tick');});
  // Sound can only start after the first click, key press or controller input, so that is when it is switched on.
- for(const type of ['pointerdown','keydown'])window.addEventListener(type,()=>{if(scene&&!scene.audio.unlocked)scene.audio.unlock();},true);
+ for(const type of ['pointerdown','keydown'])window.addEventListener(type,()=>{if(scene&&!scene.audio.unlocked)scene.audio.unlock();if(!greeted)setTimeout(greet,200);},true);
  function setMode(value){mode=value;document.body.dataset.phase=value;const game=['playing','paused','dead','complete'].includes(value);document.body.classList.toggle('playing',game);for(const id of SCREENS)$(id).hidden=value!==id;$('hud').hidden=!['playing','paused'].includes(value);$('pause').hidden=value!=='paused';$('ending').hidden=!['dead','complete'].includes(value);if(!game){$('danger').style.opacity='0';$('flashout').style.opacity='0';document.body.classList.remove('downed');}score();backdrop();clearInput();if(scene?.game?.canvas)scene.game.canvas.style.cursor=value==='playing'?'none':'default';}
  // ---------- operations board ----------
  function openOps(id){if(!scene)return;selected=id||selected||save.run?.mission||Meta.nextMission(save)?.id||'crash';if(!Meta.unlocked(save,selected))selected=Meta.nextMission(save)?.id||'crash';scene.audio?.stopAmbient();setMode('ops');renderOps();$('ops').scrollTop=0;$('deploy').focus({preventScroll:true});}
@@ -81,7 +107,7 @@
   const rec=$('brief-rec');rec.replaceChildren();const head=document.createElement('p');head.className='rec-note';head.innerHTML=`<b>RECOMMENDED</b> ${esc(m.rec.note)}`;rec.append(head);
   for(const [kind,key] of [...m.rec.weapons.map(k=>['weapon',k]),...m.rec.gear.map(k=>['gear',k])]){const item=kind==='weapon'?W[key]:G[key],have=Meta.owns(save,kind,key),slot=kind==='weapon'?(item.slot===0?'primary':'secondary'):item.slot,on=save.loadout[slot]===key,cost=Meta.price(save,kind,key),b=document.createElement('button');b.type='button';b.className='rec-item'+(have?' owned':'')+(on?' on':'');
    b.innerHTML=`<i class="rec-art">${ICON(kind,key)}</i><span>${esc(item.name)}</span><b>${on?'EQUIPPED':have?'EQUIP':save.credits>=cost?'BUY '+fmt(cost)+' CR':fmt(cost)+' CR'}</b>`;
-   b.addEventListener('click',()=>{if(!have){const r=Meta.buy(save,kind,key);if(!r.ok){toast(r.reason);scene.audio.ui('deny');return;}scene.audio.ui('buy');toast(item.name+' PURCHASED');}save.loadout[slot]=key;save.loadout=Meta.loadout(save);persist();refreshWallet();renderOps();});rec.append(b);}
+   b.addEventListener('click',()=>{if(!have){const r=Meta.buy(save,kind,key);if(!r.ok){toast(r.reason);scene.audio.ui('deny');return;}scene.audio.ui('buy');toast(item.name+' PURCHASED');}save.loadout[slot]=key;save.loadout=Meta.loadout(save);persist();refreshWallet();renderOps();itemVoice(kind,key);});rec.append(b);}
   const dp=$('difficulty-pick');dp.replaceChildren();for(const d of DIFFS){const b=document.createElement('button');b.type='button';b.className=(settings.difficulty===d?'active ':'')+d;b.innerHTML=`<span>${DL[d].label}</span><small>×${DL[d].reward} CR</small>`;b.addEventListener('click',()=>{settings.difficulty=d;persist();renderOps();});dp.append(b);}
   $('difficulty-note').textContent={story:'Forgiving fire and frequent medkits. For the story.',standard:'The intended fight. Cover matters; mistakes are survivable.',intense:'Faster, deadlier enemies that throw grenades at campers.',insane:'Skill tier. Twice the soldiers, three-round bursts that lead your movement, grenades for anyone who camps. Fight from cover or die.'}[settings.difficulty];
   // Rook's own card beside the briefing: the soldier carries whatever primary is equipped, over rank and progress to the next one.
@@ -98,10 +124,10 @@
   const keys=gun?Object.keys(W).filter(k=>W[k].slot===(slot==='primary'?0:1)):[null,...Object.keys(G).filter(k=>G[k].slot===slot)];
   for(const key of keys){const have=key===null||(gun?save.owned.weapons:save.owned.gear).includes(key),item=key&&(gun?W[key]:G[key]),b=document.createElement('button');b.type='button';b.className='pick'+(save.loadout[slot]===key?' on':'')+(have?'':' locked');
    const lvl=gun?Meta.masteryLevel(save.mastery[key]||0):0;b.innerHTML=key===null?'<div class="pick-art"></div><div><b>NONE</b><span>Leave this slot empty.</span></div>':`<div class="pick-art">${ICON(gun?'weapon':'gear',key)}</div><div><b>${esc(item.name)}${gun&&lvl?' <em>'+'★'.repeat(lvl)+'</em>':''}</b><span>${have?esc(item.desc):'LOCKED · '+(item.drop?'DROPPED BY '+esc(item.drop).toUpperCase()+' · ':'')+'ARMORY '+fmt(item.price)+' CR'}</span></div>`;
-   b.addEventListener('click',()=>{if(!have){$('picker').close();openArmory(gun?'weapons':'gear',key,mode==='lobby'?'lobby':'ops');return;}save.loadout[slot]=key;save.loadout=Meta.loadout(save);persist();$('picker').close();loadoutChanged();scene.audio.ui('select');});list.append(b);}
+   b.addEventListener('click',()=>{if(!have){$('picker').close();openArmory(gun?'weapons':'gear',key,mode==='lobby'?'lobby':'ops');return;}save.loadout[slot]=key;save.loadout=Meta.loadout(save);persist();$('picker').close();loadoutChanged();scene.audio.ui('select');itemVoice(gun?'weapon':'gear',key);});list.append(b);}
   $('picker').showModal();list.querySelector('.on,button')?.focus();}
  // ---------- armory ----------
- function openArmory(tab='weapons',item=null,from=mode==='ops'?'ops':mode==='complete'||mode==='dead'?'menu':'menu'){armoryTab=tab;armoryItem=item;armoryFrom=from;scene?.audio?.stopAmbient();setMode('armory');renderArmory();($('armory-list').querySelector('.active')||$('armory-list').querySelector('button'))?.focus();}
+ function openArmory(tab='weapons',item=null,from=mode==='ops'?'ops':mode==='complete'||mode==='dead'?'menu':'menu'){armoryTab=tab;armoryItem=item;armoryFrom=from;scene?.audio?.stopAmbient();setMode('armory');scene?.audio?.say('vo-armory',{rest:600});renderArmory();($('armory-list').querySelector('.active')||$('armory-list').querySelector('button'))?.focus();}
  function armoryBack(){if(armoryFrom==='lobby'&&lobby)showLobby();else if(armoryFrom==='ops')openOps(selected);else menu();}
  function bars(w){const max={damage:240*1,rate:16,range:1900,mobility:1.1,capacity:75},dps=w.damage*w.pellets/w.rate;return [['DAMAGE',Math.min(1,w.damage*w.pellets/200)],['FIRE RATE',Math.min(1,(1/w.rate)/16)],['RANGE',w.range/max.range],['MOBILITY',(w.mobility-.6)/.5],['MAGAZINE',Math.min(1,w.capacity/max.capacity)],['DPS',Math.min(1,dps/420)]].map(([l,v])=>`<div class="bar"><span>${l}</span><i style="--v:${Math.max(.04,Math.min(1,v)).toFixed(2)}"></i></div>`).join('');}
  function renderArmory(){for(const b of $('armory-tabs').children)b.classList.toggle('active',b.dataset.tab===armoryTab);const list=$('armory-list'),detail=$('armory-detail');list.replaceChildren();refreshWallet();
@@ -119,17 +145,18 @@
   if(kind==='weapon'){const kills=save.mastery[key]||0,lvl=Meta.masteryLevel(kills),next=Meta.MASTERY[lvl];const slot=item.slot===0?'primary':'secondary';
    body=`<p class="ad-kind">${item.slot===0?'PRIMARY':'SECONDARY'} · ${item.cls.toUpperCase()}${item.pierce?' · PIERCES '+item.pierce:''}${item.explosive?' · EXPLOSIVE':''}${item.breach?' · BREACHES COVER':''}</p><h3>${esc(item.name)}</h3><p>${esc(item.desc)}</p><div class="bars">${bars(item)}</div>
     <div class="mastery"><b>MASTERY ${'★'.repeat(lvl)}${'☆'.repeat(3-lvl)}</b><span>${kills} KILLS${next?' · '+(next-kills)+' TO '+Meta.MASTERY_PERKS[lvl].toUpperCase():' · MASTERED'}</span></div><p class="ad-source">${have?'IN YOUR ARMORY':item.drop?'FIELD DROP: '+esc(item.drop).toUpperCase()+' — KILL ONE AND WALK OVER THE GUN':'ARMORY ONLY'}</p>`;
-   if(have)actions.push([save.loadout[slot]===key?'EQUIPPED AS '+slot.toUpperCase():'EQUIP AS '+slot.toUpperCase(),()=>{save.loadout[slot]=key;save.loadout=Meta.loadout(save);persist();renderArmory();scene.audio.ui('select');}]);}
+   if(have)actions.push([save.loadout[slot]===key?'EQUIPPED AS '+slot.toUpperCase():'EQUIP AS '+slot.toUpperCase(),()=>{save.loadout[slot]=key;save.loadout=Meta.loadout(save);persist();renderArmory();scene.audio.ui('select');itemVoice('weapon',key);}]);}
   else if(kind==='gear'){body=`<p class="ad-kind">${item.slot.toUpperCase()} GADGET · ${item.count} CHARGES PER MISSION</p><h3>${esc(item.name)}</h3><p>${esc(item.desc)}</p><p class="ad-source">${have?'IN YOUR ARMORY':'ARMORY ONLY'} · ${item.slot==='lethal'?keyLabel('grenade'):keyLabel('tactical')} TO USE</p>`;
-   if(have)actions.push([save.loadout[item.slot]===key?'EQUIPPED':'EQUIP',()=>{save.loadout[item.slot]=key;save.loadout=Meta.loadout(save);persist();renderArmory();scene.audio.ui('select');}]);}
+   if(have)actions.push([save.loadout[item.slot]===key?'EQUIPPED':'EQUIP',()=>{save.loadout[item.slot]=key;save.loadout=Meta.loadout(save);persist();renderArmory();scene.audio.ui('select');itemVoice('gear',key);}]);}
   else{const lvl=save.upgrades[key]||0;body=`<p class="ad-kind">PERMANENT UPGRADE · LEVEL ${lvl} / 3</p><h3>${esc(item.name)}</h3><p>${esc(item.desc)}</p><div class="pips">${[0,1,2].map(i=>`<i class="${i<lvl?'on':''}"></i>`).join('')}</div>`;}
-  if(!have&&cost!=null)actions.unshift([save.credits>=cost?`BUY · ${fmt(cost)} CR`:`${fmt(cost)} CR · NEED ${fmt(cost-save.credits)} MORE`,()=>{const r=Meta.buy(save,kind,key);if(!r.ok){toast(r.reason);scene.audio.ui('deny');return;}scene.audio.ui('buy');if(kind==='weapon'){save.loadout[item.slot===0?'primary':'secondary']=key;}else if(kind==='gear')save.loadout[item.slot]=key;save.loadout=Meta.loadout(save);if(kind!=='upgrade')save.seen.push(key);persist();renderArmory();banner('ARMORY',kind==='upgrade'?item.name+' LV '+save.upgrades[key]:item.name,kind==='upgrade'?'UPGRADE INSTALLED':'PURCHASED · EQUIPPED',2.2,'gold',ICON(kind,key));}]);
+  if(!have&&cost!=null)actions.unshift([save.credits>=cost?`BUY · ${fmt(cost)} CR`:`${fmt(cost)} CR · NEED ${fmt(cost-save.credits)} MORE`,()=>{const r=Meta.buy(save,kind,key);if(!r.ok){toast(r.reason);scene.audio.ui('deny');return;}scene.audio.ui('buy');itemVoice(kind,key);if(kind==='weapon'){save.loadout[item.slot===0?'primary':'secondary']=key;}else if(kind==='gear')save.loadout[item.slot]=key;save.loadout=Meta.loadout(save);if(kind!=='upgrade')save.seen.push(key);persist();renderArmory();banner('ARMORY',kind==='upgrade'?item.name+' LV '+save.upgrades[key]:item.name,kind==='upgrade'?'UPGRADE INSTALLED':'PURCHASED · EQUIPPED',2.2,'gold',ICON(kind,key));}]);
   detail.innerHTML=`<div class="ad-art ad-${kind}">${ICON(kind,key)}</div>`+body+'<div class="ad-actions"></div>';const box=detail.querySelector('.ad-actions');actions.forEach(([label,fn],i)=>{const b=document.createElement('button');b.type='button';b.className=i===0&&!have?'primary':'secondary';b.innerHTML=`<span>${label}</span>`;b.addEventListener('click',fn);box.append(b);});}
  function renderRecord(detail){const r=rank(),c=Meta.refreshContracts(save,today());persist();
-  detail.innerHTML=`<p class="ad-kind">SERVICE RECORD / ROOK</p><h3>RANK ${r.rank} · ${esc(r.title)}</h3><div class="xp-track big"><i style="width:${(r.into/r.span*100).toFixed(1)}%"></i></div><p>${fmt(r.into)} / ${fmt(r.span)} XP TO RANK ${r.rank+1} · EVERY RANK PAYS ${150*(r.rank+1)} CR</p>
+  detail.innerHTML=`<div class="record-col"><p class="ad-kind">SERVICE RECORD / ROOK</p><h3>RANK ${r.rank} · ${esc(r.title)}</h3><div class="xp-track big"><i style="width:${(r.into/r.span*100).toFixed(1)}%"></i></div><p>${fmt(r.into)} / ${fmt(r.span)} XP TO RANK ${r.rank+1} · EVERY RANK PAYS ${150*(r.rank+1)} CR</p>
    <h4>DAILY CONTRACTS <small>RESET AT MIDNIGHT</small></h4><div class="contracts">${c.map(x=>`<div class="contract${x.done?' done':''}"><span>${esc(x.text)}</span><i style="--v:${(x.progress/x.goal).toFixed(2)}"></i><b>${x.done?'PAID':x.progress+' / '+x.goal} · ${x.reward} CR</b></div>`).join('')}</div>
+</div><div class="record-col">
    <h4>RECORD</h4><div class="record"><span>HOSTILES <b>${fmt(save.stats.kills)}</b></span><span>OPERATIONS <b>${save.stats.missions}</b></span><span>DAILY STREAK <b>${save.daily.streak}</b></span><span>HOLDOUT BEST <b>${DIFFS.map(d=>save.holdout[d]?DL[d].label[0]+save.holdout[d]:'').filter(Boolean).join(' · ')||'—'}</b></span></div>
-   <h4>MEDALS</h4><div class="medal-table">${MISSIONS.map(m=>`<span>${String(m.n).padStart(2,'0')} ${Meta.unlocked(save,m.id)?esc(m.title):'CLASSIFIED'}<b class="medals">${medalRow(m.id)}</b></span>`).join('')}</div>`;}
+   <h4>MEDALS</h4><div class="medal-table">${MISSIONS.map(m=>`<span>${String(m.n).padStart(2,'0')} ${Meta.unlocked(save,m.id)?esc(m.title):'CLASSIFIED'}<b class="medals">${medalRow(m.id)}</b></span>`).join('')}</div></div>`;}
  // ---------- runs ----------
  function launch(o){if(!scene)return;scene.audio.unlock();scene.audio.stopAmbient();for(const t of debriefTimers)clearTimeout(t);debriefTimers=[];
   scene.sim=BPCore.create({training:o.mode==='training',mission:o.mission,difficulty:o.difficulty,checkpoint:o.checkpoint||null,loadout:o.loadout,owned:[...save.owned.weapons],profile:Meta.profile(save),seed:o.seed||1701,guest:o.guest||undefined});$('retry').hidden=false;scene.names=o.names||null;$('hud-name').textContent=lobby?callsign():'ROOK';
@@ -138,7 +165,9 @@
   $('training-equipment').hidden=!training;$('range-weapon').value='rifle';$('chapter').textContent=training?'LIVE FIRE / ALL EQUIPMENT':hold?'HOLDOUT / '+DL[o.difficulty].label:meta.act+' · '+DL[o.difficulty].label;$('mission-title').textContent=training?'TRAINING RANGE':hold?hm.title:meta.title;$('sector').textContent=training?'FIELD LAB / SECTOR 00':hold?'SIMULATION / '+hm.sector:meta.sector;
   $('pause-copy').textContent=training?'The range waits. Nothing here changes your campaign.':hold?'Waves resume when you do. Dying ends the run and banks its credits.':'Your checkpoint is secure. The city can wait.';$('retry').textContent=training?'RESET THE RANGE':hold?'RESTART HOLDOUT':'RETRY CHECKPOINT';
   $('radio').hidden=true;radioUntil=0;$('banner').className='banner';setMode('playing');$('status').textContent=training?'TRAINING ACTIVE':'ROOK / SIGNAL ACTIVE';scene.scale.refresh();scene.game.canvas.focus();lastHud=0;hud();drain();
-  if(!training&&!hold&&!o.checkpoint?.stage)banner(meta.act,meta.title,meta.sector,3.4);if(hold)banner('HOLDOUT',hm.title,'SURVIVE AS LONG AS YOU CAN',3);}
+  if(!training&&!hold&&!o.checkpoint?.stage)banner(meta.act,meta.title,meta.sector,3.4);if(hold)banner('HOLDOUT',hm.title,'SURVIVE AS LONG AS YOU CAN',3);
+  // The commander's order for this kind of run. It cuts in over anything else he was saying; a quick retry does not repeat it.
+  if(!training)scene.audio.say(hold?'vo-mission':'vo-move-out',{cut:true,rest:25});voiceHurt=voiceDry=false;}
  function freshCheckpoint(){return {stage:0,time:0,kills:0,damage:0,flows:0,credits:0,intel:0,killed:[],dead:[]};}
  function startMission(id,resume=false){if(!Meta.unlocked(save,id))return;const lo=Meta.loadout(save);
   if(resume&&save.run?.mission===id){run={...save.run};launch({mode:'campaign',mission:id,difficulty:run.difficulty,checkpoint:run.checkpoint,loadout:lo});return;}
@@ -170,7 +199,7 @@
  function openLobby(role,map,link='lan'){const via=role==='solo'?null:link==='online'?ONLINE:NET;if(!scene||role!=='solo'&&!via)return;netLeave();LINK=via;
   const l=lobby={role,link:via?link:null,code:'',ping:null,phase:role==='host'?'open':role==='guest'?'joining':'solo',map:map||HOLD[0].id,difficulty:settings.difficulty,peer:null,ready:false,feed:[],countdown:0,timer:null,addresses:[],status:'',host:'',inRun:false,runId:0};
   $('lobby-callsign').value=callsign();$('lobby-ip').value=link==='online'?'':settings.lastHost||'';$('lobby-chat').value='';
-  if(role==='host'&&link==='online'){feed('OPENING AN ONLINE LOBBY');ONLINE.hostStart().then(code=>{if(lobby!==l)return;l.code=code;feed('LOBBY OPEN / SHARE YOUR ROOM CODE WITH YOUR SQUADMATE');renderLobby();},err=>{if(lobby!==l)return;l.status=onlineError(err);feed(l.status);renderLobby();});}
+  if(role==='host'&&link==='online'){feed('OPENING AN ONLINE LOBBY');setTimeout(()=>{if(lobby===l&&!l.code&&!l.status){l.waking=true;feed('STILL CONNECTING / AN IDLE ONLINE SERVICE CAN TAKE UP TO A MINUTE TO WAKE');renderLobby();}},7000);ONLINE.hostStart().then(code=>{if(lobby!==l)return;l.code=code;feed('LOBBY OPEN / SHARE YOUR ROOM CODE WITH YOUR SQUADMATE');renderLobby();},err=>{if(lobby!==l)return;l.status=onlineError(err);feed(l.status);renderLobby();});}
   else if(role==='host'){feed('LOBBY OPEN / SHARE YOUR ADDRESS WITH YOUR SQUADMATE');NET.listLocalAddresses().then(a=>{if(lobby===l){l.addresses=a;renderLobby();}});
    NET.hostStart().then(port=>{netPort=port;if(lobby===l)renderLobby();},()=>{if(lobby===l){l.status='COULD NOT OPEN PORT '+netPort+' / IS ANOTHER COPY OF THE GAME ALREADY HOSTING?';renderLobby();}});}
   else if(role==='guest')feed(link==='online'?"ENTER THE HOST'S ROOM CODE TO JOIN THEIR SQUAD":"ENTER THE HOST'S ADDRESS TO JOIN THEIR SQUAD");
@@ -194,7 +223,7 @@
   // What the other player needs to find this lobby: a room code online, an address on a LAN. Once linked it also shows the delay between the two.
   const share=online?l.code:l.addresses[0]||'',lag=linked&&l.ping!=null?' · PING '+l.ping+' MS':'';
   $('lobby-link').hidden=solo;$('lobby-link-label').textContent=(online?'ROOM CODE':host?'YOUR ADDRESS · PORT '+netPort:'HOST ADDRESS')+lag;
-  $('lobby-link-value').textContent=host?(online?l.code||(l.status?'UNAVAILABLE':'OPENING…'):l.addresses.join('  ·  ')||'NO LAN ADDRESS FOUND'):linked?l.host:'NOT CONNECTED';$('lobby-copy').hidden=!host||!share;
+  $('lobby-link-value').textContent=host?(online?l.code||(l.status?'UNAVAILABLE':l.waking?'WAKING UP…':'OPENING…'):l.addresses.join('  ·  ')||'NO LAN ADDRESS FOUND'):linked?l.host:'NOT CONNECTED';$('lobby-copy').hidden=!host||!share;
   // Your own card keeps its callsign field alive across updates, so it is patched in place rather than rebuilt.
   $('op-self').className='operator self'+(lead||l.ready?' ready':'');$('op-self-tag').textContent=solo?'OPERATOR':host?'HOST':'SQUAD 02';$('op-self-state').textContent=solo?'READY':host?'LOBBY LEADER':!linked?'NOT CONNECTED':l.ready?'READY':'NOT READY';
   setHtml($('op-self-figure'),BPIcons.soldier(mine.loadout.primary,lead?0:1));if(document.activeElement!==$('lobby-callsign'))$('lobby-callsign').value=mine.name;$('op-self-rank').textContent='RANK '+r.rank+' · '+r.title;setHtml($('op-self-kit'),operatorKit(mine.loadout,lead));
@@ -219,7 +248,7 @@
   $('lobby-hint').textContent=solo?'Waves never end. Dying ends the run and banks its credits.'
    :host?(l.status||(!p?(online?'Your squadmate picks HOLDOUT, then JOIN under ONLINE, and enters your room code.':'Your squadmate picks HOLDOUT, then JOIN under LAN, and enters your address.'):counting?'Deploying both of you.':p.ready?'Everyone is ready.':p.name+' can change guns until they ready up.'))
    :!linked?'':counting?'The host is deploying the squad.':l.ready?'Waiting for the host to deploy.':'Pick your guns, then ready up.';
-  $('lobby-leave').textContent=solo?'BACK TO MAIN MENU':'LEAVE LOBBY';}
+  $('lobby-leave').innerHTML='<span>‹</span> '+(solo?'MAIN MENU':'LEAVE LOBBY');}
  function lobbyChanged(){if(!lobby)return;if(lobby.role==='host')cancelCountdown();renderLobby();lobbySync();}
  function lobbySetMap(id){if(!lobby||lobby.role==='guest'||lobby.map===id)return;lobby.map=id;feed('KILLHOUSE SET TO '+holdoutMap(id).title);lobbyChanged();}
  function lobbyGo(){const l=lobby;if(!l)return;
@@ -253,7 +282,7 @@
   // Online only: the connection to the relay itself dropped, which takes the room and the squadmate with it.
   if(msg.type==='linkLost'){onHostMsg({type:'guestLeft'});l.code='';l.status='CONNECTION TO THE ONLINE SERVICE WAS LOST / LEAVE AND HOST AGAIN';feed(l.status);renderLobby();return;}
   if(linkPing(msg))return;
-  if(msg.type==='guestJoined'){l.peer=cleanProfile(msg);netConnected=true;feed(l.peer.name+' JOINED THE SQUAD');scene.audio.ui('select');renderLobby();lobbySync();}
+  if(msg.type==='guestJoined'){l.peer=cleanProfile(msg);netConnected=true;feed(l.peer.name+' JOINED THE SQUAD');scene.audio.ui('select');scene.audio.say('vo-squad',{rest:60});renderLobby();lobbySync();}
   else if(msg.type==='guestLeft'){const name=l.peer?.name;l.peer=null;netConnected=false;netGuestInput={};cancelCountdown();if(name)feed(name+' LEFT THE SQUAD');
    // A squadmate who leaves takes the revive mechanic with them: nobody is left to carry tags, so a host who was
    // already down has lost the run, and one still standing simply carries on alone.
@@ -318,7 +347,7 @@
   if(l.phase!=='linked'||linkPing(msg))return;
   switch(msg.type){
   case 'lobby':{const first=!l.peer,map=HOLD.some(h=>h.id===msg.map)?msg.map:l.map,diff=DIFFS.includes(msg.difficulty)?msg.difficulty:l.difficulty;l.peer={...cleanProfile(msg.host),ready:true};
-   if(first)feed('JOINED '+l.peer.name+"'S SQUAD");else{if(map!==l.map)feed('KILLHOUSE SET TO '+holdoutMap(map).title);if(diff!==l.difficulty)feed('ENEMY PRESSURE SET TO '+DL[diff].label.toUpperCase());}
+   if(first){feed('JOINED '+l.peer.name+"'S SQUAD");scene.audio.say('vo-squad',{rest:60});}else{if(map!==l.map)feed('KILLHOUSE SET TO '+holdoutMap(map).title);if(diff!==l.difficulty)feed('ENEMY PRESSURE SET TO '+DL[diff].label.toUpperCase());}
    l.map=map;l.difficulty=diff;renderLobby();break;}
   case 'chat':lobbyHeard(msg);break;
   case 'countdown':if(!l.inRun&&mode==='lobby'){feed('THE HOST IS DEPLOYING THE SQUAD');startCountdown(Math.max(1,Math.min(10,Number(msg.seconds)||3)));}break;
@@ -339,7 +368,7 @@
   // The simulation lives on the host, so a guest can step away but cannot pause or restart it.
   $('pause-copy').textContent='The fight carries on without you. Only the host can pause or restart the run.';$('retry').hidden=true;$('hud-name').textContent=callsign();
   $('radio').hidden=true;radioUntil=0;$('banner').className='banner';setMode('playing');$('status').textContent='ROOK / SIGNAL ACTIVE';scene.scale.refresh();scene.game.canvas.focus();lastHud=0;
-  banner('HOLDOUT',hm.title,'SURVIVE AS LONG AS YOU CAN',3);}
+  banner('HOLDOUT',hm.title,'SURVIVE AS LONG AS YOU CAN',3);scene.audio.say('vo-mission',{cut:true,rest:25});}
  function startTraining(){run={mode:'training',mission:'range',difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};launch({mode:'training',mission:'range',difficulty:settings.difficulty});}
  // Hosting a squad: restarting from the pause menu restarts for both players; after a finished run it leads back to the lobby.
  function retry(){if(!run)return;if(lobby?.role==='host'&&lobby.inRun){if(mode==='paused')beginHostedRun(run.mission);else showLobby();return;}if(run.mode==='training')startTraining();else if(run.mode==='holdout')startHoldout(run.mission);else startMission(run.mission,!!save.run);}
@@ -347,7 +376,7 @@
  function resume(){if(mode!=='paused')return;scene.audio.unlock();scene.audio.resume();scene.audio.startAmbient(scene.sim.map.theme);setMode('playing');scene.accumulator=0;scene.game.canvas.focus();}
  function menu(){netLeave();scene?.audio.stopAmbient();scene?.audio.vitals(100,false);for(const t of debriefTimers)clearTimeout(t);debriefTimers=[];setMode('menu');updateContinue();$('continue').focus();}
  function payDifficulty(){return DIFFS[Math.min(DIFFS.indexOf(run.difficulty),DIFFS.indexOf(run.floor||run.difficulty))];}
- function end(e){const s=scene.sim;scene.audio.stopAmbient();scene.audio.vitals(100,false);$('debrief').hidden=true;$('ending-next').hidden=true;$('ending-armory').hidden=run.mode==='training';
+ function end(e){const s=scene.sim;scene.audio.say(e.type==='complete'?'vo-complete':'vo-failed',{cut:true,rest:6});scene.audio.stopAmbient();scene.audio.vitals(100,false);$('debrief').hidden=true;$('ending').classList.remove('tally');$('ending-next').hidden=true;$('ending-armory').hidden=run.mode==='training';
   if(e.type==='complete'&&run.mode==='campaign'){const meta=missionMeta(run.mission),summary=Meta.summarize(s,{rating:e.rating,score:e.score,deaths:run.deaths||0,difficulty:payDifficulty()}),report=Meta.settle(save,summary,today());save.run=null;persist();setMode('complete');
    $('ending-eyebrow').textContent='CHAPTER '+meta.n+' / '+meta.title+' / COMPLETE';$('ending-title').innerHTML=['NO ONE IS<br>COMING.','THE QUARTER<br>FALLS SILENT.','THE LOG<br>NAMES HIM.','UNDER THE<br>CORDON.','THE KEY<br>TURNS.','EVERY NAME<br>BURNS.'][meta.n-1];$('ending-copy').textContent=meta.outro;
    $('run-stats').innerHTML=`<span>FIELD RATING<b>${e.rating}</b></span><span>HOSTILES<b>${s.stats.kills}</b></span><span>BEST COMBO<b>×${s.stats.bestCombo}</b></span><span>TIME<b>${formatTime(e.time)}</b></span>`;
@@ -359,7 +388,8 @@
   $('ending-copy').textContent=s.training?'Live fire got the better of you. Reset the range and try a different approach.':(s.difficulty==='insane'?'Insane punishes open ground. Fight from corners, break line of sight when a telegraph lights up, and relocate before grenades land. ':'Your last checkpoint is secure. Watch attack telegraphs and use cover. ')+(meta?.rec?.note||'');
   $('ending-retry').textContent=s.training?'RESET THE RANGE ↗':'RETRY CHECKPOINT ↗';$('run-stats').innerHTML=`<span>HOSTILES<b>${s.stats.kills}</b></span><span>TIME<b>${formatTime(s.time)}</b></span>${run.mode==='campaign'?`<span>CREDITS AT RISK<b>${fmt(s.stats.credits)}</b></span>`:''}`;$('ending-retry').focus();}
  // The tally counts each line up with a tick, then fills the XP bar and calls out rank-ups, medals, mastery and contracts.
- function debrief(report){const box=$('debrief-lines'),awards=$('debrief-awards');box.replaceChildren();awards.replaceChildren();$('debrief').hidden=false;$('debrief-credits').textContent='0';const before=report.rankBefore,after=report.rankAfter||before;
+ function debrief(report){const box=$('debrief-lines'),awards=$('debrief-awards');box.replaceChildren();awards.replaceChildren();$('debrief').hidden=false;$('ending').classList.add('tally');$('debrief-credits').textContent='0';
+  $('debrief-contracts').innerHTML=Meta.refreshContracts(save,today()).map(x=>`<div class="contract${x.done?' done':''}"><span>${esc(x.text)}</span><b>${x.done?'PAID':x.progress+' / '+x.goal} · ${x.reward} CR</b><i style="--v:${(x.progress/x.goal).toFixed(2)}"></i></div>`).join('');const before=report.rankBefore,after=report.rankAfter||before;
   $('xp-rank').textContent='RANK '+before.rank+' · '+before.title;$('xp-fill').style.transition='none';$('xp-fill').style.width=(before.into/before.span*100)+'%';$('xp-note').textContent='+'+fmt(report.xp)+' XP';
   let total=0,t=350;const later=(fn,ms)=>debriefTimers.push(setTimeout(fn,ms));
   for(const l of report.lines){later(()=>{const row=document.createElement('div');row.className='dl';row.innerHTML=`<span>${esc(l.label)}${l.note?' <small>'+esc(l.note)+'</small>':''}</span><b>+0</b>`;box.append(row);const b=row.querySelector('b'),start=performance.now(),from=total;total+=l.value;const to=total;scene.audio.ui('tick');
@@ -374,7 +404,7 @@
  function onEvent(e,isGuest=false){const s=scene.sim;
   // A guest never owns save/run state (the host's save is authoritative for this pass), so it skips every
   // branch below that would persist() or settle() a run, and shows a plain message instead of a full ending.
-  if(isGuest&&(e.type==='death'||e.type==='complete')){const token=lobby?.runId;toast(e.type==='death'?'SQUAD WIPED OUT / BACK TO THE LOBBY':'RUN COMPLETE / BACK TO THE LOBBY',2.5);setTimeout(()=>{if(lobby?.inRun&&lobby.runId===token)showLobby();},2500);return;}
+  if(isGuest&&(e.type==='death'||e.type==='complete')){const token=lobby?.runId;toast(e.type==='death'?'SQUAD WIPED OUT / BACK TO THE LOBBY':'RUN COMPLETE / BACK TO THE LOBBY',2.5);scene.audio.say(e.type==='death'?'vo-failed':'vo-complete',{cut:true,rest:6});setTimeout(()=>{if(lobby?.inRun&&lobby.runId===token)showLobby();},2500);return;}
   if(isGuest&&['checkpoint','unlock','weaponfound'].includes(e.type))return;
   switch(e.type){
   case 'radio':radio(e);break;case 'toast':toast(e.text);break;case 'flow':toast('PERFECT FLOW / MOMENTUM RETAINED',1.5);break;
@@ -384,18 +414,19 @@
   case 'pickup':if(e.kind!=='weapon')toast(e.kind==='health'?'HEALTH RESTORED':e.kind==='armor'?'ARMOR REINFORCED':e.kind==='supply'?'FIELD EQUIPMENT RESTORED':e.kind==='lethal'?'LETHAL RESUPPLIED':e.kind==='tactical'?'TACTICAL RESUPPLIED':e.kind==='intel'||e.kind==='cache'?'':'AMMUNITION RECOVERED',1.5);break;
   case 'intel':banner('CLASSIFIED','INTEL RECOVERED','+200 CR ON COMPLETION · MEDAL',3,'gold',ICON('pickup','intel'));break;case 'cache':toast('CREDIT CACHE / +120 CR',2);break;
   case 'objective':banner(e.partial?'OBJECTIVE':'OBJECTIVE COMPLETE',e.partial?e.name:e.name.toUpperCase(),'',2.4);break;
-  case 'stage':if(e.stage>0){const st=s.map.stages[e.stage];setTimeout(()=>{if(mode==='playing')banner('NEW OBJECTIVE',st.name.toUpperCase(),st.hint,3);},2500);}break;
+  case 'stage':if(e.stage>0){voice('stage',{rest:30});const st=s.map.stages[e.stage];setTimeout(()=>{if(mode==='playing')banner('NEW OBJECTIVE',st.name.toUpperCase(),st.hint,3);},2500);}break;
   case 'kill':comboUntil=performance.now()+3500;if(e.combo>=2){const name={2:'DOUBLE KILL',3:'TRIPLE KILL',5:'RAMPAGE',8:'UNSTOPPABLE',12:'BLACKOUT'}[e.combo];if(name)banner('×'+e.combo+' COMBO',name,'',1.4,'combo');}
    if(e.boss){slowUntil=performance.now()+1100;banner('TARGET DOWN',A[e.enemy].name+' DESTROYED','',3,'gold');}break;
-  case 'waveclear':banner('WAVE '+e.wave+' CLEARED','+'+e.bonus+' CR','SUPPLIES RESTOCKED',2.6,'gold');slowUntil=performance.now()+700;break;
-  case 'wave':banner('HOLDOUT','WAVE '+e.wave,e.wave%5===0?'COMMANDER INBOUND':'',2,e.wave%5===0?'danger':'');break;
+  case 'waveclear':voice('lull',{rest:45});banner('WAVE '+e.wave+' CLEARED','+'+e.bonus+' CR','SUPPLIES RESTOCKED',2.6,'gold');slowUntil=performance.now()+700;break;
+  case 'wave':if(e.wave%5===0)scene.audio.say('vo-boss',{cut:true,rest:30});else if(e.wave>1)voice('wave',{rest:30});banner('HOLDOUT','WAVE '+e.wave,e.wave%5===0?'COMMANDER INBOUND':'',2,e.wave%5===0?'danger':'');break;
   case 'armorbreak':toast('ARMOR BROKEN',1.4);break;case 'bossphase':toast('THE '+A[s.enemies.find(x=>x.id===e.id)?.type||'commander'].name+' IS ADAPTING',2);break;
   case 'flash':if(e.self&&!settings.flash){$('flashout').style.transition='none';$('flashout').style.opacity='.85';requestAnimationFrame(()=>{$('flashout').style.transition='opacity 1.3s ease-out';$('flashout').style.opacity='0';});}break;
   // Co-op: one operator down is a setback, not the end. Both players get told who fell and what happens next.
   case 'down':case 'tags':case 'revive':{const self=netRole==='guest'?'guest':'player',mine=e.who===self,mate=scene.names?.[self==='guest'?'player':'guest']||'YOUR SQUADMATE';
    if(e.type==='down')banner(mine?'OPERATOR DOWN':'SQUADMATE DOWN',mine?'YOU ARE DOWN':mate+' IS DOWN',mine?mate+' HAS TO CARRY YOUR DOG TAGS TO THE REVIVE STATION':'GRAB THEIR DOG TAGS / TAKE THEM TO THE REVIVE STATION',4.5,'danger');
    else if(e.type==='tags')toast(mine?mate+' HAS YOUR TAGS / HANG ON':'DOG TAGS RECOVERED / HOLD '+keyLabel('interact')+' AT THE REVIVE STATION',3);
-   else banner('REVIVED',mine?'BACK IN THE FIGHT':mate+' IS BACK IN THE FIGHT','',2.8,'gold');break;}
+   else{banner('REVIVED',mine?'BACK IN THE FIGHT':mate+' IS BACK IN THE FIGHT','',2.8,'gold');scene.audio.say('vo-on-your-feet',{rest:10});}
+   if(e.type==='down'&&!mine)scene.audio.say('vo-mate-down',{cut:true,rest:20});break;}
   case 'death':case 'complete':end(e);break;}}
  function drain(){if(!scene?.sim)return;const events=scene.sim.events.splice(0);if(netRole==='host'&&netConnected&&events.length)LINK.hostSend({type:'events',list:events});for(const e of events){scene.renderer.event(e);scene.audio.event(e);onEvent(e);if(mode!=='playing'&&(e.type==='death'||e.type==='complete'))break;}}
  function formatTime(time){return Math.floor(time/60).toString().padStart(2,'0')+':'+Math.floor(time%60).toString().padStart(2,'0');}
@@ -438,6 +469,8 @@
   if(s.guest&&!s.guest.vanished&&(s.player.dead||s.guest.dead)&&!s.dead){const mate=scene.names?.[p===s.guest?'player':'guest']||'Your squadmate',held=(s.tags||[]).some(q=>q.carrier);
    if(p.dead){$('objective').textContent='You are down';$('objective-hint').textContent=held?mate+' has your dog tags and is heading for the revive station.':mate+' has to pick up your dog tags and carry them to the revive station.';}
    else{$('objective').textContent=held?'Carry the tags to the revive station':'Recover '+mate+"'s dog tags";$('objective-hint').textContent=held?'Follow the green marker, then hold '+keyLabel('interact')+' on the pad for '+BPCore.REVIVE_TIME+' seconds.':'Follow the amber marker to where they fell.';}$('objective-progress').hidden=true;}
+  // Commander call-outs for your own state, each on the moment it begins: health dropping into the red, and a gun running completely dry.
+  const hurtNow=!p.dead&&p.health>0&&p.health<30,dryNow=!p.dead&&p.ammo[key]===0&&p.reserve[key]===0;if(hurtNow&&!voiceHurt)scene.audio.say('vo-low-health',{rest:45});if(dryNow&&!voiceDry)scene.audio.say('vo-dry',{rest:30});voiceHurt=hurtNow;voiceDry=dryNow;
   $('health-number').textContent=Math.ceil(p.health);$('health-bar').style.width=p.health+'%';$('health-bar').style.background=p.health<30?'#d18b70':'#d3ddbb';$('armor-bar').style.width=Math.min(100,p.armor/p.maxArmor*100)+'%';$('stamina-bar').style.width=p.stamina+'%';$('armor').textContent=Math.ceil(p.armor);
   gearHud(s);
   weaponHud(s);
@@ -453,10 +486,11 @@
   for(const [key,label] of Object.entries(labels))bindButton(list,label,displayKey(settings.bindings[key]),bindingTarget===key,'PRESS KEY',()=>{bindingTarget=key;padBindingTarget=null;bindings();}).dataset.action=key;
   for(const key of Object.keys(BPSave.padBindings))bindButton(padList,padActionLabel(key),BPGamepad.glyphs[pad.brand||'generic'][settings.padBindings[key]],padBindingTarget===key,'PRESS BUTTON',()=>{padBindingTarget=key;bindingTarget=null;bindings();}).dataset.padAction=key;
   strip();menuHint();}
- function showSettings(){if(mode==='playing')pause();for(const id of ['difficulty','volume','shake','quality'])$(id).value=settings[id];for(const id of ['music','flash','gamepad','aimAssist'])$(id).checked=settings[id];padStatus();bindings();$('settings').showModal();$('settings').querySelector('button,select,input')?.focus({preventScroll:true});}
- function settingsChanged(){settings.difficulty=$('difficulty').value;settings.volume=Number($('volume').value);settings.shake=Number($('shake').value);settings.music=$('music').checked;settings.flash=$('flash').checked;settings.gamepad=$('gamepad').checked;settings.aimAssist=$('aimAssist').checked;settings.quality=$('quality').value;padStatus();
+ function showSettings(){if(mode==='playing')pause();for(const id of ['difficulty','volume','shake','quality'])$(id).value=settings[id];for(const id of ['music','voice','flash','gamepad','aimAssist'])$(id).checked=settings[id];padStatus();bindings();$('settings').showModal();$('settings').querySelector('button,select,input')?.focus({preventScroll:true});}
+ function settingsChanged(){settings.difficulty=$('difficulty').value;settings.volume=Number($('volume').value);settings.shake=Number($('shake').value);settings.music=$('music').checked;settings.voice=$('voice').checked;settings.flash=$('flash').checked;settings.gamepad=$('gamepad').checked;settings.aimAssist=$('aimAssist').checked;settings.quality=$('quality').value;padStatus();
   if(scene){scene.settings=settings;if(scene.sim&&['playing','paused'].includes(mode)&&run){scene.sim.difficulty=settings.difficulty;if(DIFFS.indexOf(settings.difficulty)<DIFFS.indexOf(run.floor||run.difficulty))run.floor=settings.difficulty;if(save.run&&run.mode==='campaign')save.run.floor=run.floor;}scene.audio.settings=settings;scene.audio.stopAmbient();if(mode==='playing')scene.audio.startAmbient(scene.sim.map.theme);score();backdrop();}if(mode==='ops')renderOps();if(mode==='lobby'&&lobby&&lobby.role!=='guest'&&lobby.difficulty!==settings.difficulty){lobby.difficulty=settings.difficulty;lobbyChanged();}persist();}
- $('continue').addEventListener('click',()=>openOps());$('training').addEventListener('click',startTraining);$('holdout').addEventListener('click',()=>openLobby('solo'));$('armory-button').addEventListener('click',()=>openArmory('weapons',null,'menu'));
+ // Picking a mode on the main menu gets a word from the commander about what you have just chosen.
+ $('continue').addEventListener('click',()=>{openOps();voiceAny('campaign');});$('training').addEventListener('click',()=>{startTraining();voiceAny('range');});$('holdout').addEventListener('click',()=>{openLobby('solo');voiceAny('holdout');});$('armory-button').addEventListener('click',()=>openArmory('weapons',null,'menu'));
  $('deploy').addEventListener('click',()=>startMission(selected,false));$('resume-run').addEventListener('click',()=>startMission(selected,true));$('ops-armory').addEventListener('click',()=>openArmory('weapons',null,'ops'));$('ops-settings').addEventListener('click',showSettings);$('ops-back').addEventListener('click',menu);
  $('armory-back').addEventListener('click',armoryBack);for(const b of $('armory-tabs').children)b.addEventListener('click',()=>{armoryTab=b.dataset.tab;armoryItem=null;renderArmory();});
  $('picker-close').addEventListener('click',()=>$('picker').close());
@@ -469,7 +503,7 @@
  $('lobby-connect').addEventListener('click',lobbyConnect);$('lobby-ip').addEventListener('keydown',e=>{if(isEnter(e))lobbyConnect();});$('lobby-send').addEventListener('click',lobbySay);$('lobby-chat').addEventListener('keydown',e=>{if(isEnter(e))lobbySay();});
  $('lobby-callsign').addEventListener('input',e=>{const el=e.target,at=el.selectionStart,clean=el.value.toUpperCase().replace(/[^A-Z0-9 _-]/g,'');if(clean!==el.value){el.value=clean;el.setSelectionRange(at,at);}});
  $('lobby-callsign').addEventListener('change',e=>{settings.callsign=BPSave.callsign(e.target.value)||callsign();e.target.value=settings.callsign;persist();renderLobby();lobbySync();});$('lobby-callsign').addEventListener('keydown',e=>{if(isEnter(e))e.target.blur();});
- $('settings-button').addEventListener('click',showSettings);$('pause-settings').addEventListener('click',showSettings);$('settings').addEventListener('close',()=>{bindingTarget=padBindingTarget=null;settingsChanged();});$('settings').addEventListener('cancel',()=>{bindingTarget=padBindingTarget=null;});for(const id of ['difficulty','volume','shake','quality','music','flash','gamepad','aimAssist'])$(id).addEventListener('change',settingsChanged);
+ $('settings-button').addEventListener('click',showSettings);$('pause-settings').addEventListener('click',showSettings);$('settings').addEventListener('close',()=>{bindingTarget=padBindingTarget=null;settingsChanged();});$('settings').addEventListener('cancel',()=>{bindingTarget=padBindingTarget=null;});for(const id of ['difficulty','volume','shake','quality','music','voice','flash','gamepad','aimAssist'])$(id).addEventListener('change',settingsChanged);
  $('reset-bindings').addEventListener('click',()=>{settings.bindings={...BPSave.bindings};settings.padBindings={...BPSave.padBindings};bindingTarget=padBindingTarget=null;bindings();persist();});$('sound').addEventListener('click',()=>{settings.muted=!settings.muted;$('sound').textContent=settings.muted?'SOUND OFF':'SOUND ON';persist();if(scene){scene.audio.unlock();scene.audio.stopAmbient();if(mode==='playing')scene.audio.startAmbient(scene.sim.map.theme);score();}});$('sound').textContent=settings.muted?'SOUND OFF':'SOUND ON';strip();menuHint();
  const option=(sel,value,text)=>{const o=document.createElement('option');o.value=value;o.textContent=text;$(sel).append(o);};
  for(const [key,w] of Object.entries(W))option('range-weapon',key,w.name);for(const [key,g] of Object.entries(G))option(g.slot==='lethal'?'range-lethal':'range-tactical',key,g.name);
@@ -540,7 +574,7 @@
  class FieldScene extends Phaser.Scene {
   constructor(){super('field');}
   preload(){this.load.on('progress',v=>{$('load-bar').style.width=Math.round(v*100)+'%';});this.load.on('loaderror',file=>{if(this.loadFailed)return;this.loadFailed=true;$('load-text').textContent=location.protocol==='file:'?'CANNOT RUN FROM A LOCAL FILE / RUN "NPM RUN SERVE" THEN OPEN HTTP://127.0.0.1:8127/BLACKOUT-PROTOCOL.HTML':'ASSET LOAD FAILED: '+file.key+' / REFRESH TO RETRY';});BPRender.preload(this);BPAudio.preload(this);}
-  create(){scene=this;this.settings=settings;this.renderer=new BPRender(this);this.audio=new BPAudio(this,settings);this.accumulator=0;this.cameras.main.setZoom(1.03);this.game.canvas.tabIndex=0;this.game.canvas.setAttribute('aria-label','Top-down battlefield. Use WASD to move, mouse to aim, and left click to fire, or a controller: left stick to move, right stick to aim, right trigger to fire, Y to swap weapons.');this.input.mouse.disableContextMenu();this.input.on('pointerdown',pointer=>{if(mode!=='playing')return;this.audio.unlock();if(pointer.button===0)mouseFire=true;if(pointer.button===2)mouseAim=true;});this.input.on('pointerup',pointer=>{if(pointer.button===0)mouseFire=false;if(pointer.button===2)mouseAim=false;});this.game.canvas.addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('pointerup',e=>{if(e.button===0)mouseFire=false;if(e.button===2)mouseAim=false;});if(!this.loadFailed)$('loading').hidden=true;updateContinue();document.body.dataset.phase='menu';score();backdrop();
+  create(){scene=this;this.settings=settings;this.renderer=new BPRender(this);this.audio=new BPAudio(this,settings);this.accumulator=0;this.cameras.main.setZoom(1.03);this.game.canvas.tabIndex=0;this.game.canvas.setAttribute('aria-label','Top-down battlefield. Use WASD to move, mouse to aim, and left click to fire, or a controller: left stick to move, right stick to aim, right trigger to fire, Y to swap weapons.');this.input.mouse.disableContextMenu();this.input.on('pointerdown',pointer=>{if(mode!=='playing')return;this.audio.unlock();if(pointer.button===0)mouseFire=true;if(pointer.button===2)mouseAim=true;});this.input.on('pointerup',pointer=>{if(pointer.button===0)mouseFire=false;if(pointer.button===2)mouseAim=false;});this.game.canvas.addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('pointerup',e=>{if(e.button===0)mouseFire=false;if(e.button===2)mouseAim=false;});if(!this.loadFailed)$('loading').hidden=true;updateContinue();document.body.dataset.phase='menu';this.audio.unlock();score();backdrop();greet();
    const inspect=()=>({mode,camera:{scrollX:this.cameras.main.scrollX,scrollY:this.cameras.main.scrollY,zoom:this.cameras.main.zoom,width:this.cameras.main.width,height:this.cameras.main.height,originX:this.cameras.main.originX,originY:this.cameras.main.originY},world:JSON.parse(JSON.stringify({map:this.sim.map,walls:this.sim.walls,player:this.sim.player,guest:this.sim.guest,tags:this.sim.tags,station:this.sim.station,enemies:this.sim.enemies,stage:this.sim.stage,goal:this.sim.goal,time:this.sim.time,completed:this.sim.completed,dead:this.sim.dead,stats:this.sim.stats,hazards:this.sim.hazards,grenades:this.sim.grenades,pickups:this.sim.pickups,difficulty:this.sim.difficulty,spawnWarnings:this.sim.spawnWarnings,zones:this.sim.zones,director:this.sim.director,progress:this.sim.progress,mission:this.sim.mission,training:this.sim.training}))});
    if(new URLSearchParams(location.search).has('qa'))window.BPQA={sim:()=>this.sim,end:e=>end(e),settle:()=>Meta,save};
    const lobbyInfo=()=>lobby&&{link:lobby.link,code:lobby.code,ping:lobby.ping,role:lobby.role,phase:lobby.phase,map:lobby.map,difficulty:lobby.difficulty,ready:lobby.ready,peer:lobby.peer,counting:lobby.countdown>0,inRun:lobby.inRun};

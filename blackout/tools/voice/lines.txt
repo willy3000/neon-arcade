@@ -1,0 +1,67 @@
+# Commander voice lines for Blackout Protocol: name|style|text
+# Styles (see STYLES in voice_lines.py): command = barked order, firm = level and direct, calm = measured.
+
+# Orders in the middle of a fight
+vo-hostiles|command|Hostiles inbound!
+vo-contact|command|Contact front! Weapons free!
+vo-boss|command|Enemy commander on the field. Take him down!
+vo-hold|command|Hold the line!
+vo-low-health|command|You're hit! Find cover!
+vo-dry|command|You're dry! Switch weapons!
+vo-mate-down|command|Operator down! Get those tags!
+vo-on-your-feet|command|On your feet, soldier!
+
+# Direction between fights
+vo-objective|firm|New objective. Stay on mission.
+vo-failed|firm|Get up. We are not done here.
+vo-squad|firm|Squad assembled. Check your gear.
+vo-range|firm|This is the range. Make your mistakes here.
+
+# The quiet moments
+vo-area-clear|calm|Area clear. Catch your breath.
+vo-quiet|calm|Too quiet. Keep your eyes open.
+vo-complete|calm|Objective complete. Good work, soldier.
+vo-armory|calm|Gear up. Make every credit count.
+
+# Choosing a mode on the main menu
+vo-mode-holdout|command|Endless! Let's see how long you can hold your ground, soldier.
+vo-mode-campaign|brisk|Campaign. Behind enemy lines, no way out but through. Get it done, soldier.
+
+# More ways of announcing each mode (the game picks one at random)
+vo-mode-holdout-2|command|Endless! The enemy just keeps coming. Take as many with you as you can.
+vo-mode-holdout-3|command|Endless! No extraction, no reinforcements. Just you, and every wave they can throw at you.
+vo-mode-holdout-4|brisk|Endless. Dig in, soldier. They won't stop, so neither do you.
+vo-mode-campaign-2|brisk|Campaign. You were shot down and left for dead. Find out who gave the order.
+vo-mode-campaign-3|brisk|Campaign. Six operations stand between you and the truth. Pick your fight, soldier.
+vo-mode-campaign-4|command|Campaign. The mission is over. Your war has just begun.
+vo-range-2|firm|Firing range. Every weapon unlocked, and nothing shooting back. Get familiar, soldier.
+vo-range-3|firm|The range. Learn your weapons here, so they don't fail you out there.
+
+# The commander's word on each gun as it is bought or equipped: what it is, and how to use it
+vo-w-rifle|firm|The M-K eighteen. Reliable at any range. Fire in short bursts, and it will never let you down.
+vo-w-shotgun|firm|Good choice. The M eight-seventy breach shotgun. Kicks like a mule. Use it in tight spaces to clear your path.
+vo-w-pistol|firm|The service pistol. Light, accurate, and quick to reload. Draw it when your primary runs dry.
+vo-w-smg|firm|The M-P seven. Fast hands, faster feet. Stay moving, get in close, and don't stop firing.
+vo-w-marksman|firm|The S-V-K nine marksman rifle. Two hits drop most soldiers. Keep your distance, and make every round count.
+vo-w-battle|firm|The battle rifle. Heavy rounds, real recoil. Tap the trigger, and it hits like a hammer.
+vo-w-precision|firm|The precision rifle. One shot, one kill. Line them up, and a single round will drop two.
+vo-w-lmg|firm|The M two-four-nine. Seventy-five rounds of suppression. Pin them down, and chew through their cover.
+vo-w-autoshotgun|firm|The auto shotgun. Twelve shells, as fast as you can pull the trigger. Take the corridors, and keep them.
+vo-w-launcher|firm|The grenade launcher. Six rounds of area denial. Break their armour, break their walls, and keep your distance.
+vo-w-pulse|firm|The pulse carbine. Prototype tech, almost no recoil. Hold the trigger down. It punches straight through the first man it hits.
+vo-w-rail|firm|The rail rifle. Cover, shields, armour. Nothing stops that slug. You get four shots. Make them matter.
+vo-w-machinepistol|firm|The machine pistol. Fully automatic, for when they get too close. Empty it, then get moving.
+vo-w-magnum|firm|The forty-four magnum. Six heavy rounds. It staggers anything that walks, so make each one count.
+vo-w-sawedoff|firm|The sawed-off. Two barrels, point blank. Wait until you can see their eyes, soldier.
+vo-w-thumper|firm|The Thumper. One grenade, one chance. Save it for armour, and for a crowd.
+vo-w-rocket|firm|The rocket launcher. One shot that ends vehicles, and arguments. Don't waste it on a rifleman.
+
+# ...and on each gadget
+vo-g-frag|firm|Frag grenades. Short fuse, wide blast. Put one behind their cover, and flush them out.
+vo-g-incendiary|firm|Incendiary. It burns a doorway shut for six seconds. Use it to cut off the rush.
+vo-g-mine|firm|Proximity mines. Plant them at your feet, then fall back. Let the rushers find them.
+vo-g-flash|firm|Flashbangs. Anyone who sees the blast is stunned for three seconds. Throw, then push in hard.
+vo-g-smoke|firm|Smoke. Ten seconds of cover, anywhere you need it. They can't shoot what they can't see.
+vo-g-emp|firm|E-M-P charge. Kills drones, blinds sentries, and drops shields. Throw it before you push.
+vo-g-decoy|firm|Holo decoy. They will shoot at your ghost for seven seconds. Use that time to flank them.
+vo-g-cover|firm|Deployable cover. A ballistic barrier, wherever you aim. Caught in the open? Bring your own wall.

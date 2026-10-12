@@ -15,7 +15,9 @@
     "dist:win": "electron-builder --win",
     "test:relay": "node server/test.cjs",
     "test:e2e:online": "node electron/net/e2e-online.cjs",
-    "relay": "node server/relay.js"
+    "relay": "node server/relay.js",
+    "start:rich": "electron . --credits=99999",
+    "start:windowed": "electron . --windowed"
   },
   "devDependencies": {
     "playwright": "1.58.2",

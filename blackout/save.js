@@ -8,14 +8,14 @@
   const padBindings={fire:'rt',aim:'lt',sprint:'lb',roll:'a',slide:'b',interact:'x',swap:'y',reload:'up',gadget:'left',melee:'rs',grenade:'rb',cycle:'right'},padButtons=['a','b','x','y','lb','rb','lt','rt','back','ls','rs','up','down','left','right'];
   const PAD_LAYOUT=3,W=World.weapons,G=World.gear,U=World.upgrades,MISSIONS=World.missions.map(m=>m.id),DIFFS=World.order;
   function defaults(){return {version:VERSION,credits:0,xp:0,owned:{weapons:['rifle','pistol'],gear:[]},upgrades:{},loadout:{primary:'rifle',secondary:'pistol',lethal:null,tactical:null},missions:{},run:null,holdout:{},mastery:{},contracts:{day:-1,list:[]},daily:{day:-1,streak:0},stats:{kills:0,missions:0,deaths:0},seen:[],
-    settings:{difficulty:'standard',volume:.65,music:true,shake:.45,flash:false,quality:'high',muted:false,gamepad:true,aimAssist:true,callsign:'',lastHost:'',bindings:{...bindings},padBindings:{...padBindings},padLayout:PAD_LAYOUT}};}
+    settings:{difficulty:'standard',volume:.65,music:true,voice:true,shake:.45,flash:false,quality:'high',muted:false,gamepad:true,aimAssist:true,callsign:'',lastHost:'',bindings:{...bindings},padBindings:{...padBindings},padLayout:PAD_LAYOUT}};}
   // LAN lobby identity: the callsign other players see, and the last host address joined (pre-filled next time).
   const callsign=t=>String(t??'').toUpperCase().replace(/[^A-Z0-9 _-]/g,'').trim().slice(0,12);
   const num=(v,lo,hi,d=0)=>Number.isFinite(Number(v))?Math.max(lo,Math.min(hi,Number(v))):d,ids=(a,max=200)=>Array.isArray(a)?a.filter(x=>typeof x==='string'&&/^[A-Za-z0-9_-]{1,24}$/.test(x)).slice(0,max):[];
   function checkpoint(c){if(!c||!Number.isInteger(c.stage)||c.stage<0||c.stage>9)return null;const out={stage:c.stage,time:num(c.time,0,86400),kills:num(c.kills,0,1e5),damage:num(c.damage,0,1e6),flows:num(c.flows,0,1e5),credits:num(c.credits,0,1e7),intel:num(c.intel,0,9),killed:ids(c.killed),dead:ids(c.dead,40)};
     if(Number.isFinite(c.x)&&Number.isFinite(c.y)){out.x=num(c.x,0,1e4);out.y=num(c.y,0,1e4);}if(Array.isArray(c.slots)&&c.slots.length===2&&W[c.slots[0]]?.slot===0&&W[c.slots[1]]?.slot===1)out.slots=[c.slots[0],c.slots[1]];
     for(const k of ['lethal','tactical'])if(c[k]===null||G[c[k]]?.slot===k)out[k]=c[k];return out;}
-  function settings(d,s){for(const k of ['music','flash','muted','gamepad','aimAssist'])if(typeof s[k]==='boolean')d.settings[k]=s[k];
+  function settings(d,s){for(const k of ['music','voice','flash','muted','gamepad','aimAssist'])if(typeof s[k]==='boolean')d.settings[k]=s[k];
     for(const k of ['volume','shake'])if(Number.isFinite(s[k]))d.settings[k]=Math.max(0,Math.min(1,s[k]));
     if(DIFFS.includes(s.difficulty))d.settings.difficulty=s.difficulty;if(['high','low'].includes(s.quality))d.settings.quality=s.quality;
     if(typeof s.callsign==='string')d.settings.callsign=callsign(s.callsign);if(typeof s.lastHost==='string'&&/^[A-Za-z0-9.:-]{0,64}$/.test(s.lastHost))d.settings.lastHost=s.lastHost;

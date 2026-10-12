@@ -125,7 +125,7 @@ input.op-name{background:transparent;border:0;border-bottom:1px dashed #dfad7066
 .op-kit{display:flex;gap:6px;justify-content:center;margin-top:10px;min-height:48px}
 .kit{display:grid;justify-items:center;align-content:center;gap:4px;background:#141a15cc;border:1px solid #d3d8ba1f;padding:6px;flex:1;min-width:0;max-width:112px}.kit i{height:22px;width:100%;display:flex;align-items:center;justify-content:center}.kit .icon{height:22px;width:auto;max-width:100%}
 .kit b{font:7px var(--mono);letter-spacing:.7px;color:#c6ceba;font-weight:400;white-space:nowrap}.kit.none{opacity:.45}.kit.note b{color:var(--amber)}.kit.note small{font:6px var(--mono);color:var(--muted);letter-spacing:1px}
-.lobby-comms{border:1px solid #ccd3b826;background:#151b16d9;padding:10px 12px;display:grid;gap:8px}.lobby-feed{height:54px;overflow:auto;display:grid;align-content:start;gap:3px;scrollbar-width:thin;scrollbar-color:#4a5540 transparent}
+.lobby-comms{border:1px solid #ccd3b826;background:#151b16d9;padding:10px 12px;display:grid;gap:8px}.lobby-feed{height:54px;overflow:auto;display:grid;align-content:start;gap:3px}
 .lobby-feed p{margin:0;font:9px/1.5 var(--mono);color:#d2d9c5;letter-spacing:.4px;overflow-wrap:anywhere}.lobby-feed p b{color:var(--amber);font-weight:500;margin-right:8px}.lobby-feed p.sys{color:#8b9684;letter-spacing:1px;font-size:8px}
 .lobby-say{display:grid;grid-template-columns:1fr auto;gap:6px}.lobby-say input{background:#232b22;color:var(--paper);border:1px solid #ccd3b833;padding:8px 10px;font:10px var(--mono);letter-spacing:.6px;min-width:0}.lobby-say input::placeholder{color:#6f7a66}
 .lobby-side{display:grid;gap:10px}.lobby-card{border:1px solid #ccd3b826;background:#151b16d9;padding:12px 14px}#lobby-join{border-color:#dfad7066}
@@ -195,3 +195,101 @@ body.downed #game{filter:grayscale(.8) brightness(.82);transition:filter .6s}
 /* Co-op invitations in the solo lobby: one row per way of connecting (online, LAN), each with Host and Join. */
 .op-invite{flex-direction:column;gap:6px}.invite-row{display:grid;grid-template-columns:54px 1fr 1fr;gap:6px;align-items:center}.invite-row em{font:600 7px var(--mono);font-style:normal;letter-spacing:1.5px;color:var(--amber);text-align:left}.op-invite .secondary{min-height:32px}
 .net-ping{display:block;margin-top:5px;font:7px var(--mono);letter-spacing:1px;color:#8fa285}
+
+/* The top bar is not a band across the screen: it has no background or border of its own, only a fade that keeps its
+   text readable, so the artwork and every screen run the full height of the window. Its contents (status, credits,
+   sound, settings) float over whatever is behind. Screens start at the very top and pad their content down past it. */
+.topbar,body.playing .topbar{background:linear-gradient(180deg,#0c110ce0 0,#0c110c85 55%,transparent);border-bottom:0;pointer-events:none}
+.topbar>*{pointer-events:auto}.topbar .operation,.topbar .header-actions button{text-shadow:0 1px 4px #000}
+.topbar{z-index:13}.menu,.screen,.overlay{inset:0}
+.menu-content{padding-top:calc(74px + 2.4vh)}.screen-inner,.lobby-inner,#ops .screen-inner{padding-top:86px}.overlay{padding-top:74px}
+@media(max-width:650px){.menu,.screen{inset:0}.menu-content{padding-top:84px}.screen-inner,.lobby-inner,#ops .screen-inner{padding-top:74px}}
+
+/* Every screen's head carries its way out and its shortcuts (Back, Armory, Settings), beside the wallet or lobby address,
+   so they are in the same place everywhere and the panels below keep their height for content. */
+.screen-side{display:flex;align-items:flex-end;gap:22px}.screen-tools{display:flex;gap:6px}
+.tool{display:flex;align-items:center;gap:9px;min-height:32px;padding:0 13px;border:1px solid #ccd3b839;background:#151b1599;font:8px var(--mono);letter-spacing:1.3px;white-space:nowrap;transition:border-color .15s,color .15s}
+.tool span{color:var(--amber);font-size:11px;line-height:1}.tool.back-button{color:#aab49a}.tool:hover,.tool:focus-visible{border-color:var(--amber);color:var(--paper)}
+.brief-actions{display:flex;flex-wrap:wrap}.brief-actions>*{flex:1 1 220px}
+.record-col>p{font-size:12px;line-height:1.7;color:#c3cbb6}.record-col>h4:first-child{margin-top:0}
+@media(max-width:900px){.screen-side{flex-wrap:wrap;justify-content:flex-end}}
+@media(max-width:650px){.screen-side{justify-content:flex-start;align-items:flex-start}.screen-tools{flex-wrap:wrap}}
+
+/* Regions that scroll (the armory list, the weapon picker, settings, squad chat) get a slim rail in the game's own
+   colours in place of the browser's scrollbar: a hairline track with a square marker that turns amber under the cursor. */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:linear-gradient(90deg,transparent 4px,#d3d8ba1f 4px,#d3d8ba1f 6px,transparent 6px)}
+::-webkit-scrollbar-thumb{background:#8c9a7f;border:3px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover,::-webkit-scrollbar-thumb:active{background-color:var(--amber)}
+::-webkit-scrollbar-button{display:none}::-webkit-scrollbar-corner{background:transparent}
+@supports not selector(::-webkit-scrollbar){*{scrollbar-width:thin;scrollbar-color:#8c9a7f transparent}}
+.armory-list,.picker-list{padding-right:6px;scroll-padding:6px}
+
+/* ---------- Fitted layout ----------
+   game.js adds body.fit for any window a PC would use and sets --ui-scale to how the window compares with the
+   1366x768 the interface is drawn for. The menu, the pre-game screens, the top bar and the dialogs are zoomed by that
+   much, so they look the same in a small window as on a full-screen 4K display, and each screen is exactly one window
+   tall: nothing scrolls as a page. Only lists that are naturally longer than their panel scroll, inside it.
+   --screen-w/h are the window's size in those drawn units, never less than 1366x768; a window that is taller or wider
+   than 16:9 gives the panels the extra room. These rules also replace the narrow-window rearrangements above, which
+   key off the real window width and no longer apply once the interface is scaled instead. */
+.screen-inner,dialog,.overlay .panel,body.fit:not(.playing) .topbar,body.fit .menu-content,body.fit .dossier,body.fit .menu-footer{zoom:var(--ui-scale,1)}
+dialog{max-height:calc(var(--screen-h,768)*.9px)}#ending .panel{max-height:calc(var(--screen-h,768)*1px - 110px / var(--ui-scale,1))}
+body.fit .menu,body.fit .screen{overflow:hidden}
+body.fit .screen-inner,body.fit .lobby-inner,body.fit #ops .screen-inner{height:calc(var(--screen-h,768)*1px);max-width:1560px;padding:64px 3.4% 16px;display:flex;flex-direction:column}
+body.fit .screen-head{flex:none;flex-direction:row;align-items:flex-end;margin-bottom:12px;padding-bottom:10px}body.fit .screen-head h2{font-size:44px}
+body.fit .screen-side{flex-wrap:nowrap}body.fit .segmented{grid-template-columns:repeat(4,1fr)}
+body.fit .ops-grid,body.fit .armory-grid,body.fit .lobby-grid{flex:1;min-height:0;grid-template-rows:minmax(0,1fr);align-items:stretch}
+/* Campaign: the six operations share the column's height, the briefing keeps Deploy at its foot, and the operator
+   card takes whatever height the loadout leaves. */
+body.fit .ops-grid{grid-template-columns:286px minmax(0,1fr) 350px;gap:18px}
+body.fit .mission-list{grid-auto-rows:minmax(0,1fr);align-content:stretch}body.fit .mission-card{min-height:0}
+body.fit .briefing{display:flex;flex-direction:column;min-height:0;padding:18px 22px}
+body.fit .brief-body{flex:1;min-height:0;overflow-y:auto}body.fit .brief-actions{flex:none;margin-top:14px}
+body.fit .ops-operator{grid-column:auto;display:flex;flex-direction:column;gap:10px;min-height:0}body.fit .ops-operator>*{flex:none}body.fit .ops-operator .operator{flex:1;min-height:0}
+/* The soldier fills the card it stands in, whatever height that turns out to be. */
+body.fit .operator{grid-template-rows:auto minmax(0,1fr) auto auto}body.fit .op-figure{position:relative;min-height:0}
+body.fit .op-figure .soldier,body.fit .ops-operator .op-figure .soldier{position:absolute;inset:0;margin:auto;height:100%;max-height:440px;width:auto;max-width:100%}
+/* Armory: tabs, then the list (which scrolls) beside the detail panel, whose picture grows into spare height and whose
+   buy / equip button sits at its foot. The service record is two columns so all of it is on screen at once. */
+body.fit .tabs{flex:none;margin-bottom:12px}
+body.fit .armory-grid{grid-template-columns:minmax(260px,380px) minmax(0,1fr);gap:20px}
+body.fit .armory-list{max-height:none;min-height:0;overflow-y:auto}
+body.fit .armory-detail{display:flex;flex-direction:column;min-height:0;overflow-y:auto;padding:18px 24px}body.fit .armory-detail>*{flex:none}
+body.fit .armory-detail>p{margin:0 0 10px}body.fit .armory-detail .ad-source{margin:10px 0 0}body.fit .bars{margin:6px 0 14px}
+body.fit .ad-art{flex:1 1 128px;min-height:96px;max-height:240px;margin:-4px 0 14px}body.fit .ad-art .icon{height:74%;max-height:none}body.fit .ad-art.ad-gear .icon,body.fit .ad-art.ad-upgrade .icon{height:62%}
+body.fit .ad-actions{margin-top:auto;padding-top:16px;width:100%}
+body.fit .armory-detail.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 34px;align-content:start;align-self:start;max-height:100%;padding:22px 24px}
+/* Lobby: the squad cards take the height the chat or records strip leaves; the side column keeps Ready Up at its foot. */
+body.fit .lobby-grid{grid-template-columns:minmax(0,1fr) 372px;gap:18px}
+body.fit .lobby-stage{grid-template-rows:minmax(0,1fr);grid-auto-rows:auto;min-height:0}body.fit .squad{grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr);min-height:0}
+body.fit .lobby-side{display:flex;flex-direction:column;gap:10px;min-height:0;overflow-y:auto}body.fit .lobby-side>*{flex:none}body.fit .lobby-actions{margin-top:auto}
+/* Main menu: the same composition at every size, drawn as it is at 1366x768. Taller windows get the synopsis back. */
+body.fit .menu-content{width:55%;padding:calc(92px + (var(--screen-h,768)*1px - 768px)*.3) 0 0 7%}
+body.fit h1{font-size:95px;margin:16px 0 20px}body.fit .classified{display:flex;margin-bottom:20px}body.fit .tagline{display:block;font-size:17px}
+body.fit .synopsis{display:none}body.fit.tall .synopsis{display:block;font-size:11px;margin-top:14px}
+body.fit .mode-cards,body.fit .menu-meta{width:440px}body.fit .mode-cards{margin-top:22px}body.fit .mode-card{height:104px}body.fit .mode-card.hero{height:118px}
+body.fit .hero .mode-text b{font-size:36px}body.fit .mode-card:not(.hero) .mode-text b{font-size:18px}
+body.fit .dossier{top:17%;right:5.2%;width:290px}
+
+/* End of a run. With no tally (killed in a mission) it is the narrow panel it always was. With one, the debrief uses
+   the whole window: the story and the next steps on the left, the credit tally in the middle, rank, contracts and
+   commendations on the right, so nothing has to be scrolled to be read. In a window too small to scale to, the same
+   blocks simply stack and the panel scrolls. */
+.ending-actions{display:grid;gap:10px}.debrief-lines{max-height:none;overflow:visible}
+.debrief-card h4,.ending-contracts h4{font:8px var(--mono);letter-spacing:1.6px;color:var(--amber);margin:0 0 10px;display:flex;justify-content:space-between;gap:10px}.debrief-card h4 small,.ending-contracts h4 small{color:var(--muted);font-size:7px}
+#ending:not(.tally) .ending-contracts{display:none}.ending-contracts{margin-bottom:16px}.ending-contracts .contracts{gap:6px}.ending-contracts .contract{padding:7px 10px;gap:5px 12px}
+.debrief-rewards{margin-top:16px}.debrief-rewards h4:not(:first-child){margin-top:18px}.debrief-rewards .xp{margin-top:0}
+.debrief-card h4:has(+.debrief-awards:empty){display:none}
+/* A paid-contract commendation is an award like the rest, not a contract row (the two share a class name). */
+.award.contract{grid-template-columns:none;font:inherit;letter-spacing:normal}
+body.fit #ending.tally .panel{width:min(1250px,calc(var(--screen-w,1366)*.93px));max-width:none;min-height:min(560px,calc(var(--screen-h,768)*1px - 110px / var(--ui-scale,1)));overflow:visible;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.06fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"main tally rewards" "actions tally rewards";gap:0 24px}
+body.fit .tally .ending-main{grid-area:main}body.fit .tally .ending-main h2{margin:14px 0}body.fit .tally .panel-copy{margin:14px 0 18px}body.fit .tally .run-stats{margin:18px 0;padding:16px 0}
+body.fit .tally .ending-actions{grid-area:actions;align-self:end;grid-template-columns:1fr 1fr;gap:8px}body.fit .tally .ending-actions .primary,body.fit .tally .ending-actions .text-button{grid-column:1 / -1}body.fit .tally .ending-actions .text-button{padding:11px}
+body.fit .tally .debrief{display:contents}
+body.fit .tally .debrief-card{min-height:0;overflow-y:auto;display:flex;flex-direction:column;border:1px solid #ccd3b826;background:#151b16e8;padding:18px 20px;margin:0}body.fit .tally .debrief-card>*{flex:none}
+body.fit .tally .debrief-tally{grid-area:tally}body.fit .tally .debrief-rewards{grid-area:rewards}
+body.fit .tally .debrief-lines{gap:0}body.fit .tally .dl{font-size:9px;padding:6px 0;border-bottom:1px solid #d3d8ba14}
+body.fit .tally .debrief-total{margin-top:auto;border-top:0;padding-top:16px}body.fit .tally .debrief-total b{font-size:46px;line-height:1}
+body.fit .tally .debrief-awards{display:grid;grid-template-columns:1fr 1fr;margin-top:0}body.fit .tally .award{position:relative;padding:6px 10px;align-content:center;min-width:0}body.fit .tally .award b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.fit .tally .award-art{position:absolute;right:8px;top:5px}body.fit .tally .award-art .icon{height:16px;margin:0;opacity:.85}

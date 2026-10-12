@@ -11,7 +11,7 @@ const SAVE_KEY = 'blackout-protocol-progress';
 
 // Each instance serves the game from its own loopback port, so a save written here is private to that window.
 async function bootWindow(save) {
-  const app = await electron.launch({ args: [path.join(ROOT, 'electron', 'main.js')], cwd: ROOT });
+  const app = await electron.launch({ args: [path.join(ROOT, 'electron', 'main.js'), '--windowed'], cwd: ROOT });
   const win = await app.firstWindow();
   const loaded = () => win.waitForFunction(() => document.getElementById('loading')?.hidden && window.BPApp, null, { timeout: 30000 });
   await loaded();
