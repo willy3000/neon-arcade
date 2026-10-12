@@ -154,7 +154,9 @@
   connect.addEventListener('click',async()=>{status.textContent='CONNECTING…';
    try{await NET.guestConnect(ipInput.value.trim(),netPort);}catch{status.textContent='COULD NOT CONNECT / CHECK THE ADDRESS';return;}
    status.textContent='CONNECTED / WAITING FOR THE HOST TO DEPLOY…';
-   netGuestHandler=msg=>{if(msg.type==='start')beginGuestRun(msg);else if(msg.type==='hostClosed'){netRole='solo';toast('HOST DISCONNECTED');if(mode==='playing')menu();}};});
+   netGuestHandler=msg=>{if(msg.type==='start')beginGuestRun(msg);else if(msg.type==='hostClosed'){netRole='solo';toast('HOST DISCONNECTED');if(mode==='playing')menu();}};
+   // The host only counts a socket as a player (and unlocks DEPLOY) once it receives this - see host.js.
+   NET.guestSend({type:'hello'});});
   list.append(connect);
   const cancel=document.createElement('button');cancel.type='button';cancel.className='pick';cancel.innerHTML='<div class="pick-art"></div><div><b>CANCEL</b><span>Go back.</span></div>';
   cancel.addEventListener('click',()=>{NET.guestDisconnect();$('picker').close();});list.append(cancel);

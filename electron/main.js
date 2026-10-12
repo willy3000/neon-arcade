@@ -33,7 +33,7 @@ function wireNet() {
 
   ipcMain.handle('net:hostStart', async (_e, port) => {
     host.onMessage = (msg) => mainWindow?.webContents.send('net:hostEvent', msg);
-    host.onGuestJoined = (msg) => mainWindow?.webContents.send('net:hostEvent', { type: 'guestJoined', ...msg });
+    host.onGuestJoined = (msg) => mainWindow?.webContents.send('net:hostEvent', { ...msg, type: 'guestJoined' });
     host.onGuestLeft = () => mainWindow?.webContents.send('net:hostEvent', { type: 'guestLeft' });
     return host.start(port || DEFAULT_PORT);
   });

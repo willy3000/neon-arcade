@@ -1,0 +1,26 @@
+{
+  "passed": 15,
+  "results": [
+    "title loads every asset, shows the campaign and the proving grounds, and reports the renderer",
+    "hero select offers three heroes and remembers the choice",
+    "real keys run, jump, double jump and air-dash",
+    "melee combo damages a training husk and builds a combo with real keys",
+    "grapple latches, swings and releases with a real key held",
+    "wall-run engages on a marked wall",
+    "pause freezes the simulation and resume continues it",
+    "the three heroes play differently in the browser",
+    "a controller drives movement, jumping and the grapple",
+    "campaign: intro cards, a checkpoint save, and CONTINUE after reloading the page",
+    "defeat returns the hero to the last checkpoint with full health",
+    "the first fight and the gate court run in the browser without errors",
+    "settings persist and a corrupt save does not block play",
+    "small screens keep the menus inside the viewport",
+    "the arcade library lists WILDFALL"
+  ],
+  "fps": {
+    "median": 60,
+    "slowest5pct": 60
+  },
+  "site": "gamejam-submission",
+  "note": "Headless Chromium on this machine; not a guarantee for other hardware."
+}
