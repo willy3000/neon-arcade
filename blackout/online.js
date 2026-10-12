@@ -3,7 +3,9 @@
  // passes their messages along. It offers the same calls and events as the desktop app's LAN transport (BPNet in
  // electron/preload.js), so the lobby and the game do not care which one they are talking through - and because it is
  // an ordinary WebSocket, it works in the browser build as well as the desktop app.
- const PROTOCOL=1,CONNECT_MS=9000;
+ // The wait is long on purpose: a relay on a free hosting tier is put to sleep when idle and can take most of a minute
+ // to wake for the first player of the day. A wrong address or a refused connection still fails straight away.
+ const PROTOCOL=1,CONNECT_MS=75000;
  function relayUrl(){const pick=v=>typeof v==='string'&&/^wss?:\/\/[^\s]+$/i.test(v.trim())?v.trim():'';
   try{const q=pick(new URLSearchParams(root.location.search).get('relay'));if(q)return q;}catch{}
   try{const s=pick(root.localStorage.getItem('blackout-relay-url'));if(s)return s;}catch{}

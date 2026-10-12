@@ -11,6 +11,7 @@ const { Host, DEFAULT_PORT } = require('./net/host.js');
 const { Guest } = require('./net/guest.js');
 
 const GAME_ROOT = path.join(__dirname, '..');
+const windowed = process.argv.includes('--windowed') || process.env.BP_WINDOWED === '1';
 const ENTRY = 'blackout-protocol.html';
 
 const MIME_TYPES = {
@@ -82,6 +83,9 @@ async function createWindow() {
   const port = await startLocalServer();
 
   mainWindow = new BrowserWindow({
+    // Opens full screen; F11 switches to a window of this size and back. Automated runs and development can start in a
+    // window instead with --windowed (npm run start:windowed) or BP_WINDOWED=1.
+    fullscreen: !windowed,
     width: 1366,
     height: 768,
     minWidth: 960,
@@ -99,7 +103,9 @@ async function createWindow() {
   });
 
   Menu.setApplicationMenu(null);
-  mainWindow.loadURL(`http://127.0.0.1:${port}/${ENTRY}`);
+  // Development only: 'electron . --credits=99999' (npm run start:rich) starts with a full wallet for testing the armory.
+  const credits = !app.isPackaged && process.argv.map((a) => /^--credits=(\d+)$/.exec(a)).find(Boolean);
+  mainWindow.loadURL(`http://127.0.0.1:${port}/${ENTRY}${credits ? '?credits=' + credits[1] : ''}`);
 
   mainWindow.on('closed', () => { mainWindow = null; });
 
