@@ -53,7 +53,8 @@ class Host {
     }
   }
 
-  send(msg) { if (this.socket) this.socket.write(JSON.stringify(msg) + '\n'); }
+  // A message may arrive already serialised (the game does that for its large state updates).
+  send(msg) { if (this.socket) this.socket.write((typeof msg === 'string' ? msg : JSON.stringify(msg)) + '\n'); }
 
   stop() {
     if (this.socket) this.socket.end();

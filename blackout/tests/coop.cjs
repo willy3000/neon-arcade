@@ -62,4 +62,59 @@ test('a guest can pick up a nearby health pack when closer than the player',()=>
   ticks(s,1,{});
   assert.equal(s.guest.health,70,'guest should have healed from the pack it was standing on');
 });
+// ---- Downed operators, dog tags and the revive station ----
+const kill=(s,op)=>Core.explode(s,op.x,op.y,30,500,false,'test'),HOLD=Math.ceil(Core.REVIVE_TIME/Core.DT)+2;
+test('a co-op run gets a revive station: open ground, reachable, a short run from the start',()=>{
+  const s=range();assert.ok(s.station,'co-op runs have a station');
+  assert.ok(Core.clearAt(s,s.station.x,s.station.y,40),'the station stands on open ground');
+  const d=Math.hypot(s.station.x-s.player.x,s.station.y-s.player.y);assert(d>150&&d<900,'neither on top of the start nor across the map, got '+d.toFixed(0));
+  assert.equal(Core.create({training:true}).station,null,'solo runs have none');
+});
+test('the host going down no longer ends the run: Rook drops tags and the squadmate fights on',()=>{
+  const s=range();s.guest.x=s.player.x+400;kill(s,s.player);
+  assert.equal(s.player.dead,true);assert.equal(s.dead,false,'the run continues while the squadmate is alive');
+  assert.deepEqual(s.tags.map(t=>[t.owner,t.carrier]),[['player',null]],'Rook leaves dog tags where he fell');
+  assert.ok(s.events.some(e=>e.type==='down'&&e.who==='player'));assert.ok(!s.events.some(e=>e.type==='death'),'no run-over event');
+  const px=s.player.x,ammo=s.player.ammo.rifle;ticks(s,30,{mx:1,fire:true,aimX:1500,aimY:600,guest:{mx:1}});
+  assert.equal(s.player.x,px,'a downed Rook does not move');assert.equal(s.player.ammo.rifle,ammo,'or fire');assert(s.guest.vx>60,'the squadmate still has control');
+  const hp=s.player.health;Core.damagePlayer(s,50,0,0);assert.equal(s.player.health,hp,'a downed operator takes no further damage');
+});
+test('hostiles hunt the surviving squadmate while Rook is down',()=>{
+  const s=range();s.guest.x=s.player.x+500;kill(s,s.player);
+  const e=dummy(s,{x:s.player.x+30,y:s.player.y});s.enemies=[e];ticks(s,1,{});
+  assert.equal(s.enemies[0].lastX,s.guest.x,'the enemy beside the body turns on the living operator instead');
+});
+test('carrying the tags to the revive station brings the operator back',()=>{
+  const s=range();s.guest.x=s.player.x+400;kill(s,s.player);const tag=s.tags[0];s.events=[];
+  s.guest.x=tag.x+10;s.guest.y=tag.y;ticks(s,1,{});
+  assert.equal(s.tags[0].carrier,'guest','walking over the tags picks them up');assert.ok(s.events.some(e=>e.type==='tags'&&e.by==='guest'));
+  assert.equal(s.player.dead,true,'holding the tags is not enough');
+  s.guest.x=s.station.x+20;s.guest.y=s.station.y;ticks(s,240,{});
+  assert.equal(s.player.dead,true,'standing on the pad does nothing by itself');assert.equal(s.tags[0].progress,0);
+  ticks(s,HOLD>>1,{guest:{interactDown:true}});const half=s.tags[0].progress;
+  assert(half>.45&&half<.55,'holding interact fills the station at a steady rate, got '+half);assert.equal(s.player.dead,true,'and half way is not enough');assert.ok(s.events.some(e=>e.type==='reviving'));
+  ticks(s,60,{});assert(s.tags[0].progress<half-.15,'letting go drains the progress');
+  ticks(s,30,{guest:{interactDown:true}});const kept=s.tags[0].progress;s.guest.x=s.station.x+200;ticks(s,30,{guest:{interactDown:true}});assert(s.tags[0].progress<kept,'so does stepping off the pad, even while holding');
+  s.guest.x=s.station.x+20;ticks(s,HOLD,{guest:{interactDown:true}});
+  assert.equal(s.player.dead,false,'a full '+Core.REVIVE_TIME+' second hold revives Rook');assert.equal(s.tags.length,0);assert(s.player.health>0&&s.player.health<100,'with part of his health');
+  assert(Math.hypot(s.player.x-s.station.x,s.player.y-s.station.y)<=60,'standing at the station');assert.ok(s.events.some(e=>e.type==='revive'&&e.who==='player'));
+  ticks(s,40,{mx:1});assert(s.player.vx>60,'and back under control');
+});
+test('it works the other way round: the host revives the guest',()=>{
+  const s=range();s.guest.x=s.player.x+400;const where={x:s.guest.x,y:s.guest.y};kill(s,s.guest);
+  assert.equal(s.guest.dead,true);assert.equal(s.dead,false);assert.equal(s.tags[0].owner,'guest');
+  s.player.x=where.x;s.player.y=where.y+12;ticks(s,1,{});assert.equal(s.tags[0].carrier,'player');
+  s.player.x=s.station.x;s.player.y=s.station.y+24;ticks(s,HOLD,{guest:{interactDown:true}});assert.equal(s.guest.dead,true,'only the carrier holding interact counts');
+  ticks(s,HOLD,{interactDown:true});assert.equal(s.guest.dead,false);
+  ticks(s,40,{guest:{mx:1}});assert(s.guest.vx>60,'the revived guest responds to input again');
+});
+test('losing both operators ends the run, and a solo death still ends it at once',()=>{
+  const s=range();s.guest.x=s.player.x+400;kill(s,s.player);assert.equal(s.dead,false);kill(s,s.guest);
+  assert.equal(s.dead,true,'squad wipe');assert.ok(s.events.some(e=>e.type==='death'));
+  const solo=Core.create({training:true});solo.enemies=[];Core.damagePlayer(solo,500,0,0);assert.equal(solo.dead,true);assert.equal(solo.tags.length,0);
+});
+test('determinism holds through a down and a revive',()=>{
+  const run=()=>{const s=range();s.guest.x=s.player.x+400;kill(s,s.player);ticks(s,60,i=>({guest:{mx:i%20<10?1:-1,fire:i%6===0,aimX:1500,aimY:600}}));s.guest.x=s.tags[0].x;s.guest.y=s.tags[0].y;ticks(s,2,{});s.guest.x=s.station.x;s.guest.y=s.station.y;ticks(s,HOLD,{guest:{interactDown:true}});ticks(s,90,i=>({mx:1,guest:{my:1}}));if(s.player.dead)throw new Error('not revived');return s;};
+  assert.deepEqual(run(),run());
+});
 console.log(`${passed} co-op checks passed.`);

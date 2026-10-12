@@ -16,7 +16,7 @@ const ENTRY = 'blackout-protocol.html';
 const MIME_TYPES = {
   '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css',
   '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml',
-  '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.woff': 'font/woff', '.woff2': 'font/woff2',
+  '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.woff': 'font/woff', '.woff2': 'font/woff2',
   '.txt': 'text/plain', '.md': 'text/markdown',
 };
 
@@ -87,6 +87,8 @@ async function createWindow() {
     minWidth: 960,
     minHeight: 600,
     backgroundColor: '#151915',
+    // The game's own emblem in the title bar and taskbar (the packaged .exe also carries build/icon.ico).
+    icon: path.join(__dirname, 'icon.png'),
     autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: false,
@@ -107,6 +109,9 @@ async function createWindow() {
     }
   });
 }
+
+// Without its own identity Windows files the window under Electron's taskbar entry and shows Electron's icon there.
+if (process.platform === 'win32') app.setAppUserModelId('com.neonarcade.blackoutprotocol');
 
 app.whenReady().then(() => { wireNet(); createWindow(); });
 

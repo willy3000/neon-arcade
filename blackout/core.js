@@ -16,6 +16,11 @@
   const reserveOf=(s,k)=>Math.round(W[k].reserve*s.mods.reserve*(s.mods.mastery[k]>=1?1.1:1)),reloadOf=(s,k)=>W[k].reload*s.mods.reload*(s.mods.mastery[k]>=2?.92:1),damageOf=(s,k)=>W[k].damage*(s.mods.mastery[k]>=3?1.06:1);
   function makeEnemy(s,e){const t=A[e.type]||A.infantry,gun=e.gun||s.map.guns?.[e.type]||t.gun||null;return {...e,gun,hp:t.hp,maxHp:t.hp,radius:t.radius||17,vx:0,vy:0,angle:e.angle||0,dead:false,active:false,stagger:0,cooldown:.6+rand(s),attack:0,attackAge:0,aim:0,seen:0,lastX:e.x,lastY:e.y,phase:1,clip:0,reload:0,moveTime:0,side:rand(s)>.5?1:-1,burst:0,burstT:0,shieldDown:0,disabled:0,gone:0,flashed:0,woke:false};}
   const stageDef=s=>s.map.stages[Math.min(s.stage,s.map.stages.length-1)],liveZone=s=>stageDef(s).zone;
+  // Co-op: an operator at zero health goes down instead of ending the run, and drops dog tags. The squadmate brings
+  // them back by carrying those tags to the revive station and holding interact there for REVIVE_TIME seconds; the
+  // run only ends once both are down. "lead" is whoever the
+  // hostiles should be hunting and pathing towards: Rook, or the squadmate while Rook is down.
+  const lead=s=>s.player.dead&&s.guest&&!s.guest.dead?s.guest:s.player,REVIVE_TIME=5;
   const eligible=(s,e)=>s.training||e.zone<=liveZone(s)||e.woke||e.spawned;
   function create(options={}){
     const training=options.training===true,id=training?'range':options.mission||'crash',map=World.mission(id),last=map.stages.length-1,cp=training?null:options.checkpoint||null;
@@ -48,6 +53,7 @@
         slot:0,slots:gslots,lethal:null,tactical:null,grenades:0,tacticals:0,stims:0,ammo:{},reserve:{},dead:false};
       for(const [k,w] of Object.entries(W)){s.guest.ammo[k]=w.capacity;s.guest.reserve[k]=reserveOf(s,k);}
     }
+    s.tags=[];s.station=s.guest?placeStation(s,spawn):null;
     s.camp={x:spawn.x,y:spawn.y,t:0};
     const cleared=new Set();for(let j=0;j<stage;j++){const q=map.stages[j];if(['clear','hold','boss'].includes(q.kind))cleared.add(q.zone);}
     s.enemies=map.enemies.filter(e=>training||!cleared.has(e.zone)&&!s.killed.includes(e.id)).map(e=>makeEnemy(s,e));
@@ -55,6 +61,12 @@
     event(s,'radio',stage===0?{...map.intro}:{...(map.resume||map.intro)});
     return s;
   }
+  // Where a downed squadmate is brought back. Chosen once per run: an open, reachable spot a short run from the start,
+  // as far from the enemy spawn points as that allows.
+  function placeStation(s,spawn){const n=navField(s),pts=s.map.spawnPoints||[];let best=null,score=-Infinity;
+    for(let cy=2;cy<n.h-2;cy++)for(let cx=2;cx<n.w-2;cx++){const d=n.dist[cy*n.w+cx];if(d<7||d>16)continue;const x=cx*CELL+20,y=cy*CELL+20;if(!clearAt(s,x,y,46))continue;
+      const far=pts.length?Math.min(...pts.map(q=>distance(q,{x,y}))):400,v=Math.min(far,520)-Math.abs(d-11)*18;if(v>score){score=v;best={x,y};}}
+    return best||{x:spawn.x,y:spawn.y};}
   // Higher difficulties add soldiers beside the authored ones (same room, deterministic) rather than inflating health.
   function reinforce(s,spawn){const D=diff(s),pool=s.map.insane||[];if(!D.extra||s.training)return;const extra=[];
     for(const e of s.enemies){const t=A[e.type];if(t.boss||t.static||rand(s)>D.extra)continue;const id=e.id+'x';if(s.killed.includes(id))continue;
@@ -85,14 +97,27 @@
     for(let i=0;i<(t.pellets||1);i++){const bullet=s.projectiles.find(b=>!b.active);if(!bullet)break;const a=angle+(rand(s)-.5)*2*(t.spread??.035)*D.spread,speed=(opts.speed||t.bullet||620)*D.bullet;
       Object.assign(bullet,{active:true,x:m.x,y:m.y,px:m.x,py:m.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,remaining:t.reach||1100,damage:(opts.damage||t.damage)*(s.map.threat||1),enemy:true,weapon:e.gun||'rifle',pierce:0,explosive:rocket,stagger:0,breach:false,hitIds:[],whiz:false});}
     e.shotAge=0;event(s,'shot',{x:m.x,y:m.y,angle,weapon:rocket?'rocket':e.gun||'rifle',enemy:true});}
-  function damagePlayer(s,amount,x,y,src=''){const p=s.player;if(s.dead||s.cinematic>0||p.iframes>0||p.state==='roll'&&p.age>=.055&&p.age<=.25||p.state==='dive'&&p.age>=.07&&p.age<=.28||p.state==='vault'&&p.age<.24)return false;
+  function damagePlayer(s,amount,x,y,src=''){const p=s.player;if(s.dead||p.dead||s.cinematic>0||p.iframes>0||p.state==='roll'&&p.age>=.055&&p.age<=.25||p.state==='dive'&&p.age>=.07&&p.age<=.28||p.state==='vault'&&p.age<.24)return false;
     const D=diff(s);amount*=D.dmg;const hadArmor=p.armor>0,armor=Math.min(p.armor,amount*.65);p.armor-=armor;p.health=Math.max(0,p.health-amount+armor);s.stats.damage+=amount-armor;p.iframes=D.iframes;p.heal=0;s.director.rest=1.3;event(s,'damage',{x:p.x,y:p.y,amount,fromX:x,fromY:y,src});
-    if(hadArmor&&p.armor<.5){p.armor=0;event(s,'armorbreak');}if(p.health<=0){s.dead=true;p.state='death';p.age=0;event(s,'death');}return true;
+    if(hadArmor&&p.armor<.5){p.armor=0;event(s,'armorbreak');}if(p.health<=0){if(s.guest&&!s.guest.dead)down(s,p);else{s.dead=true;p.state='death';p.age=0;event(s,'death');}}return true;
   }
-  // Mirrors damagePlayer for the co-op guest, but a downed guest never ends the run (only s.dead does) - see stepGuest.
+  function down(s,op){const who=op===s.guest?'guest':'player';Object.assign(op,{dead:true,state:'death',age:0,health:0,vx:0,vy:0,reload:0,heal:0});s.tags.push({owner:who,x:op.x,y:op.y,carrier:null,progress:0});event(s,'down',{who,x:op.x,y:op.y});}
+  // Tags are picked up by walking over them. Reviving means standing on the station with them and holding interact:
+  // progress builds over REVIVE_TIME, and drains twice as fast whenever the carrier lets go or steps off the pad. The
+  // revived operator stands up beside the station with part of their health and a moment of protection.
+  function stepRevive(s,input,dt){if(!s.guest||!s.tags.length)return;const ops={player:s.player,guest:s.guest};
+    for(const t of s.tags){const by=t.owner==='player'?'guest':'player',mate=ops[by],op=ops[t.owner];if(mate.dead)continue;
+      if(!t.carrier){if(distance(mate,t)<38){t.carrier=by;event(s,'tags',{who:t.owner,by,x:t.x,y:t.y});}continue;}
+      t.x=mate.x;t.y=mate.y;const held=by==='player'?input.interactDown:input.guest&&input.guest.interactDown;
+      if(!held||distance(mate,s.station)>64){t.progress=Math.max(0,t.progress-dt/REVIVE_TIME*2);continue;}
+      if(t.progress<=0)event(s,'reviving',{who:t.owner,by,x:s.station.x,y:s.station.y});t.progress+=dt/REVIVE_TIME;if(t.progress<1)continue;
+      const spot=[[0,0],[44,0],[-44,0],[0,44],[0,-44]].map(([dx,dy])=>({x:s.station.x+dx,y:s.station.y+dy})).find(q=>clearAt(s,q.x,q.y,17)&&distance(q,mate)>30)||s.station;
+      Object.assign(op,{dead:false,x:spot.x,y:spot.y,vx:0,vy:0,health:60,stamina:100,state:'idle',age:0,iframes:2,reload:0,heal:0});t.done=true;event(s,'revive',{who:t.owner,by,x:spot.x,y:spot.y});}
+    s.tags=s.tags.filter(t=>!t.done);}
+  // Mirrors damagePlayer for the co-op guest. A downed guest never ends the run by itself; losing both operators does.
   function damageGuest(s,amount,x,y,src=''){const p=s.guest;if(!p||p.dead||s.cinematic>0||p.iframes>0)return false;
     const D=diff(s);amount*=D.dmg;const hadArmor=p.armor>0,armor=Math.min(p.armor,amount*.65);p.armor-=armor;p.health=Math.max(0,p.health-amount+armor);p.iframes=D.iframes;event(s,'damage',{x:p.x,y:p.y,amount,fromX:x,fromY:y,src,guest:true});
-    if(hadArmor&&p.armor<.5)p.armor=0;if(p.health<=0){p.dead=true;p.state='death';p.age=0;event(s,'death',{guest:true});}return true;
+    if(hadArmor&&p.armor<.5)p.armor=0;if(p.health<=0){down(s,p);if(s.player.dead){s.dead=true;event(s,'death');}}return true;
   }
   function damageEnemy(s,e,amount,angle=0,stagger=.15,source='rifle',bypass=false,blast=false){if(e.dead||e.gone>0)return;const t=A[e.type]||A.infantry;
     if(t.front&&!bypass&&!(e.shieldDown>0)&&!(e.disabled>0)&&Math.abs(wrap(angle+Math.PI-e.angle))<.85){amount*=t.front;event(s,'armorhit',{x:e.x,y:e.y});}
@@ -100,7 +125,7 @@
     if(t.barrier&&!(e.shieldDown>0)&&!e.barrierOff){amount*=t.barrier;event(s,'shieldhit',{x:e.x,y:e.y});}
     e.hp-=amount;const resistant=t.boss&&source!=='melee'&&!blast;e.stagger=t.static?0:Math.max(e.stagger,resistant?Math.min(.025,stagger):stagger);if(!resistant){e.attack=0;e.attackAge=0;e.burst=0;}
     if(!t.static)move(s,e,Math.cos(angle)*Math.min(t.boss?3:14,amount*.18),Math.sin(angle)*Math.min(t.boss?3:14,amount*.18));
-    if(source!=='enemy'&&!e.active){e.active=true;e.woke=true;e.seen=Math.max(e.seen,2.5);e.lastX=s.player.x;e.lastY=s.player.y;}else if(source!=='enemy')e.woke=true;
+    if(source!=='enemy'&&!e.active){e.active=true;e.woke=true;e.seen=Math.max(e.seen,2.5);e.lastX=lead(s).x;e.lastY=lead(s).y;}else if(source!=='enemy')e.woke=true;
     event(s,'hit',{id:e.id,x:e.x,y:e.y,angle,amount,player:source!=='enemy'});s.stats.hits++;if(source==='melee')s.hitstop=Math.max(s.hitstop,.025);
     if(e.hp<=0){e.dead=true;e.deathAge=0;s.stats.kills++;let credits=0;
       if(source!=='enemy'){s.mastery[source]=(s.mastery[source]||0)+1;s.combo=s.time-s.comboAt<3.5?s.combo+1:1;s.comboAt=s.time;s.stats.bestCombo=Math.max(s.stats.bestCombo,s.combo);credits=Math.round((t.bounty||15)*(1+.25*Math.min(s.combo-1,8))*(source==='melee'?1.5:1));s.stats.credits+=credits;}
@@ -188,7 +213,7 @@
     else if(kind==='emp'){event(s,'emp',{x:g.x,y:g.y});for(const h of s.hazards)if(distance(g,{x:h.x+h.w/2,y:h.y+h.h/2})<380)h.off=9;
       for(const e of s.enemies){const t=A[e.type];if(e.dead||distance(e,g)>320)continue;if(t.flying&&t.machine){e.detonated=true;damageEnemy(s,e,999,0,.1,'emp',true,true);}
         else if(t.machine){e.disabled=e.type==='mech'?3.5:e.type==='apc'?5:9;e.shieldDown=Math.max(e.shieldDown,8);e.attack=0;e.burst=0;}else if(t.front){e.shieldDown=9;e.stagger=Math.max(e.stagger,1.2);}else e.stagger=Math.max(e.stagger,.5);}}}
-  function stepPlayer(s,input,dt){const p=s.player,w=W[p.slots[p.slot]],busy=['slide','roll','dive','vault','melee'].includes(p.state);p.age+=dt;p.shotAge+=dt;p.cooldown=Math.max(0,p.cooldown-dt);p.iframes=Math.max(0,p.iframes-dt);p.recoil=Math.max(0,p.recoil-dt*.18);p.aiming=!!input.aiming;
+  function stepPlayer(s,input,dt){if(s.player.dead)return;const p=s.player,w=W[p.slots[p.slot]],busy=['slide','roll','dive','vault','melee'].includes(p.state);p.age+=dt;p.shotAge+=dt;p.cooldown=Math.max(0,p.cooldown-dt);p.iframes=Math.max(0,p.iframes-dt);p.recoil=Math.max(0,p.recoil-dt*.18);p.aiming=!!input.aiming;
     const mx=input.mx||0,my=input.my||0,len=Math.hypot(mx,my),nx=len?mx/len:0,ny=len?my/len:0;
     if(Number.isFinite(input.aimX)&&Number.isFinite(input.aimY))p.angle=Math.atan2(input.aimY-p.y,input.aimX-p.x);
     const want=input.swap?1-p.slot:input.slot;if(want!==undefined&&want!==p.slot&&p.slots[want]){p.slot=want;p.reload=0;p.cooldown=.15;event(s,'swap',{weapon:p.slots[want]});}
@@ -242,12 +267,12 @@
   // Breadth-first distance field to the player on the 40px grid. Hunters follow it around buildings instead of stalling at a last-seen corner.
   function navField(s){const w=Math.ceil(s.map.width/CELL),h=Math.ceil(s.map.height/CELL),sig=s.walls.length*1000+s.walls.filter(b=>b.dead).length;let n=s.nav;
     if(!n||n.sig!==sig){const blocked=new Uint8Array(w*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++)blocked[y*w+x]=clearAt(s,x*CELL+20,y*CELL+20,15)?0:1;n=s.nav={sig,w,h,blocked,dist:new Int16Array(w*h),cell:-1,at:-9};}
-    const pc=clamp(Math.floor(s.player.y/CELL),0,h-1)*w+clamp(Math.floor(s.player.x/CELL),0,w-1);
+    const pc=clamp(Math.floor(lead(s).y/CELL),0,h-1)*w+clamp(Math.floor(lead(s).x/CELL),0,w-1);
     if(n.cell!==pc||s.time-n.at>1.5){n.cell=pc;n.at=s.time;n.dist.fill(-1);const queue=new Int32Array(w*h);let head=0,tail=0;n.dist[pc]=0;queue[tail++]=pc;
       while(head<tail){const id=queue[head++],cx=id%w,cy=(id-cx)/w;for(const [dx,dy] of DIRS){const x=cx+dx,y=cy+dy;if(x<0||y<0||x>=w||y>=h)continue;const nid=y*w+x;if(n.dist[nid]>=0||n.blocked[nid]||dx&&dy&&(n.blocked[cy*w+x]||n.blocked[y*w+cx]))continue;n.dist[nid]=n.dist[id]+1;queue[tail++]=nid;}}}
     return n;}
   function chase(s,e,speed,dt){const n=navField(s),cx=Math.floor(e.x/CELL),cy=Math.floor(e.y/CELL),here=n.dist[cy*n.w+cx];let best=null,bd=here<0?32767:here;
-    if(here>=0&&here<=1){enemyMovement(s,e,s.player.x,s.player.y,speed,dt);return;}
+    if(here>=0&&here<=1){enemyMovement(s,e,lead(s).x,lead(s).y,speed,dt);return;}
     for(const [dx,dy] of DIRS){const x=cx+dx,y=cy+dy;if(x<0||y<0||x>=n.w||y>=n.h)continue;const d=n.dist[y*n.w+x];if(d<0||d>=bd)continue;if(dx&&dy&&(n.blocked[cy*n.w+x]||n.blocked[y*n.w+cx]))continue;bd=d;best={x:x*CELL+20,y:y*CELL+20};}
     enemyMovement(s,e,best?best.x:e.lastX,best?best.y:e.lastY,speed,dt);}
   function leadAim(s,e,t,tgt){const D=diff(s),speed=(t.bullet||620)*D.bullet,tt=distance(e,tgt)/speed;return Math.atan2(e.lastY+(tgt.vy||0)*tt*D.lead-e.y,e.lastX+(tgt.vx||0)*tt*D.lead-e.x);}
@@ -264,8 +289,8 @@
       const burst=(t.burst||1)+((t.burst||1)===1&&!t.locked&&!t.rocket&&!t.boss?diff(s).burst||0:0);if(burst>1){e.burst=burst-1;e.burstT=t.gap||.1;e.burstAim=a;}
       if(t.blink)e.blinkAt=.55;}
   }
-  function blink(s,e){const p=s.player,list=(s.map.perches||[]).filter(q=>distance(q,p)>360&&distance(q,e)>200);if(list.length){const pick=list[Math.floor(rand(s)*list.length)];e.x=pick.x;e.y=pick.y;}e.cooldown=.5+rand(s)*.5;e.attack=0;e.seen=4;e.lastX=p.x;e.lastY=p.y;event(s,'blinkin',{x:e.x,y:e.y});}
-  function stepEnemies(s,dt){const p=s.player,D=diff(s);s.squad.nade=Math.max(0,s.squad.nade-dt);for(const e of s.enemies){if(e.dead){e.deathAge=(e.deathAge||0)+dt;continue;}const type=A[e.type]||A.infantry;
+  function blink(s,e){const p=lead(s),list=(s.map.perches||[]).filter(q=>distance(q,p)>360&&distance(q,e)>200);if(list.length){const pick=list[Math.floor(rand(s)*list.length)];e.x=pick.x;e.y=pick.y;}e.cooldown=.5+rand(s)*.5;e.attack=0;e.seen=4;e.lastX=p.x;e.lastY=p.y;event(s,'blinkin',{x:e.x,y:e.y});}
+  function stepEnemies(s,dt){const p=lead(s),D=diff(s);s.squad.nade=Math.max(0,s.squad.nade-dt);for(const e of s.enemies){if(e.dead){e.deathAge=(e.deathAge||0)+dt;continue;}const type=A[e.type]||A.infantry;
       e.vx=0;e.vy=0;e.shotAge=(e.shotAge||0)+dt;e.cooldown-=dt;e.stagger=Math.max(0,e.stagger-dt);e.reload=Math.max(0,e.reload-dt);e.shieldDown=Math.max(0,(e.shieldDown||0)-dt);e.disabled=Math.max(0,(e.disabled||0)-dt);e.flashed=Math.max(0,(e.flashed||0)-dt);
       if(e.gone>0){e.gone-=dt;if(e.gone<=0)blink(s,e);continue;}
       if(e.blinkAt>0){e.blinkAt-=dt;if(e.blinkAt<=0){e.gone=.9;e.burst=0;e.attack=0;event(s,'blink',{x:e.x,y:e.y});continue;}}
@@ -302,7 +327,7 @@
         else if(e.cooldown>.4)enemyMovement(s,e,e.x-Math.sin(aim)*e.side*45,e.y+Math.cos(aim)*e.side*45,type.speed*.6,dt);
       }
     }}
-  function warnSpawn(s,entries,quiet=false){const pts=s.map.spawnPoints||[];for(const e of entries){let pos=e;if(distance(s.player,e)<340){pos=pts.find(a=>distance(s.player,a)>=340&&clearAt(s,a.x,a.y,25));}if(!pos)continue;const warning={...e,x:pos.x,y:pos.y,delay:2.3};s.spawnWarnings.push(warning);event(s,'spawnwarning',{x:warning.x,y:warning.y});}if(!quiet)event(s,'toast',{text:'HOSTILE REINFORCEMENTS / WATCH THE APPROACHES'});}
+  function warnSpawn(s,entries,quiet=false){const pts=s.map.spawnPoints||[],near=lead(s);for(const e of entries){let pos=e;if(distance(near,e)<340){pos=pts.find(a=>distance(near,a)>=340&&clearAt(s,a.x,a.y,25));}if(!pos)continue;const warning={...e,x:pos.x,y:pos.y,delay:2.3};s.spawnWarnings.push(warning);event(s,'spawnwarning',{x:warning.x,y:warning.y});}if(!quiet)event(s,'toast',{text:'HOSTILE REINFORCEMENTS / WATCH THE APPROACHES'});}
   function entriesFor(s,entries,st){const D=diff(s),pts=s.map.spawnPoints||[],out=[];
     entries.forEach((e,i)=>{if(e.min&&!atLeast(s,e.min))return;const type=s.difficulty==='story'&&e.story?e.story:e.type,p=e.at!==undefined?pts[e.at%pts.length]:e;if(!p)return;out.push({id:e.id||'s'+s.tick+'_'+i,type,x:p.x,y:p.y,zone:st.zone});
       if(D.waveExtra&&!A[type].boss&&pts.length&&rand(s)<D.waveExtra){const q=pts[Math.floor(rand(s)*pts.length)];out.push({id:'s'+s.tick+'_'+i+'x',type,x:q.x,y:q.y,zone:st.zone});}});
@@ -318,7 +343,7 @@
     if(d.wave===0||d.phase==='rest'){d.timer=(d.timer??3)-dt;s.progress=0;if(d.timer<=0){d.wave++;d.phase='fight';d.queue=composeWave(s,d.wave);event(s,'wave',{wave:d.wave});event(s,'toast',{text:'WAVE '+d.wave+(d.wave%5===0?' / COMMANDER INBOUND':'')});}}
     else if(!d.queue.length&&alive===0){d.phase='rest';d.timer=6;s.stats.wave=d.wave;const bonus=60+d.wave*25;s.stats.credits+=bonus;event(s,'waveclear',{wave:d.wave,bonus});
       s.pickups=s.pickups.filter(q=>!q.taken||q.base);for(const q of s.pickups)if(q.base)q.taken=false;}}
-  function director(s,dt){const d=s.director,p=s.player;d.clock+=dt;d.rest=Math.max(0,d.rest-dt);d.pressure=clamp(s.enemies.filter(e=>e.active&&!e.dead).length/7+(100-p.health)/200,0,1);
+  function director(s,dt){const d=s.director,p=lead(s);d.clock+=dt;d.rest=Math.max(0,d.rest-dt);d.pressure=clamp(s.enemies.filter(e=>e.active&&!e.dead).length/7+(100-p.health)/200,0,1);
     d.supplyCooldown=Math.max(0,(d.supplyCooldown||0)-dt);const equipped=p.slots[p.slot];
     if(!s.training&&d.supplyCooldown===0&&p.reserve[equipped]<W[equipped].capacity&&s.pickups.filter(a=>!a.taken&&a.type==='ammo').length<2){const x=p.x-Math.cos(p.angle)*80,y=p.y-Math.sin(p.angle)*80;if(clearAt(s,x,y,12)){s.pickups.push({id:'support'+s.tick,x,y,type:'ammo',taken:false});d.supplyCooldown=18;}}
     for(const warning of s.spawnWarnings){warning.delay-=dt;if(warning.delay<=0&&!warning.spawned){warning.spawned=true;const e=makeEnemy(s,warning);e.active=true;e.seen=4;e.lastX=p.x;e.lastY=p.y;e.spawned=true;e.hunt=true;const existing=s.enemies.find(a=>a.id===e.id);if(existing)Object.assign(existing,e);else s.enemies.push(e);}}
@@ -349,7 +374,7 @@
     for(const h of s.hazards){h.off=Math.max(0,h.off-dt);h.on=h.off<=0&&((s.time+h.phase)%h.period)<h.period*h.duty;
       if(h.on&&!p.zap&&circleBox(p.x,p.y,p.radius-3,h)&&damagePlayer(s,22,h.x+h.w/2,h.y+h.h/2,'laser')){p.zap=.7;event(s,'zap',{x:p.x,y:p.y});}
       if(h.on&&gp&&!gp.zap&&circleBox(gp.x,gp.y,gp.radius-3,h)&&damageGuest(s,22,h.x+h.w/2,h.y+h.h/2,'laser')){gp.zap=.7;event(s,'zap',{x:gp.x,y:gp.y});}}}
-  function stepPickups(s,dt){const p=s.player,gp=s.guest&&!s.guest.dead?s.guest:null;for(const pick of s.pickups){if(pick.taken||pick.type==='supply')continue;
+  function stepPickups(s,dt){const p=s.player.dead?{x:-1e9,y:-1e9}:s.player,gp=s.guest&&!s.guest.dead?s.guest:null;for(const pick of s.pickups){if(pick.taken||pick.type==='supply')continue;
       if(pick.type==='weapon'){if(!pick.owned&&s.owned.includes(pick.weapon))pick.owned=true;if(distance(pick,p)<=35&&!pick.owned){s.owned.push(pick.weapon);pick.owned=true;event(s,'weaponfound',{weapon:pick.weapon,x:pick.x,y:pick.y});}if(pick.owned){pick.ttl+=dt;if(pick.ttl>45)pick.taken=true;}continue;}
       // Lethal/tactical gadgets stay player-only: the guest's leaner v1 kit has no gadget slots to fill.
       if(pick.type==='lethal'){if(distance(pick,p)>35||!p.lethal)continue;p.grenades=Math.min(G[p.lethal].count+s.mods.charges+2,p.grenades+1);pick.taken=true;event(s,'pickup',{kind:pick.type,x:pick.x,y:pick.y});continue;}
@@ -368,7 +393,7 @@
     if(s.buffered){input={...input,...s.buffered};s.buffered=null;}
     s.tick++;s.time+=dt;s.flowTime=Math.max(0,s.flowTime-dt);
     if(s.cinematic>0){s.cinematic+=dt;const cin=stageDef(s).cinematic||{duration:2.5,beats:[]};s.beats=s.beats||{};cin.beats.forEach((b,i)=>{if(s.cinematic>b.at&&!s.beats[i]){s.beats[i]=true;if(b.explode)explode(s,s.player.x+b.explode[0],s.player.y+b.explode[1],b.explode[2],0);if(b.radio)event(s,'radio',{...b.radio});}});if(s.cinematic>cin.duration){s.completed=true;event(s,'complete',{...rating(s)});}return;}
-    stepPlayer(s,input,dt);if(s.dead)return;if(s.guest)stepGuest(s,input.guest||{},dt);stepEnemies(s,dt);stepProjectiles(s,dt);stepThrown(s,dt);if(s.dead)return;stepPickups(s,dt);director(s,dt);
+    stepPlayer(s,input,dt);if(s.dead)return;if(s.guest)stepGuest(s,input.guest||{},dt);stepRevive(s,input,dt);stepEnemies(s,dt);stepProjectiles(s,dt);stepThrown(s,dt);if(s.dead)return;stepPickups(s,dt);director(s,dt);
   }
-  return {DT,CELL,create,step,move,clearAt,lineOfSight,sees,circleBox,segmentBox,segmentCircle,distance,shoot,damagePlayer,damageEnemy,damageProp,explode,vault,interact,melee,checkpoint,resupply,rating,stageDef,advance,enterStage,eligible,navField,nearbyWeapon,reserveOf,diff};
+  return {DT,CELL,REVIVE_TIME,create,step,move,clearAt,lineOfSight,sees,circleBox,segmentBox,segmentCircle,distance,shoot,damagePlayer,damageEnemy,damageProp,explode,vault,interact,melee,checkpoint,resupply,rating,stageDef,advance,enterStage,eligible,navField,nearbyWeapon,reserveOf,diff};
 });

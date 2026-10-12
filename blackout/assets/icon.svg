@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Blackout Protocol emblem: an operator in front of an eclipse. Project-original artwork.
+       Shapes are kept bold so it still reads as an app icon at 16 pixels. -->
+  <defs>
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#262f25"/><stop offset="1" stop-color="#0b0f0b"/></linearGradient>
+    <radialGradient id="corona" cx="128" cy="110" r="104" gradientUnits="userSpaceOnUse"><stop offset=".6" stop-color="#ffd58a" stop-opacity="0"/><stop offset=".69" stop-color="#ffd58a"/><stop offset=".78" stop-color="#e7a95c" stop-opacity=".75"/><stop offset="1" stop-color="#c9843c" stop-opacity="0"/></radialGradient>
+    <linearGradient id="helmet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#72825a"/><stop offset=".55" stop-color="#4d5b3d"/><stop offset="1" stop-color="#2c3626"/></linearGradient>
+    <linearGradient id="lens" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe2a0"/><stop offset=".5" stop-color="#f0a94e"/><stop offset="1" stop-color="#b96a26"/></linearGradient>
+    <clipPath id="tile"><rect x="8" y="8" width="240" height="240" rx="54"/></clipPath>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#plate)"/>
+  <g clip-path="url(#tile)">
+    <!-- the eclipse: a burning rim around a black disc -->
+    <circle cx="128" cy="110" r="104" fill="url(#corona)"/>
+    <circle cx="128" cy="110" r="70" fill="#070a07"/>
+    <path d="M70.6 69.8A70 70 0 0 1 185.4 69.8" fill="none" stroke="#fff0c9" stroke-width="5" stroke-linecap="round" opacity=".9"/>
+    <!-- reticle ticks on the rim -->
+    <g stroke="#e7e8de" stroke-width="7" stroke-linecap="butt"><path d="M128 12v24M14 110h24M218 110h24"/></g>
+    <!-- shoulders and collar -->
+    <path d="M26 262Q30 198 92 186L164 186Q226 198 230 262Z" fill="#1d261c" stroke="#070a07" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M92 186L128 214L164 186" fill="none" stroke="#3b4734" stroke-width="7" stroke-linejoin="round"/>
+    <!-- balaclava -->
+    <path d="M80 140Q80 198 128 206Q176 198 176 140Z" fill="#0e130e" stroke="#070a07" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M110 186Q128 194 146 186" fill="none" stroke="#263024" stroke-width="5" stroke-linecap="round"/>
+    <!-- helmet -->
+    <path d="M60 140Q52 54 128 52Q204 54 196 140Q196 152 184 152L72 152Q60 152 60 140Z" fill="url(#helmet)" stroke="#070a07" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M78 96Q88 68 124 64" fill="none" stroke="#a9ba88" stroke-width="6" stroke-linecap="round" opacity=".75"/>
+    <path d="M62 118H194" stroke="#232c1f" stroke-width="8"/>
+    <rect x="112" y="52" width="32" height="15" rx="4" fill="#232c1f" stroke="#070a07" stroke-width="4"/>
+    <!-- goggles -->
+    <rect x="58" y="112" width="140" height="48" rx="18" fill="#141a14" stroke="#070a07" stroke-width="6"/>
+    <path d="M70 124H120L114 150H80Q70 150 70 140Z" fill="url(#lens)" stroke="#070a07" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M186 124H136L142 150H176Q186 150 186 140Z" fill="url(#lens)" stroke="#070a07" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M78 130H104M144 130H170" stroke="#fff6dc" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+  </g>
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="none" stroke="#dfad70" stroke-opacity=".5" stroke-width="4"/>
+</svg>

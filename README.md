@@ -32,10 +32,26 @@ points the Electron window at it — the same fix as `npm run serve`, just autom
 bundled. See `WINDOWS_PACKAGING.md` for why this approach was chosen, how to build a
 distributable `.exe`, and what's left before a Steam upload.
 
+## Co-op (Holdout, two players)
+
+One player hosts and runs the game; the other joins. There are two ways to connect, both
+offered from the Holdout lobby:
+
+- **LAN** — desktop app only. The host shares the address shown in their lobby; the guest
+  types it in. Both machines must be on the same network.
+- **Online** — desktop app or web page. Both players connect out to a small relay service
+  and pair up with a five-character room code, so no router setup is needed. This option
+  only appears once a relay address is set in `blackout/online-config.js`; `server/README.md`
+  covers running the relay locally and putting it on a public host.
+
 ## Verify
 
 - `npm test` — deterministic campaign/combat/systems replay (`blackout/tests/core.cjs`,
-  `blackout/tests/walkthrough.cjs`). No browser required.
+  `blackout/tests/walkthrough.cjs`), the co-op rules (`blackout/tests/coop.cjs`) and the LAN
+  socket framing. No browser required.
+- `npm run test:relay` — the online relay, over real local WebSockets (Node 22+).
+- `npm run test:e2e` / `npm run test:e2e:online` — two real desktop app instances playing a
+  LAN session, and an online session through a locally started relay.
 - `npm run test:tactical` — additional tactical-systems checks.
 - `npm run test:browser` — real Chromium input/graphics/audio checks via Playwright
   (`npx playwright install chromium` once if not already installed).

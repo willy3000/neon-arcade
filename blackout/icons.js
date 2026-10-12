@@ -54,9 +54,30 @@
  function art(kind,key){if(kind==='weapon'){const d=W[key]||W.rifle;return {w:d[0],h:d[1],body:d[2]};}const set=kind==='gear'?GEAR:kind==='upgrade'?UP:PICK;return {w:S,h:S,body:set[key]||PICK.gadget};}
  function svg(kind,key,cls=''){const a=art(kind,key);return `<svg class="icon icon-${kind} ${cls}" viewBox="0 0 ${a.w} ${a.h}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><g stroke="${O}" stroke-width="1.3" stroke-linejoin="round">${a.body}</g></svg>`;}
  function uri(kind,key,scale=2){const a=art(kind,key),s=`<svg xmlns="http://www.w3.org/2000/svg" width="${a.w*scale}" height="${a.h*scale}" viewBox="0 0 ${a.w} ${a.h}"><g stroke="${O}" stroke-width="1.4" stroke-linejoin="round">${a.body}</g></svg>`;return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);}
+ // Cartoon operator for the co-op lobby: a stocky, front-facing soldier at low ready, holding whichever weapon art is
+ // passed in. Each kit is one player's uniform colours, so squadmates read apart at a glance.
+ const KITS=[{u:'#6b7a4c',ud:'#4d5937',v:'#39422f',vl:'#59664b',h:'#56633f',hh:'#7a8960',ac:'#dfad70'},{u:'#55707f',ud:'#3d5260',v:'#2b373e',vl:'#485b65',h:'#486070',hh:'#6a8394',ac:CY}];
+ function soldier(weapon='rifle',kit=0){const k=KITS[kit%KITS.length],d=W[weapon]||W.rifle,w=d[0],h=d[1],s=Math.min(1.3,172/w),a=-16*Math.PI/180,cx=126,cy=200,SK='#dcab80',SKD='#b8845c',GL='#262b23',BT='#22261e',EYE='#191713';
+  // Points along the gun (as fractions of its artwork) mapped into the figure, so the gloves land on the grip and fore-end.
+  const at=(fx,fy)=>{const x=(fx-.5)*w*s,y=(fy-.5)*h*s;return [+(cx+x*Math.cos(a)-y*Math.sin(a)).toFixed(1),+(cy+x*Math.sin(a)+y*Math.cos(a)).toFixed(1)];};
+  const small=w<130,rear=at(small?.26:.34,.8),fore=at(small?.4:.64,small?.84:.64),arm=path=>st(path,O,27)+st(path,k.u,21);
+  const body=`<ellipse cx="120" cy="303" rx="76" ry="10" fill="#000" opacity=".38" stroke="none"/>`+
+   r(84,222,32,62,k.ud,10)+r(124,222,32,62,k.ud,10)+r(87,243,26,17,k.v,6)+r(127,243,26,17,k.v,6)+r(77,275,42,25,BT,10)+r(121,275,42,25,BT,10)+
+   r(72,136,96,96,k.u,24)+r(76,214,88,13,k.v,4)+r(112,214,16,13,k.ac,2)+
+   r(81,146,78,62,k.v,13)+r(87,180,20,24,k.vl,4)+r(110,180,20,24,k.vl,4)+r(133,180,20,24,k.vl,4)+r(89,154,24,9,k.ac,2,NS)+r(141,144,13,22,k.vl,3)+ln(147,144,151,126,O,2.4)+
+   arm(`M80 160 Q50 198 ${rear[0]} ${rear[1]}`)+arm(`M160 160 Q192 202 ${fore[0]} ${fore[1]}`)+
+   `<g transform="translate(${cx} ${cy}) rotate(-16) scale(${s.toFixed(3)}) translate(${-w/2} ${-h/2})" stroke-width="${(2.2/s).toFixed(2)}">${d[2]}</g>`+
+   c(rear[0],rear[1],12,GL)+c(fore[0],fore[1],12,GL)+
+   r(107,120,26,24,SKD,8)+c(76,99,8,SK)+c(164,99,8,SK)+c(120,92,45,SK)+
+   c(104,101,5.5,EYE,NS)+c(136,101,5.5,EYE,NS)+c(105.8,99,1.8,'#fff',NS)+c(137.8,99,1.8,'#fff',NS)+ln(93,88,111,92,O,4)+ln(147,88,129,92,O,4)+ln(95,111,110,112,'#4a3524',3,.5)+ln(145,111,130,112,'#4a3524',3,.5)+
+   st('M120 105 Q117 111 121 112',SKD,2.4)+st('M110 120 Q121 126 132 118',O,2.8)+
+   p('M72 97 Q62 35 120 35 Q178 35 168 97 Q146 78 120 78 Q94 78 72 97Z',k.h)+st('M86 62 Q98 47 118 44',k.hh,5,.9)+st('M73 82 Q120 62 167 82',k.v,6)+
+   r(92,47,56,21,'#1b2220',10)+r(97,51,20,12,k.ac,6,NS+' opacity=".6"')+r(123,51,20,12,k.ac,6,NS+' opacity=".6"')+
+   st('M78 105 Q84 133 106 138',k.v,3.5)+st('M162 105 Q156 133 134 138',k.v,3.5);
+  return `<svg class="soldier" viewBox="0 0 240 316" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><g stroke="${O}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${body}</g></svg>`;}
  const keyOf=(kind,key)=>kind[0]+':'+key;
  // Rasterize every icon into a Phaser texture. Images decode asynchronously; the renderer falls back to drawn shapes until each texture exists.
  function load(scene){const jobs=[...Object.keys(W).map(k=>['weapon',k]),...Object.keys(GEAR).map(k=>['gear',k]),...Object.keys(PICK).map(k=>['pickup',k])];
   for(const [kind,key] of jobs){const id=keyOf(kind,key);if(scene.textures.exists(id))continue;const img=new Image();img.onload=()=>{if(!scene.textures.exists(id))scene.textures.addImage(id,img);};img.src=uri(kind,key,kind==='weapon'?2:2);}}
- root.BPIcons={svg,uri,art,load,keyOf,size:k=>W[k]?{w:W[k][0],h:W[k][1]}:{w:S,h:S}};
+ root.BPIcons={svg,uri,art,load,keyOf,soldier,size:k=>W[k]?{w:W[k][0],h:W[k][1]}:{w:S,h:S}};
 })(globalThis);

@@ -1,56 +1,85 @@
 'use strict';
 // Real end-to-end check: launches two actual Electron app instances (the exact built app, preload and all,
-// not a mock) on one machine and drives a full host+guest LAN co-op connection through the real UI.
+// not a mock) on one machine and drives a full host+guest LAN co-op session through the real squad lobby UI.
+// Needs the default LAN port free: quit any running copy of the game that is hosting before running this.
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { _electron: electron } = require('playwright');
 
 const ROOT = path.join(__dirname, '..', '..');
+const SAVE_KEY = 'blackout-protocol-progress';
 
-async function bootWindow() {
+// Each instance serves the game from its own loopback port, so a save written here is private to that window.
+async function bootWindow(save) {
   const app = await electron.launch({ args: [path.join(ROOT, 'electron', 'main.js')], cwd: ROOT });
   const win = await app.firstWindow();
-  await win.waitForFunction(() => document.getElementById('loading')?.hidden, null, { timeout: 30000 });
+  const loaded = () => win.waitForFunction(() => document.getElementById('loading')?.hidden && window.BPApp, null, { timeout: 30000 });
+  await loaded();
+  await win.evaluate(([key, value]) => localStorage.setItem(key, JSON.stringify(value)), [SAVE_KEY, save]);
+  await win.reload();
+  await loaded();
   return { app, win };
 }
+const lobbyOf = (w) => w.win.evaluate(() => window.BPApp.snapshot().lobby);
+const modeIs = (w, mode) => w.win.waitForFunction((m) => window.BPApp.snapshot().mode === m, mode, { timeout: 10000 });
 
 (async () => {
-  const host = await bootWindow();
-  const guest = await bootWindow();
+  const host = await bootWindow({ version: 2, settings: { volume: 0, callsign: 'ROOK' } });
+  const guest = await bootWindow({ version: 2, owned: { weapons: ['rifle', 'pistol', 'shotgun'], gear: [] }, loadout: { primary: 'shotgun', secondary: 'pistol' }, settings: { volume: 0, callsign: 'VIPER' } });
   try {
     assert.equal(await host.win.evaluate(() => !!window.BPNet?.available), true, 'host window must have window.BPNet (preload wired correctly)');
     assert.equal(await guest.win.evaluate(() => !!window.BPNet?.available), true, 'guest window must have window.BPNet too');
 
-    // Host: HOLDOUT -> HOST LAN GAME -> first (always-unlocked) killhouse -> read the address it's listening on.
+    // Host: HOLDOUT -> HOST LAN GAME opens the squad lobby and starts listening.
     await host.win.click('#holdout');
-    await host.win.waitForFunction(() => document.getElementById('picker').open);
-    await host.win.click('#picker-list button:has-text("HOST LAN GAME")');
-    await host.win.click('#picker-list button:not(.locked)'); // the default Killhouse, always first and unlocked
-    await host.win.waitForFunction(() => document.getElementById('picker-title').textContent.includes('WAITING'), null, { timeout: 10000 });
-    const addressLine = await host.win.$eval('#picker-list .pick span', (el) => el.textContent);
-    const port = Number(/PORT (\d+)/.exec(addressLine)[1]);
-    assert.ok(port > 0, `could not read a port out of "${addressLine}"`);
+    await host.win.click('#op-peer [data-link="lan"][data-role="host"]');
+    await modeIs(host, 'lobby');
+    const addressLine = await host.win.textContent('#lobby-link-label');
+    assert.ok(Number(/PORT (\d+)/.exec(addressLine)?.[1]) > 0, `could not read a port out of "${addressLine}"`);
+    assert.equal(await host.win.isDisabled('#lobby-go'), true, 'the host cannot deploy into an empty lobby');
 
     // Guest: HOLDOUT -> JOIN LAN GAME -> connect to the host over loopback (same machine, real sockets, real IPC).
     await guest.win.click('#holdout');
-    await guest.win.waitForFunction(() => document.getElementById('picker').open);
-    await guest.win.click('#picker-list button:has-text("JOIN LAN GAME")');
-    await guest.win.fill('#picker-list input', '127.0.0.1');
-    await guest.win.click('#picker-list button:has-text("CONNECT")');
-    await guest.win.waitForFunction(() => document.querySelector('#picker-list p')?.textContent.includes('WAITING FOR THE HOST'), null, { timeout: 10000 });
+    await guest.win.click('#op-peer [data-link="lan"][data-role="guest"]');
+    await modeIs(guest, 'lobby');
+    await guest.win.fill('#lobby-ip', '127.0.0.1');
+    await guest.win.click('#lobby-connect');
+    await guest.win.waitForFunction(() => window.BPApp.snapshot().lobby?.peer, null, { timeout: 10000 });
+    await host.win.waitForFunction(() => window.BPApp.snapshot().lobby?.peer, null, { timeout: 10000 });
+    console.log('PASS both players are in the same lobby after a real host+guest LAN handshake');
 
-    // Host sees the connection and deploys for both.
-    await host.win.waitForFunction(() => document.getElementById('picker-title').textContent.includes('CONNECTED'), null, { timeout: 10000 });
-    await host.win.click('#picker-list button:has-text("DEPLOY")');
+    // Each side sees the other's callsign and loadout, not just a connection.
+    const seenByHost = (await lobbyOf(host)).peer, seenByGuest = (await lobbyOf(guest)).peer;
+    assert.equal(seenByHost.name, 'VIPER');
+    assert.equal(seenByHost.loadout.primary, 'shotgun');
+    assert.equal(seenByGuest.name, 'ROOK');
+    assert.equal(await host.win.textContent('#op-peer .op-name'), 'VIPER', "the host's lobby shows the guest's operator card");
+    assert.equal(await guest.win.textContent('#op-peer .op-name'), 'ROOK', "the guest's lobby shows the host's operator card");
+    console.log('PASS each player sees the other operator, with their callsign and loadout');
 
-    await host.win.waitForFunction(() => window.BPApp?.snapshot().mode === 'playing', null, { timeout: 10000 });
-    await guest.win.waitForFunction(() => window.BPApp?.snapshot().mode === 'playing', null, { timeout: 10000 });
-    console.log('PASS both windows reached mode:playing after a real host+guest LAN handshake');
+    // The host's enemy pressure reaches the guest, and squad chat goes both ways.
+    await host.win.click('#lobby-difficulty button.intense');
+    await guest.win.waitForFunction(() => window.BPApp.snapshot().lobby.difficulty === 'intense', null, { timeout: 5000 });
+    await guest.win.fill('#lobby-chat', 'ready when you are');
+    await guest.win.press('#lobby-chat', 'Enter');
+    await host.win.waitForFunction(() => document.getElementById('lobby-feed').textContent.includes('ready when you are'), null, { timeout: 5000 });
+    console.log('PASS host settings and squad chat sync across the lobby');
 
-    // The host's real simulation must have a live guest character.
+    // Deploy stays locked until the guest readies up; then the host deploys for both after the countdown.
+    assert.equal(await host.win.isDisabled('#lobby-go'), true, 'the host cannot deploy before the guest is ready');
+    await guest.win.click('#lobby-go');
+    await host.win.waitForFunction(() => !document.getElementById('lobby-go').disabled, null, { timeout: 5000 });
+    await host.win.click('#lobby-go');
+    await modeIs(host, 'playing');
+    await modeIs(guest, 'playing');
+    console.log('PASS both windows reached mode:playing after the guest readied up and the host deployed');
+
+    // The host's real simulation must have a live guest character carrying the loadout the guest picked.
     const hostSnap = await host.win.evaluate(() => window.BPApp.inspect().world);
     assert.ok(hostSnap.guest, 'host sim should have created s.guest once the guest connected and deployed');
-    console.log('PASS host sim has a guest character:', hostSnap.guest.x, hostSnap.guest.y);
+    assert.deepEqual(hostSnap.guest.slots, ['shotgun', 'pistol'], "the guest character should carry the guest's own guns");
+    assert.equal(hostSnap.difficulty, 'intense');
+    console.log('PASS host sim has a guest character with the guest loadout:', hostSnap.guest.slots.join(' + '));
 
     // Drive the guest's movement via its own real input, over the real socket, and confirm the HOST's
     // authoritative simulation actually moves the guest character (not just the guest's local display).
@@ -60,10 +89,21 @@ async function bootWindow() {
     await guest.win.keyboard.up('KeyD');
     console.log('PASS guest input over the socket moved the host-authoritative guest character');
 
-    // The guest's own render loop should reflect a snapshot from the host (not a local simulation of its own).
+    // The guest's own render loop should reflect a snapshot from the host (not a local simulation of its own),
+    // and its HUD should describe its own character rather than the host's.
     const guestSawEnemiesField = await guest.win.evaluate(() => Array.isArray(window.BPApp.inspect().world.enemies));
     assert.equal(guestSawEnemiesField, true, 'guest should have received and applied a host snapshot');
-    console.log('PASS guest is rendering host-streamed snapshot data');
+    assert.match(await guest.win.textContent('#weapon-name'), /M870/, "the guest's HUD should show the guest's own weapon");
+    console.log('PASS guest is rendering host-streamed snapshot data with its own HUD');
+
+    // The host walking away ends the session: the guest lands back in the lobby, ready to join again.
+    await host.win.keyboard.press('Escape');
+    await modeIs(host, 'paused');
+    await host.win.click('#exit');
+    await modeIs(guest, 'lobby');
+    assert.equal((await lobbyOf(guest)).phase, 'joining');
+    assert.equal(await host.win.evaluate(() => window.BPApp.snapshot().lobby), null, 'leaving for the main menu closes the host lobby');
+    console.log('PASS the guest returns to the lobby when the host leaves');
 
     console.log('ALL END-TO-END LAN CO-OP CHECKS PASSED');
   } finally {

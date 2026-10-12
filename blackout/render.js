@@ -14,9 +14,12 @@
    this.effects=scene.add.graphics().setDepth(11000);this.lines=scene.add.graphics().setDepth(10900);this.decalsGraphics=scene.add.graphics().setDepth(2);this.smoke=scene.add.graphics().setDepth(11500);this.uiGraphics=scene.add.graphics().setScrollFactor(0).setDepth(20000);
    this.crosshair=scene.add.graphics().setScrollFactor(0).setDepth(20010);this.brush=scene.make.graphics({x:0,y:0,add:false});this.dark=null;
    this.sprites=new Map();this.frame=0;this.labels=Array.from({length:3},()=>scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:'10px',fontStyle:'600',color:'#f4cf8e',stroke:'#0b0f0a',strokeThickness:3}).setOrigin(.5,1).setDepth(12001).setVisible(false));
+   // Co-op: a callsign over each operator, and the caption under the revive station.
+   const small=(size,color)=>scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:size,fontStyle:'600',color,stroke:'#0b0f0a',strokeThickness:3}).setDepth(12001).setVisible(false);
+   this.nameTags=[small('9px','#e2b074').setOrigin(.5,1),small('9px','#8fe3ff').setOrigin(.5,1)];this.stationLabel=small('8px','#9fd08a').setOrigin(.5,0).setText('REVIVE STATION');
    this.texts=Array.from({length:14},()=>({obj:scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:'12px',fontStyle:'600',color:'#e2b074',stroke:'#10150f',strokeThickness:3}).setOrigin(.5).setDepth(12000).setVisible(false),life:0}));
   }
-  clear(){for(const obj of this.staticObjects)obj.destroy();this.staticObjects=[];for(const a of this.actors.values())for(const obj of Object.values(a))if(obj?.destroy)obj.destroy();this.actors.clear();this.props.clear();this.decals=[];this.flashes=[];this.hurt=[];for(const p of this.particles)p.active=false;for(const t of this.texts){t.life=0;t.obj.setVisible(false);}for(const o of this.sprites.values())o.destroy();this.sprites.clear();for(const l of this.labels)l.setVisible(false);this.decalsGraphics.clear();this.effects.clear();this.lines.clear();this.smoke.clear();this.uiGraphics.clear();this.crosshair.clear();if(this.dark){this.dark.destroy();this.dark=null;}}
+  clear(){for(const obj of this.staticObjects)obj.destroy();this.staticObjects=[];for(const a of this.actors.values())for(const obj of Object.values(a))if(obj?.destroy)obj.destroy();this.actors.clear();this.props.clear();this.decals=[];this.flashes=[];this.hurt=[];for(const p of this.particles)p.active=false;for(const t of this.texts){t.life=0;t.obj.setVisible(false);}for(const o of this.sprites.values())o.destroy();this.sprites.clear();for(const l of [...this.labels,...this.nameTags,this.stationLabel])l.setVisible(false);this.decalsGraphics.clear();this.effects.clear();this.lines.clear();this.smoke.clear();this.uiGraphics.clear();this.crosshair.clear();if(this.dark){this.dark.destroy();this.dark=null;}}
   static preload(scene){scene.load.atlas('characters','blackout/assets/characters.png','blackout/assets/characters.json');scene.load.atlas('props','blackout/assets/props.png','blackout/assets/props.json');scene.load.svg('helicopter','blackout/assets/helicopter.svg');if(root.BPIcons)BPIcons.load(scene);}
   // Pooled images for icon-textured world items; unused ones are destroyed at the end of each frame.
   sprite(id,key){if(!this.scene.textures.exists(key))return null;let o=this.sprites.get(id);if(!o){o=this.scene.add.image(0,0,key).setDepth(6);this.sprites.set(id,o);}else if(o.texture.key!==key)o.setTexture(key);o.used=this.frame;o.setVisible(true);return o;}
@@ -175,6 +178,8 @@
     case 'damage':if(!this.scene.settings.flash)this.damageFlash=.17;this.shake(.09,.002);if(Number.isFinite(e.fromX)){const p=sim.player;this.hurt.push({angle:Math.atan2(e.fromY-p.y,e.fromX-p.x),life:.9});if(this.hurt.length>6)this.hurt.shift();}break;
     case 'armorbreak':this.flashes.push({x:sim.player.x,y:sim.player.y,life:.3,ring:true,radius:70,color:0xb7d7e8});break;
     case 'pickup':this.emit(e.x,e.y,8,'dust');break;
+    case 'down':this.emit(e.x,e.y,14,'dust');this.shake(.2,.006);break;case 'tags':this.emit(e.x,e.y,8,'spark');break;
+    case 'revive':this.flashes.push({x:e.x,y:e.y,life:.5,ring:true,radius:90,color:0x9fd08a});this.emit(e.x,e.y,18,'spark');break;
    }if(this.decals.length>160)this.decals.splice(0,this.decals.length-160);}
   shake(duration,intensity){const strength=this.scene.settings.shake;if(strength>0)this.scene.cameras.main.shake(duration*1000,intensity*strength);}
   update(s,dt,pointer,self=s.player){if(this.lastMap!==s.map.id)this.build(s,self);this.frame++;const g=this.effects,l=this.lines,cam=this.scene.cameras.main,p=self,t=s.time;g.clear();l.clear();this.smoke.clear();this.uiGraphics.clear();
@@ -205,6 +210,7 @@
    this.drawPickups(s,g,t);
    if(!s.training&&BPCore.stageDef(s).kind!=='endless'){const obj=s.goal,pulse=1+Math.sin(t*2)*.05;l.lineStyle(2,C.amber,.65).strokeRect(obj.x-22*pulse,obj.y-22*pulse,44*pulse,44*pulse);l.lineStyle(1,C.amber,.25).strokeCircle(obj.x,obj.y,58);l.lineBetween(obj.x-8,obj.y,obj.x+8,obj.y);l.lineBetween(obj.x,obj.y-8,obj.x,obj.y+8);this.marker(obj,C.amber,cam);}
    this.decalsGraphics.clear();for(const d of this.decals)this.decalsGraphics.fillStyle(0x18241b,.55).fillEllipse(d.x,d.y,d.size*1.5,d.size);
+   this.squad(s,g,l,cam,t);
    for(const fire of this.fires){const sz=fire.size;g.fillStyle(0xac713b,.16).fillCircle(fire.x,fire.y,sz*1.9);g.fillStyle(0xb88446,.65).fillEllipse(fire.x,fire.y,sz+Math.sin(t*11)*3,sz*.7);g.fillStyle(0xe6bc76,.8).fillTriangle(fire.x-sz*.35,fire.y,fire.x+sz*.35,fire.y,fire.x+Math.sin(t*6)*5,fire.y-sz*(.8+.15*Math.sin(t*8)));if(Math.random()<dt*9&&this.scene.settings.quality==='high')this.emit(fire.x,fire.y-10,1,'smoke');}
    for(const part of this.particles){if(!part.active)continue;part.life-=dt;if(part.life<=0){part.active=false;continue;}part.x+=part.vx*dt;part.y+=part.vy*dt;const fade=Math.min(1,part.life/(part.kind==='smoke'?.9:.3));if(part.kind==='smoke'){part.size+=dt*8;part.vx*=Math.exp(-dt);part.vy-=dt*6;g.fillStyle(part.color,.24*fade).fillCircle(part.x,part.y,part.size);}else{part.vx*=Math.exp(-dt*4);part.vy*=Math.exp(-dt*4);g.fillStyle(part.color,fade).fillRect(part.x,part.y,part.size,part.kind==='casing'?2:part.size);}}
    this.flashes=this.flashes.filter(f=>{f.life-=dt;if(f.life<=0)return false;if(f.ring){const k=1-f.life/(f.total||(f.total=f.life+dt));if(f.fill&&!this.scene.settings.flash)g.fillStyle(f.color,.5*(1-k)).fillCircle(f.x,f.y,f.radius*.6*k+20);g.lineStyle(4,f.color,.8*(1-k)).strokeCircle(f.x,f.y,f.radius*k);return true;}if(f.explosion){const k=1-f.life/.32;g.fillStyle(0xb36c35,.18*(1-k)).fillCircle(f.x,f.y,f.radius*.8*k+15);g.fillStyle(0xe4ac5a,.55*(1-k)).fillCircle(f.x,f.y,15+f.radius*.35*k);if(!this.scene.settings.flash)g.fillStyle(0xf3d599,.6*(1-k)).fillCircle(f.x,f.y,10+f.radius*.13*k);}else{const size=f.big?24:14;g.fillStyle(f.color||0xedbe78,.9).fillTriangle(f.x+Math.cos(f.angle)*size,f.y+Math.sin(f.angle)*size,f.x+Math.cos(f.angle+1.5)*5,f.y+Math.sin(f.angle+1.5)*5,f.x+Math.cos(f.angle-1.5)*5,f.y+Math.sin(f.angle-1.5)*5);}return true;});
@@ -222,6 +228,21 @@
    this.sweep();
    if(s.cinematic>0){this.uiGraphics.fillStyle(0x10170f,.95).fillRect(0,0,cam.width,38).fillRect(0,cam.height-38,cam.width,38);}
   }
+  // Co-op only. Callsigns ride above both operators (yours amber, your squadmate's blue). The revive station is a pad
+  // on the ground that wakes up while someone is down and fills with colour, clockwise, as a revive is held; dog tags
+  // lie where an operator fell, then ride with whoever picked them up. Whatever the survivor needs next - the tags, then the station - gets an arrow at the screen edge.
+  squad(s,g,l,cam,t){const names=this.scene.names,ops=[s.player,s.guest],tags=s.tags||[];
+   this.nameTags.forEach((tag,i)=>{const e=ops[i],name=names&&s.guest&&!s.guest.vanished?names[i?'guest':'player']:null;if(!e||!name){tag.setVisible(false);return;}
+    tag.setText(e.dead?name+' / DOWN':name).setColor((names.self==='guest')===!!i?'#e2b074':'#8fe3ff').setAlpha(e.dead?.6:.95).setPosition(e.x,e.y-(e.dead?22:34)).setVisible(true);});
+   const st=s.station;this.stationLabel.setVisible(!!st);if(!st)return;const need=tags.length>0,fill=Math.min(1,Math.max(0,...tags.map(q=>q.progress||0))),col=need?0x9fd08a:0x6f8a66,beat=need&&!fill?1+Math.sin(t*5)*.07:1,d=this.decalsGraphics,top=-Math.PI/2;
+   d.fillStyle(0x16241a,.6).fillCircle(st.x,st.y,42);
+   if(fill>0){d.fillStyle(0x9fd08a,.5).slice(st.x,st.y,42,top,top+Math.PI*2*fill).fillPath();l.lineStyle(4,0xd6f2c4,.95).beginPath();l.arc(st.x,st.y,42,top,top+Math.PI*2*fill);l.strokePath();}
+   d.fillStyle(fill>0?0xe9f7df:col,need?.9:.45).fillRect(st.x-5,st.y-16,10,32).fillRect(st.x-16,st.y-5,32,10);
+   l.lineStyle(2,col,need?.9:.4).strokeCircle(st.x,st.y,42*beat);if(need&&!fill)l.lineStyle(1,col,.35).strokeCircle(st.x,st.y,60*beat);
+   this.stationLabel.setText(fill>0?'REVIVING '+Math.round(fill*100)+'%':'REVIVE STATION').setPosition(st.x,st.y+48).setAlpha(need?1:.55);if(tags.some(q=>q.carrier))this.marker(st,0x9fd08a,cam);
+   for(const q of tags){const k=q.carrier?.75:1,x=q.carrier?q.x+15:q.x,y=q.carrier?q.y-30:q.y;
+    g.lineStyle(1.5,0x8e9484,.9).strokeCircle(x,y-7*k,5*k);for(const dx of [-8,1]){g.fillStyle(0xd9d3b8,1).fillRoundedRect(x+dx*k,y-3*k,7*k,11*k,2);g.lineStyle(1,0x5f6455,.9).strokeRoundedRect(x+dx*k,y-3*k,7*k,11*k,2);}
+    if(!q.carrier){l.lineStyle(2,C.amber,.5+.4*Math.sin(t*6)).strokeCircle(q.x,q.y,22+Math.sin(t*6)*3);this.marker(q,C.amber,cam);}}}
   // Pickups use the shared icon art. Dropped guns lie on their side inside a pulsing amber outline with a name label as Rook closes in;
   // lethal/tactical refills show the gadget they will actually top up.
   drawPickups(s,g,t){const p=s.player,RING={health:0xd4846c,supply:0xd4846c,armor:0x9fc0d0,ammo:0xd4c79b,lethal:0xc9d09a,tactical:C.cyan,intel:0xf1d27d,cache:0xf1d27d};let labels=0;

@@ -2,8 +2,15 @@
  const files=['footstep-concrete-0.ogg','footstep-concrete-1.ogg','footstep-wood.ogg','footstep-snow-0.ogg','footstep-snow-1.ogg','metal.ogg','body.ogg','wood.ogg','glass.ogg','explosion.ogg','rumble.ogg','boom.ogg','radio.ogg','reload-rifle.wav','reload-pistol.wav','reload-shotgun.wav','pistol.ogg','rifle.ogg','shotgun.ogg','smg.ogg','laser.ogg','laser-large.ogg','forcefield.ogg','door.ogg','bell.ogg','plate.ogg','punch.ogg','points.ogg','healthpack.ogg','empty.ogg','pickup.ogg','heal.ogg','flow.ogg','wind.ogg','ambience.ogg'];
  // Per-theme ambience bed (sample, volume, rate) layered under the drone score.
  const BEDS={city:[['wind',.035,.7],['ambience',.055,.7]],ruins:[['wind',.05,.55],['ambience',.05,.6]],snow:[['wind',.09,.45]],subway:[['ambience',.07,.45],['wind',.02,1.3]],desert:[['wind',.07,.85]],facility:[['ambience',.06,.9],['wind',.02,1.6]],range:[['wind',.035,.7],['ambience',.055,.7]]};
+ const MUSIC='blackout/assets/audio/menu-music.mp3',MUSIC_VOLUME=.5;
  class Audio {
-  constructor(scene,settings){this.scene=scene;this.settings=settings;this.pools=new Map();this.step=0;this.ambience=[];this.nodes=[];this.unlocked=false;this.beatAt=0;this.breathAt=0;this.vitalsOn=false;this.lastWhiz=0;}
+  constructor(scene,settings){this.scene=scene;this.settings=settings;this.pools=new Map();this.step=0;this.ambience=[];this.nodes=[];this.unlocked=false;this.beatAt=0;this.breathAt=0;this.vitalsOn=false;this.lastWhiz=0;this.uiAt=0;
+   // Menu score state. Browsers refuse to start sound before the first click or key press, so a refused start is retried on the next one.
+   this.track=null;this.musicOn=false;this.musicBlocked=false;this.fadeTimer=0;
+   // It also goes quiet whenever the window is hidden or another window has focus, like the rest of the game's sound.
+   this.onGesture=()=>{if(this.musicBlocked){this.musicBlocked=false;this.music(this.musicOn);}};this.onVisibility=()=>{if(this.away)this.track?.pause();else this.music(this.musicOn);};
+   window.addEventListener('pointerdown',this.onGesture);window.addEventListener('keydown',this.onGesture);document.addEventListener('visibilitychange',this.onVisibility);window.addEventListener('blur',this.onVisibility);window.addEventListener('focus',this.onVisibility);}
+  get away(){return document.hidden||!document.hasFocus();}
   static preload(scene){for(const file of files)scene.load.audio(file.split('.')[0],'blackout/assets/audio/'+file);}
   unlock(){if(this.scene.sound.context?.state==='suspended')this.scene.sound.context.resume().catch(()=>{});this.scene.sound.unlock();this.unlocked=true;}
   get live(){return this.unlocked&&!this.settings.muted&&this.settings.volume>0;}
@@ -13,10 +20,15 @@
    if(attenuation<.02)return;voice.play({volume:Math.min(1,volume*this.settings.volume*attenuation),rate,pan});
   }
   // Small Web Audio synth for interface feedback, heartbeat and breathing. Silent when the sound manager has no Web Audio context.
-  tone(freq,dur=.12,{type='sine',vol=.08,to=null,attack=.004,delay=0}={}){const ctx=this.scene.sound.context;if(!this.live||!ctx)return;const t=ctx.currentTime+delay,o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);if(to)o.frequency.exponentialRampToValueAtTime(Math.max(20,to),t+dur);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol*this.settings.volume,t+attack);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+dur+.02);}
-  noise(dur=.3,{vol=.05,freq=900,q=1,type='bandpass',attack=.02,delay=0,sweep=null}={}){const ctx=this.scene.sound.context;if(!this.live||!ctx)return;const t=ctx.currentTime+delay,len=Math.ceil(ctx.sampleRate*dur),buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+  tone(freq,dur=.12,{type='sine',vol=.08,to=null,attack=.004,delay=0}={}){const ctx=this.scene.sound.context;if(!this.live||!ctx||ctx.state!=='running')return;const t=ctx.currentTime+delay,o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);if(to)o.frequency.exponentialRampToValueAtTime(Math.max(20,to),t+dur);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol*this.settings.volume,t+attack);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+dur+.02);}
+  noise(dur=.3,{vol=.05,freq=900,q=1,type='bandpass',attack=.02,delay=0,sweep=null}={}){const ctx=this.scene.sound.context;if(!this.live||!ctx||ctx.state!=='running')return;const t=ctx.currentTime+delay,len=Math.ceil(ctx.sampleRate*dur),buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
    const src=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();src.buffer=buf;f.type=type;f.frequency.setValueAtTime(freq,t);if(sweep)f.frequency.exponentialRampToValueAtTime(sweep,t+dur);f.Q.value=q;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol*this.settings.volume,t+attack);g.gain.linearRampToValueAtTime(0,t+dur);src.connect(f).connect(g).connect(ctx.destination);src.start(t);src.stop(t+dur+.02);}
-  ui(kind){switch(kind){case 'tick':this.tone(1400,.05,{type:'square',vol:.025});break;case 'total':this.tone(523,.18,{type:'triangle',vol:.07});this.tone(784,.32,{type:'triangle',vol:.07,delay:.09});break;
+  // Menu navigation adds hover (landing on a control), back and launch. uiAt lets it tell that a control has just made
+  // its own sound, so the two never double up (see the navigation sounds in game.js).
+  ui(kind){this.uiAt=performance.now();switch(kind){
+   case 'hover':this.tone(1250,.04,{type:'triangle',vol:.022});break;case 'back':this.tone(540,.1,{type:'triangle',vol:.04,to:350});break;
+   case 'launch':this.tone(392,.16,{type:'triangle',vol:.05});this.tone(587,.2,{type:'triangle',vol:.05,delay:.07});this.tone(784,.3,{type:'triangle',vol:.045,delay:.14});break;
+   case 'tick':this.tone(1400,.05,{type:'square',vol:.025});break;case 'total':this.tone(523,.18,{type:'triangle',vol:.07});this.tone(784,.32,{type:'triangle',vol:.07,delay:.09});break;
    case 'rank':[523,659,784,1046].forEach((f,i)=>this.tone(f,.42,{type:'triangle',vol:.08,delay:i*.11}));this.play('bell',.4,1.2);break;case 'medal':this.tone(880,.25,{type:'triangle',vol:.06});this.tone(1320,.35,{type:'sine',vol:.05,delay:.07});break;
    case 'buy':this.play('points',.5,1);this.tone(660,.12,{type:'square',vol:.03});this.tone(990,.2,{type:'square',vol:.03,delay:.08});break;case 'deny':this.tone(180,.18,{type:'square',vol:.04,to:120});break;case 'select':this.tone(740,.06,{type:'triangle',vol:.04});break;}}
   // Low health: heartbeat whose tempo rises as health falls, and laboured breathing, until a heal or pickup lifts health back up.
@@ -60,6 +72,10 @@
    case 'wave':this.tone(110,.7,{type:'sawtooth',vol:.04});this.tone(165,.7,{type:'sawtooth',vol:.03,delay:.05});break;
    case 'waveclear':case 'stage':this.play('bell',.3,1.1);break;
    case 'death':this.tone(220,1.4,{type:'sine',vol:.08,to:55});this.vitalsOn=false;break;
+   case 'down':this.tone(196,.9,{type:'sine',vol:.07,to:62});this.play('body',.6,.6,e.x,e.y);this.vitalsOn=false;break;
+   case 'reviving':this.tone(294,.6,{type:'sine',vol:.045,to:587});break;
+   case 'tags':this.play('pickup',.5,1.3);this.tone(1320,.12,{type:'triangle',vol:.04});break;
+   case 'revive':[392,523,659,880].forEach((f,i)=>this.tone(f,.35,{type:'triangle',vol:.06,delay:i*.08}));break;
    case 'complete':[392,494,587,784].forEach((f,i)=>this.tone(f,.6,{type:'triangle',vol:.06,delay:i*.14}));break;
   }}
   startAmbient(theme='city'){this.stopAmbient();if(!this.unlocked||this.settings.muted)return;for(const [key,vol,rate] of BEDS[theme]||BEDS.city){if(!this.scene.cache.audio.exists(key))continue;const voice=this.scene.sound.add(key,{loop:true,volume:vol*this.settings.volume,rate});voice.play();this.ambience.push(voice);}if(!this.settings.music)return;
@@ -68,9 +84,19 @@
   }
   pressure(value){if(this.musicGain){const ctx=this.scene.sound.context;this.musicGain.gain.setTargetAtTime((.009+.016*value)*this.settings.volume,ctx.currentTime,.5);}}
   stopAmbient(){for(const a of this.ambience)a.destroy();this.ambience=[];for(const n of this.nodes){if(n.stop)try{n.stop();}catch{}n.disconnect();}this.nodes=[];this.musicGain=null;}
+  // Menu and lobby score: one looping track for every screen outside a mission, where the per-theme ambience and drone take
+  // over. It plays through a plain media element, so it is not decoded during the loading bar, and it is fetched whole
+  // first so that looping does not depend on the server answering range requests. Follows the same switches as the drone.
+  music(on){this.musicOn=on;const want=on&&!this.away&&!this.settings.muted&&this.settings.music&&this.settings.volume>0,target=want?Math.min(1,MUSIC_VOLUME*this.settings.volume):0;
+   if(!this.track){if(!want)return;const track=this.track=document.createElement('audio');track.loop=true;track.volume=0;
+    fetch(MUSIC).then(r=>r.ok?r.blob():Promise.reject(new Error('missing'))).then(b=>{track.src=URL.createObjectURL(new Blob([b],{type:'audio/mpeg'}));if(this.track===track)this.music(this.musicOn);}).catch(()=>{});return;}
+   const track=this.track;if(!track.src)return;
+   if(want&&track.paused)track.play()?.catch(()=>{this.musicBlocked=true;});
+   clearInterval(this.fadeTimer);const from=track.volume,start=performance.now(),ms=want?900:350;
+   this.fadeTimer=setInterval(()=>{const k=Math.min(1,(performance.now()-start)/ms);track.volume=from+(target-from)*k;if(k>=1){clearInterval(this.fadeTimer);if(!want)track.pause();}},40);}
   pause(){this.scene.sound.pauseAll();if(this.musicGain)this.musicGain.gain.value=0;this.vitalsOn=false;}
   resume(){this.scene.sound.resumeAll();this.pressure(0);}
-  destroy(){this.stopAmbient();for(const pool of this.pools.values())for(const a of pool)a.destroy();this.pools.clear();}
+  destroy(){window.removeEventListener('pointerdown',this.onGesture);window.removeEventListener('keydown',this.onGesture);document.removeEventListener('visibilitychange',this.onVisibility);window.removeEventListener('blur',this.onVisibility);window.removeEventListener('focus',this.onVisibility);clearInterval(this.fadeTimer);if(this.track){this.track.pause();if(this.track.src)URL.revokeObjectURL(this.track.src);this.track=null;}this.stopAmbient();for(const pool of this.pools.values())for(const a of pool)a.destroy();this.pools.clear();}
  }
  root.BPAudio=Audio;
 })(globalThis);

@@ -1,0 +1,17 @@
+{
+  "name": "blackout-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Blackout Protocol online co-op relay: pairs two players by room code and forwards their messages.",
+  "main": "relay.js",
+  "scripts": {
+    "start": "node relay.js",
+    "test": "node test.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

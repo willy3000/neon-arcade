@@ -2,6 +2,8 @@
 // LAN guest side: connects to a host's IP:port, same newline-delimited JSON framing as host.js.
 const net = require('node:net');
 
+const CONNECT_TIMEOUT_MS = 6000;
+
 class Guest {
   constructor() {
     this.socket = null;
@@ -13,7 +15,11 @@ class Guest {
   connect(host, port) {
     return new Promise((resolve, reject) => {
       let settled = false;
+      // A wrong address on a LAN usually just never answers; give up well before the OS's own ~20s timeout.
+      const timer = setTimeout(() => { if (!settled) { settled = true; socket.destroy(); reject(new Error('timed out')); } }, CONNECT_TIMEOUT_MS);
       const socket = net.createConnection({ host, port }, () => {
+        if (settled) return;
+        clearTimeout(timer);
         settled = true;
         this.socket = socket;
         resolve();
@@ -22,7 +28,7 @@ class Guest {
       socket.setEncoding('utf8');
       socket.on('data', (chunk) => this._onData(chunk));
       socket.on('close', () => { this.socket = null; this.onClose?.(); });
-      socket.on('error', (err) => { if (!settled) { settled = true; reject(err); } });
+      socket.on('error', (err) => { if (!settled) { settled = true; clearTimeout(timer); reject(err); } });
     });
   }
 

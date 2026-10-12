@@ -5,6 +5,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('BPNet', {
   available: true,
+  // Optional relay address for online co-op, for running against a relay without editing blackout/online-config.js.
+  relayUrl: (() => { try { return process.env.BP_RELAY_URL || ''; } catch { return ''; } })(),
 
   listLocalAddresses: () => ipcRenderer.invoke('net:listAddresses'),
 

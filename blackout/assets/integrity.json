@@ -96,6 +96,11 @@
       "sha256": "ab87913aba9790a0c5fa173d086267ba521ad522fcad2252271db49988313cf5"
     },
     {
+      "file": "audio/menu-music.mp3",
+      "bytes": 4584960,
+      "sha256": "6dea69d778fdb9c39580900bf4bd30f0004c1f09856c03d3199b058ca9b8caeb"
+    },
+    {
       "file": "audio/metal.ogg",
       "bytes": 7117,
       "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003"
@@ -196,6 +201,11 @@
       "sha256": "d69b7b43e7b4159576efbb839e74a20fe9f06cc41e9026a25c624967958122ad"
     },
     {
+      "file": "icon.svg",
+      "bytes": 3450,
+      "sha256": "7cc66558f255d3e4ed208395468943d8ed95f47ead32ad721babbba25f050fdc"
+    },
+    {
       "file": "licenses/kenney-impact.txt",
       "bytes": 608,
       "sha256": "b49aa9c56b04528b95913de13e506a0f7c5e807b9925db9bfef86af1f91120db"
@@ -209,6 +219,46 @@
       "file": "licenses/kenney-scifi.txt",
       "bytes": 571,
       "sha256": "a9767b25c3533f69d03af136480efad08efba19a9f0d89616992b34c79fd6186"
+    },
+    {
+      "file": "menu/campaign-convoy.jpg",
+      "bytes": 10140,
+      "sha256": "94e4187b8b14fcb1c8744ab38e129054e6000abfb9b13898b279767e3073979d"
+    },
+    {
+      "file": "menu/campaign-crash.jpg",
+      "bytes": 15029,
+      "sha256": "518f5fe7c8f181c77a1a6f991efb19d64e5244e682b352c22b55367ac36c150d"
+    },
+    {
+      "file": "menu/campaign-kestrel.jpg",
+      "bytes": 10314,
+      "sha256": "87a2aca61a66b51f88f5a5f6763d3b9ecd7fc5a7872ae9bf6f993c5fb81fafd5"
+    },
+    {
+      "file": "menu/campaign-meridian.jpg",
+      "bytes": 18713,
+      "sha256": "f98ef90345e9eb9241611c866035e2974ff4f031b25f3410e85118de866dbc76"
+    },
+    {
+      "file": "menu/campaign-ruins.jpg",
+      "bytes": 15902,
+      "sha256": "2658fea2da958f0c771fa86c06fac346239f3684efbb76475a6004a74230cd6c"
+    },
+    {
+      "file": "menu/campaign-underground.jpg",
+      "bytes": 9198,
+      "sha256": "2e819b43fa85a702ab8bf80313e78e6e77648ebd0f372225e910e78c78a1ea30"
+    },
+    {
+      "file": "menu/holdout.jpg",
+      "bytes": 9532,
+      "sha256": "89c511d36163d2c244430b6d4c7fc14ee52515030b1635fcf5fb0aae39662c22"
+    },
+    {
+      "file": "menu/training.jpg",
+      "bytes": 9937,
+      "sha256": "e469e275ee535a6b84aa012e7e952997cbb4da104dc287bad872aed3c33b9725"
     },
     {
       "file": "props.json",
