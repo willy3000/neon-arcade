@@ -6,4 +6,4 @@
 //   1. ?relay=ws://localhost:8787 on the page address
 //   2. localStorage.setItem('blackout-relay-url', 'ws://localhost:8787')
 //   3. the BP_RELAY_URL environment variable, when running the desktop app
-globalThis.BPOnlineConfig = { url: '' };
+globalThis.BPOnlineConfig = { url: 'ws://10.110.0.225:8787' };
