@@ -3,9 +3,13 @@
   // Progression and economy. Pure functions over the save object so the reward loop is testable without a browser.
   const W=World.weapons,G=World.gear,U=World.upgrades,ORDER=World.order;
   const TITLES=['RECRUIT','PRIVATE','CORPORAL','SERGEANT','STAFF SERGEANT','OPERATOR','SPECIALIST','VETERAN','ELITE','GHOST','PHANTOM','SPECTRE','WRAITH HUNTER','LEGEND','BLACKOUT'];
-  const need=r=>r<=1?0:Math.round(350*Math.pow(r-1,1.5)/50)*50;
+  // XP needed to hold a rank. Rank opens the armory tiers (World.tiers), so the curve is paced against the whole
+  // catalogue: see blackout/qa/economy-report.cjs.
+  const need=r=>r<=1?0:Math.round(XP_BASE*Math.pow(r-1,XP_POWER)/50)*50,XP_BASE=1500,XP_POWER=1.75;
   function rankOf(xp){let r=1;while(need(r+1)<=xp&&r<99)r++;const base=need(r),next=need(r+1);return {rank:r,title:TITLES[Math.min(r-1,TITLES.length-1)]+(r>TITLES.length?' '+(r-TITLES.length+1):''),into:xp-base,span:next-base,next};}
   const MASTERY=[20,60,150],masteryLevel=k=>MASTERY.filter(n=>k>=n).length,MASTERY_PERKS=['+10% reserve ammunition','8% faster reload','+6% damage'];
+  // Weapon kit: one purchasable part per mastery level, bought in order. Parts cost a share of the gun's price.
+  const KIT=[{name:'MATCH BARREL',desc:'20% tighter spread.',share:.25},{name:'FAST MAG',desc:'10% faster reload.',share:.4},{name:'HOT LOADS',desc:'+8% damage.',share:.6}],FOUND_DISCOUNT=.25;
   const cls=(m,c)=>Object.entries(m).reduce((n,[k,v])=>n+(W[k]&&W[k].cls===c?v:0),0);
   const CONTRACTS=[
     {id:'kills',text:'Eliminate 40 hostiles',goal:40,reward:300,stat:r=>r.stats.kills},
@@ -42,7 +46,11 @@
       if(!run.deaths)line('NO DEATHS',250);if(run.stats.intel&&!m.intel)line('INTEL RECOVERED',200);if(firstAtDiff)line('FIRST CLEAR / '+D.label,meta.reward*1.5);
       const earned=[!0,!run.deaths,run.rating==='S',run.stats.intel>0||m.intel,run.difficulty==='insane'];medalsFor(meta).forEach((md,i)=>{if(earned[i]&&!m.medals.includes(md.id)){m.medals.push(md.id);report.medals.push(md);line('MEDAL / '+md.name,150);}});
       m.done=true;if(run.stats.intel)m.intel=true;if(firstAtDiff)m.diffs.push(run.difficulty);const best={score:run.score,rating:run.rating,time:+run.time.toFixed(1),difficulty:run.difficulty};if(!m.best||run.score>m.best.score){m.best=best;report.newBest=true;}save.stats.missions++;}
-    else if(run.mode==='holdout'){line('HOSTILE BOUNTIES + WAVES',run.stats.credits);const b=save.holdout[run.difficulty]||0;if((run.stats.wave||0)>b){save.holdout[run.difficulty]=run.stats.wave;report.newBest=true;if(b)line('NEW RECORD / WAVE '+run.stats.wave,100*run.stats.wave);}}
+    else if(run.mode==='holdout'){const hm=World.holdoutMaps.find(h=>h.id===run.mission),wave=run.stats.wave||0;line('HOSTILE BOUNTIES + WAVES',run.stats.credits,run.stats.spent?'AFTER '+Math.round(run.stats.spent)+' CR SPENT ON SUPPLIES':'');
+      // The campaign killhouses are harder ground and pay a little more than the default one.
+      if(hm&&hm.pay>1)line('KILLHOUSE / '+hm.title,run.stats.credits*(hm.pay-1),'×'+hm.pay);
+      const b=save.holdout[run.difficulty]||0;if(wave>b){save.holdout[run.difficulty]=wave;report.newBest=true;if(b)line('NEW RECORD / WAVE '+wave,100*wave);}
+      if(hm){const rec=save.killhouse[hm.id]||(save.killhouse[hm.id]={});if(wave>(rec[run.difficulty]||0)){rec[run.difficulty]=wave;report.newBest=true;}}}
     const mult=D.reward;if(sub&&mult!==1){const extra=sub*(mult-1);report.lines.push({label:'DIFFICULTY / '+D.label,value:Math.round(extra),note:'×'+mult});sub+=extra;}
     report.xp=Math.round(sub);
     const scav=Math.min(3,save.upgrades.scavenger||0);if(scav&&sub){const extra=sub*.08*scav;report.lines.push({label:'SCAVENGER',value:Math.round(extra),note:'+'+8*scav+'%'});sub+=extra;}
@@ -50,14 +58,33 @@
     if(qualifies&&save.daily.day!==day){save.daily.streak=save.daily.day===day-1?save.daily.streak+1:1;save.daily.day=day;const bonus=150*Math.min(5,save.daily.streak);report.lines.push({label:'DAILY OPERATION',value:bonus,note:'STREAK '+save.daily.streak});sub+=bonus;}
     for(const c of refreshContracts(save,day)){if(c.done)continue;const v=c.stat(run),entry=save.contracts.list.find(x=>x.id===c.id);entry.progress=Math.min(c.goal,c.max?Math.max(entry.progress,v):entry.progress+v);if(entry.progress>=c.goal){entry.done=true;report.lines.push({label:'CONTRACT / '+c.text.toUpperCase(),value:c.reward});sub+=c.reward;}report.contracts.push({text:c.text,progress:entry.progress,goal:c.goal,done:entry.done,reward:c.reward});}
     report.credits=Math.round(sub);save.credits+=report.credits;save.xp+=report.xp;
-    let after=rankOf(save.xp);for(let r=report.rankBefore.rank+1;r<=after.rank;r++){const bonus=150*r;save.credits+=bonus;report.credits+=bonus;report.rankUps.push({rank:r,title:rankOf(need(r)).title,bonus});}
-    report.rankAfter=after;return report;}
-  function price(save,kind,key){if(kind==='weapon')return W[key]?.price;if(kind==='gear')return G[key]?.price;if(kind==='upgrade'){const lvl=save.upgrades[key]||0;return lvl>=3?null:U[key]?.prices[lvl];}return null;}
-  function owns(save,kind,key){return kind==='weapon'?save.owned.weapons.includes(key):kind==='gear'?save.owned.gear.includes(key):(save.upgrades[key]||0)>=3;}
-  function buy(save,kind,key){const cost=price(save,kind,key);if(cost==null)return {ok:false,reason:'UNAVAILABLE'};if(owns(save,kind,key))return {ok:false,reason:'OWNED'};if(save.credits<cost)return {ok:false,reason:'NEED '+(cost-save.credits)+' MORE CREDITS'};
-    save.credits-=cost;if(kind==='weapon')save.owned.weapons.push(key);else if(kind==='gear')save.owned.gear.push(key);else save.upgrades[key]=(save.upgrades[key]||0)+1;return {ok:true,cost};}
+    let after=rankOf(save.xp);for(let r=report.rankBefore.rank+1;r<=after.rank;r++){const bonus=150*r;save.credits+=bonus;report.credits+=bonus;const tier=World.tiers.indexOf(r)+1;report.rankUps.push({rank:r,title:rankOf(need(r)).title,bonus,tier});}
+    report.rankAfter=after;report.goal=nextGoal(save);return report;}
+  // A gun found in the field (picked up from a fallen enemy) is 25% off from then on. "kit" is a weapon's next part.
+  function price(save,kind,key){if(kind==='weapon')return W[key]?Math.round(W[key].price*(save.found.includes(key)?1-FOUND_DISCOUNT:1)/10)*10:undefined;if(kind==='gear')return G[key]?.price;if(kind==='upgrade'){const lvl=save.upgrades[key]||0;return lvl>=3?null:U[key]?.prices[lvl];}
+    if(kind==='kit'){const lvl=save.kit[key]||0;return lvl>=3||!W[key]?null:Math.round(Math.min(8000,Math.max(W[key].price,1500))*KIT[lvl].share/50)*50;}return null;}
+  function owns(save,kind,key){return kind==='weapon'?save.owned.weapons.includes(key):kind==='gear'?save.owned.gear.includes(key):kind==='kit'?(save.kit[key]||0)>=3:(save.upgrades[key]||0)>=3;}
+  // The armory tier an item (or an upgrade's next level) sits in, and the rank that tier opens at.
+  const tierOf=(save,kind,key)=>kind==='upgrade'?World.upgradeTiers[Math.min(2,save.upgrades[key]||0)]:kind==='gear'?G[key]?.tier||1:W[key]?.tier||1,rankFor=tier=>World.tiers[tier-1]||1;
+  // 0 when the item can be bought at the player's rank, otherwise the rank it needs.
+  function locked(save,kind,key){const rank=rankFor(tierOf(save,kind,key));return rankOf(save.xp).rank>=rank?0:rank;}
+  function buy(save,kind,key){const cost=price(save,kind,key);if(cost==null)return {ok:false,reason:'UNAVAILABLE'};if(owns(save,kind,key))return {ok:false,reason:'OWNED'};
+    if(kind==='kit'){if(!save.owned.weapons.includes(key))return {ok:false,reason:'BUY THE WEAPON FIRST'};const lvl=save.kit[key]||0;if(masteryLevel(save.mastery[key]||0)<=lvl)return {ok:false,reason:'NEEDS MASTERY LEVEL '+(lvl+1)+' / '+MASTERY[lvl]+' KILLS WITH IT'};}
+    const rank=locked(save,kind,key);if(rank)return {ok:false,reason:'REACH RANK '+rank+' TO UNLOCK'};if(save.credits<cost)return {ok:false,reason:'NEED '+(cost-save.credits)+' MORE CREDITS'};
+    save.credits-=cost;if(kind==='weapon')save.owned.weapons.push(key);else if(kind==='gear')save.owned.gear.push(key);else if(kind==='kit')save.kit[key]=(save.kit[key]||0)+1;else save.upgrades[key]=(save.upgrades[key]||0)+1;return {ok:true,cost};}
+  // Everything still for sale: each unowned gun and gadget, and the next level of each unfinished upgrade.
+  function catalogue(save){return [...Object.keys(W).map(k=>['weapon',k]),...Object.keys(G).map(k=>['gear',k]),...Object.keys(U).map(k=>['upgrade',k])].filter(([kind,key])=>!owns(save,kind,key)&&price(save,kind,key)>0)
+    .map(([kind,key])=>({kind,key,name:kind==='upgrade'?U[key].name+' LV '+((save.upgrades[key]||0)+1):kind==='gear'?G[key].name:W[key].short,cost:price(save,kind,key),rank:locked(save,kind,key)}));}
+  // What to aim for next, shown after a run: the cheapest thing the player's rank allows but their credits do not yet
+  // cover (or, if they can afford everything open to them, the best thing they can buy now), and the next armory tier.
+  function nextGoal(save){const open=catalogue(save).filter(i=>!i.rank).sort((a,b)=>a.cost-b.cost),short=open.find(i=>i.cost>save.credits),afford=open.filter(i=>i.cost<=save.credits).pop(),r=rankOf(save.xp),tier=World.tiers.findIndex(t=>t>r.rank);
+    return {item:short?{...short,need:short.cost-save.credits}:null,afford:afford||null,tier:tier<0?null:{tier:tier+1,rank:World.tiers[tier],ranks:World.tiers[tier]-r.rank,xp:need(World.tiers[tier])-save.xp}};}
+  // The armory's "next up" marker: the cheapest unowned thing recommended for the next unfinished operation, or, when
+  // the player already has all of that, the cheapest gun or gadget their rank lets them buy.
+  function nextUp(save){const m=nextMission(save),rec=m?.rec?[...(m.rec.weapons||[]).map(k=>['weapon',k]),...(m.rec.gear||[]).map(k=>['gear',k])]:[];
+    return rec.filter(([kind,key])=>!owns(save,kind,key)).map(([kind,key])=>({kind,key,cost:price(save,kind,key)})).sort((a,b)=>a.cost-b.cost)[0]||catalogue(save).filter(i=>!i.rank&&i.kind!=='upgrade').sort((a,b)=>a.cost-b.cost)[0]||null;}
   function loadout(save,lo=save.loadout){const ow=save.owned.weapons,og=save.owned.gear,pick=(k,slot,fb)=>k&&W[k]&&W[k].slot===slot&&ow.includes(k)?k:fb,gear=(k,slot)=>k&&G[k]&&G[k].slot===slot&&og.includes(k)?k:null;
     return {primary:pick(lo.primary,0,'rifle'),secondary:pick(lo.secondary,1,'pistol'),lethal:gear(lo.lethal,'lethal'),tactical:gear(lo.tactical,'tactical')};}
-  const profile=save=>({upgrades:{...save.upgrades},mastery:Object.fromEntries(Object.entries(save.mastery).map(([k,v])=>[k,masteryLevel(v)]))});
-  return {TITLES,rankOf,need,MASTERY,masteryLevel,MASTERY_PERKS,CONTRACTS,contractsFor,refreshContracts,medalsFor,mission,unlocked,nextMission,summarize,settle,price,owns,buy,loadout,profile};
+  const profile=save=>({upgrades:{...save.upgrades},kit:{...save.kit},mastery:Object.fromEntries(Object.entries(save.mastery).map(([k,v])=>[k,masteryLevel(v)]))});
+  return {TITLES,rankOf,need,MASTERY,masteryLevel,MASTERY_PERKS,CONTRACTS,contractsFor,refreshContracts,medalsFor,mission,unlocked,nextMission,summarize,settle,price,owns,buy,loadout,profile,KIT,FOUND_DISCOUNT,tierOf,rankFor,locked,catalogue,nextGoal,nextUp};
 });

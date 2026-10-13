@@ -13,7 +13,7 @@
   constructor(scene){this.scene=scene;this.staticObjects=[];this.actors=new Map();this.props=new Map();this.particles=Array.from({length:360},()=>({active:false}));this.flashes=[];this.decals=[];this.cameraX=0;this.cameraY=0;this.lastMap=null;this.hurt=[];this.hitMark=0;this.killMark=0;this.weather=[];
    this.effects=scene.add.graphics().setDepth(11000);this.lines=scene.add.graphics().setDepth(10900);this.decalsGraphics=scene.add.graphics().setDepth(2);this.smoke=scene.add.graphics().setDepth(11500);this.uiGraphics=scene.add.graphics().setScrollFactor(0).setDepth(20000);
    this.crosshair=scene.add.graphics().setScrollFactor(0).setDepth(20010);this.brush=scene.make.graphics({x:0,y:0,add:false});this.dark=null;
-   this.sprites=new Map();this.frame=0;this.labels=Array.from({length:3},()=>scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:'10px',fontStyle:'600',color:'#f4cf8e',stroke:'#0b0f0a',strokeThickness:3}).setOrigin(.5,1).setDepth(12001).setVisible(false));
+   this.sprites=new Map();this.frame=0;this.labels=Array.from({length:6},()=>scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:'10px',fontStyle:'600',color:'#f4cf8e',stroke:'#0b0f0a',strokeThickness:3}).setOrigin(.5,1).setDepth(12001).setVisible(false));
    // Co-op: a callsign over each operator, and the caption under the revive station.
    const small=(size,color)=>scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:size,fontStyle:'600',color,stroke:'#0b0f0a',strokeThickness:3}).setDepth(12001).setVisible(false);
    this.nameTags=[small('9px','#e2b074').setOrigin(.5,1),small('9px','#8fe3ff').setOrigin(.5,1)];this.stationLabel=small('8px','#9fd08a').setOrigin(.5,0).setText('REVIVE STATION');
@@ -183,7 +183,8 @@
    }if(this.decals.length>160)this.decals.splice(0,this.decals.length-160);}
   shake(duration,intensity){const strength=this.scene.settings.shake;if(strength>0)this.scene.cameras.main.shake(duration*1000,intensity*strength);}
   update(s,dt,pointer,self=s.player){if(this.lastMap!==s.map.id)this.build(s,self);this.frame++;const g=this.effects,l=this.lines,cam=this.scene.cameras.main,p=self,t=s.time;g.clear();l.clear();this.smoke.clear();this.uiGraphics.clear();
-   const aimX=Math.cos(p.angle)*(p.aiming?115:65),aimY=Math.sin(p.angle)*(p.aiming?115:65),targetX=p.x+p.vx*.14+aimX,targetY=p.y+p.vy*.14+aimY,lerp=1-Math.exp(-dt*6);
+   // The camera leads the aim, and further when steadying a long gun: a marksman rifle sees more ahead than a pistol.
+   const ahead=p.aiming?115*Math.max(.85,Math.min(1.7,(BPWorld.weapons[p.slots?.[p.slot]]?.range||940)/940)):65,aimX=Math.cos(p.angle)*ahead,aimY=Math.sin(p.angle)*ahead,targetX=p.x+p.vx*.14+aimX,targetY=p.y+p.vy*.14+aimY,lerp=1-Math.exp(-dt*6);
    this.cameraX+=(targetX-this.cameraX)*lerp;this.cameraY+=(targetY-this.cameraY)*lerp;cam.centerOn(this.cameraX,this.cameraY);
    for(const b of s.walls)if(b.deployed&&!this.props.has(b.id))this.prop(b);
    for(const {container,b} of this.props.values()){container.setVisible(!b.dead);if(!b.dead&&Number.isFinite(b.hp)&&b.hp<b.maxHp)container.setAlpha(.6+.4*b.hp/b.maxHp);if(container.blink&&!b.dead)container.list[0].setAlpha(Math.sin(t*6)>0?1:.85);if(container.pulse&&!b.dead)container.setScale(1+.04*Math.sin(t*5));}
@@ -251,6 +252,12 @@
      g.fillStyle(C.amber,fresh?.13+.08*pulse:.05).fillEllipse(x,y,dw*1.3,dh*2);g.lineStyle(2,C.amber,fresh?.5+.4*pulse:.28).strokeEllipse(x,y,dw*1.2+4*pulse,dh*1.8+3*pulse);g.fillStyle(0x0b0f0a,.45).fillEllipse(x+3,y+5,dw*.92,dh*.55);
      const o=this.sprite(pick.id,'w:'+pick.weapon);if(o)o.setPosition(x,y).setDisplaySize(dw,dh).setRotation(rot).setDepth(6);else{g.fillStyle(0x23281d).fillRect(x-dw/2,y-3,dw,6);g.fillStyle(0x8b8a6e).fillRect(x-dw/2+2,y-2,dw-4,3);}
      const d=Math.hypot(p.x-x,p.y-y);if(d<240&&labels<this.labels.length){const lab=this.labels[labels++];lab.setText((fresh?'NEW · ':'')+w.short+(fresh?'':' · SWAP')).setPosition(x,y-dh*.9-6).setColor(fresh?'#f4cf8e':'#d3dbc7').setAlpha(Math.min(1,(240-d)/60)).setVisible(true);}
+     continue;}
+    // Supply-drop crates: a priced box holding what it sells, brighter once Rook is close enough to buy.
+    if(pick.type==='offer'){const near=Math.hypot(p.x-x,p.y-y)<70,pulse=.5+.5*Math.sin(t*4),gun=pick.item==='weapon',key=gun?'w:'+pick.weapon:'p:'+({armor:'armor',health:'health',stim:'stim',gadgets:'gadget'}[pick.item]||'ammo');
+     g.fillStyle(0x0b0f0a,.5).fillEllipse(x+3,y+20,58,18);g.fillStyle(0x1a2119,.92).fillRoundedRect(x-27,y-20,54,40,4);g.lineStyle(2,near?0xf4cf8e:C.amber,near?.95:.35+.3*pulse).strokeRoundedRect(x-27,y-20,54,40,4);
+     const o=this.sprite(pick.id,key);if(o){if(gun){const sz=BPIcons.size(pick.weapon),k=Math.min(46/sz.w,26/sz.h);o.setDisplaySize(sz.w*k,sz.h*k);}else o.setDisplaySize(26,26);o.setPosition(x,y).setRotation(0).setDepth(6);}
+     if(labels<this.labels.length){const lab=this.labels[labels++];lab.setText((gun?BPWorld.weapons[pick.weapon].short:{ammo:'AMMO',armor:'ARMOUR',health:'HEALTH',stim:'STIM',gadgets:'GADGETS'}[pick.item]||'SUPPLY')+' · '+pick.cost+' CR').setPosition(x,y-26).setColor(near?'#f4cf8e':'#d3dbc7').setAlpha(1).setVisible(true);}
      continue;}
     const key=pick.type==='lethal'?'g:'+(p.lethal||'frag'):pick.type==='tactical'?(p.tactical?'g:'+p.tactical:'p:gadget'):'p:'+(pick.type==='supply'?'health':pick.type),size=pick.type==='supply'?36:27;
     g.fillStyle(0x0b0f0a,.5).fillEllipse(x+3,y+10,size,size*.42);g.lineStyle(1.5,RING[pick.type]||0xb6bf99,.3+.25*Math.sin(t*4+x)).strokeCircle(x,y+bob,size*.66);

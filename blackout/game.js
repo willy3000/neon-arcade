@@ -1,6 +1,9 @@
 (() => {
  'use strict';
- let storage;try{storage=window.localStorage;}catch{storage=null;}
+ // In the desktop build, window.BPStore (preload.js) persists to a file instead of localStorage, which
+ // is scoped to the page's origin - and the desktop shell's local server binds a fresh random port
+ // every launch, so localStorage alone would start empty each time.
+ let storage;try{storage=window.BPStore||window.localStorage;}catch{storage=null;}
  const $=id=>document.getElementById(id),save=BPSave.load(storage),settings=save.settings,pressed=new Set(),held=new Set();
  const W=BPWorld.weapons,G=BPWorld.gear,A=BPWorld.archetypes,U=BPWorld.upgrades,MISSIONS=BPWorld.missions,DIFFS=BPWorld.order,DL=BPWorld.difficulties,Meta=BPMeta,HOLD=BPWorld.holdoutMaps;
  const holdoutMap=id=>HOLD.find(h=>h.id===id)||HOLD[0],holdoutOpen=h=>!h.locks||!!save.missions[h.locks]?.done;
@@ -19,7 +22,7 @@
  for(const [via,name] of [[NET,'lan'],[ONLINE,'online']])if(via){via.onHostEvent(msg=>{if(lobby?.link===name)onHostMsg(msg);});via.onGuestEvent(msg=>{if(lobby?.link===name)onGuestMsg(msg);});}
  const labels={up:'Move up',down:'Move down',left:'Move left',right:'Move right',sprint:'Sprint',roll:'Roll / dive',slide:'Slide',interact:'Interact / vault',reload:'Reload',swap:'Swap weapon',gadget:'Stim injector',melee:'Melee',grenade:'Lethal gadget',tactical:'Tactical gadget',slot1:'Primary weapon',slot2:'Secondary weapon'};
  const pad=new BPGamepad(),padTaps=new Set(),PAD_REACH=300,PAD_TURN=14,ASSIST_TURN=45,ASSIST_CONE=.7,ASSIST_BREAK=.6,padActionLabel=key=>({grenade:'Deploy gadget',cycle:'Switch gadget',fire:'Fire',aim:'Steady aim'})[key]||labels[key];
- let padGadget='lethal',padState=null,padActive=false,padAngle=0,padTarget=0,padAimIdle=0,padMenuStick=0,padBindingTarget=null,padLock=null,padLockLost=0,padReach=PAD_REACH;
+ let padGadget='lethal',padState=null,padActive=false,padAngle=0,padTarget=0,padAimIdle=0,padMenuStick=0,padMenuStickX=0,padBindingTarget=null,padLock=null,padLockLost=0,padReach=PAD_REACH;
  const today=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*60000)/86400000),fmt=n=>Math.round(n).toLocaleString('en-US'),esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
  const missionMeta=id=>MISSIONS.find(m=>m.id===id),gearName=k=>k?G[k].name:'NONE';
  function displayKey(code){return code.replace(/^Key|^Digit/,'').replace('Left','').replace('Right','');}
@@ -30,14 +33,15 @@
   $('menu-controls').innerHTML=`<kbd>${esc(move)}</kbd> MOVE <span>·</span> <kbd>${esc(aim)}</kbd> AIM <span>·</span> <kbd>${esc(keyLabel('roll'))}</kbd> EVADE <span>·</span> <kbd>${esc(keyLabel('swap'))}</kbd> SWAP`;}
  function setPadActive(value){padActive=value;if(value&&scene&&!scene.audio.unlocked)scene.audio.unlock();document.body.classList.toggle('pad',value);if(value&&scene?.sim)padAngle=padTarget=me(scene.sim).angle;padAimIdle=0;strip();menuHint();}
  function padStatus(){const name=settings.gamepad?pad.name:null;$('gamepad-status').textContent=!BPGamepad.supported?'NOT SUPPORTED IN THIS BROWSER':!settings.gamepad?'OFF':name?(BPGamepad.brandName[pad.brand]||'CONTROLLER')+' · '+name.slice(0,34):'PRESS ANY BUTTON ON THE CONTROLLER';}
- function persist(){const ok=BPSave.write(storage,save);if(!ok&&!hadSaveFailure){hadSaveFailure=true;toast('STORAGE UNAVAILABLE / PROGRESS LASTS THIS SESSION');}return ok;}
+ function persist(){save.presets[save.preset]={...save.loadout};const ok=BPSave.write(storage,save);if(!ok&&!hadSaveFailure){hadSaveFailure=true;toast('STORAGE UNAVAILABLE / PROGRESS LASTS THIS SESSION');}return ok;}
  function clearInput(){held.clear();pressed.clear();padTaps.clear();padState=null;padLock=null;mouseFire=false;mouseAim=false;wheelSwap=false;}
  function toast(text,duration=2.5){$('toast').textContent=text;$('toast').style.opacity='1';toastUntil=performance.now()+duration*1000;}
  function banner(eyebrow,title,sub='',duration=2.6,tone='',art=''){$('banner-art').innerHTML=art;$('banner-eyebrow').textContent=eyebrow;$('banner-title').textContent=title;$('banner-sub').textContent=sub;const b=$('banner');b.className='banner show '+tone;bannerUntil=performance.now()+duration*1000;}
  function radio(e){$('radio-speaker').textContent=e.speaker;$('radio-text').textContent=e.text;$('radio').hidden=false;radioUntil=scene.sim.time+(e.duration||6);}
  const rank=()=>Meta.rankOf(save.xp);
  function refreshWallet(){const r=rank();for(const id of ['wallet','ops-credits','armory-credits'])$(id).textContent=fmt(save.credits)+' CR';for(const id of ['ops-rank','armory-rank'])$(id).textContent='RANK '+r.rank+' · '+r.title;
-  $('rank-chip').innerHTML=`<i></i> RANK ${r.rank} · ${esc(r.title)}`;const d=save.daily,day=today();$('streak-chip').textContent=d.day===day?`DAILY OP DONE · STREAK ${d.streak}`:d.day===day-1?`DAILY OP READY · KEEP THE ${d.streak}-DAY STREAK`:'DAILY OP BONUS READY';
+  $('rank-chip').innerHTML=`<i></i> RANK ${r.rank} · ${esc(r.title)}`;
+  $('menu-contracts').innerHTML=Meta.refreshContracts(save,today()).map(x=>`<div class="contract${x.done?' done':''}"><span>${esc(x.text)}</span><b>${x.done?'PAID':x.progress+' / '+x.goal} · ${x.reward} CR</b><i style="--v:${(x.progress/x.goal).toFixed(2)}"></i></div>`).join('');const d=save.daily,day=today();$('streak-chip').textContent=d.day===day?`DAILY OP DONE · STREAK ${d.streak}`:d.day===day-1?`DAILY OP READY · KEEP THE ${d.streak}-DAY STREAK`:'DAILY OP BONUS READY';
   const fresh=[...save.owned.weapons,...save.owned.gear].filter(k=>!save.seen.includes(k)&&!['rifle','pistol'].includes(k)).length;$('armory-badge').textContent=fresh?'NEW ×'+fresh:fmt(save.credits)+' CR';$('armory-badge').classList.toggle('new',!!fresh);setArt($('armory-art'),'weapon',Meta.loadout(save).primary);}
  function updateContinue(){const next=Meta.nextMission(save),cur=save.run&&missionMeta(save.run.mission),done=MISSIONS.filter(m=>save.missions[m.id]?.done).length,medals=MISSIONS.reduce((n,m)=>n+(save.missions[m.id]?.medals.length||0),0);
   
@@ -93,7 +97,8 @@
  document.addEventListener('change',e=>{if(navOn()&&navOf(e)&&navQuiet()>60)scene.audio.ui('tick');});
  // Sound can only start after the first click, key press or controller input, so that is when it is switched on.
  for(const type of ['pointerdown','keydown'])window.addEventListener(type,()=>{if(scene&&!scene.audio.unlocked)scene.audio.unlock();if(!greeted)setTimeout(greet,200);},true);
- function setMode(value){mode=value;document.body.dataset.phase=value;const game=['playing','paused','dead','complete'].includes(value);document.body.classList.toggle('playing',game);for(const id of SCREENS)$(id).hidden=value!==id;$('hud').hidden=!['playing','paused'].includes(value);$('pause').hidden=value!=='paused';$('ending').hidden=!['dead','complete'].includes(value);if(!game){$('danger').style.opacity='0';$('flashout').style.opacity='0';document.body.classList.remove('downed');}score();backdrop();clearInput();if(scene?.game?.canvas)scene.game.canvas.style.cursor=value==='playing'?'none':'default';}
+ function setMode(value){mode=value;document.body.dataset.phase=value;const game=['playing','paused','dead','complete'].includes(value);document.body.classList.toggle('playing',game);for(const id of SCREENS)$(id).hidden=value!==id;
+  $('hud').hidden=!['playing','paused'].includes(value);$('pause').hidden=value!=='paused';$('ending').hidden=!['dead','complete'].includes(value);if(!game){$('danger').style.opacity='0';$('flashout').style.opacity='0';document.body.classList.remove('downed');}score();backdrop();clearInput();if(scene?.game?.canvas)scene.game.canvas.style.cursor=value==='playing'?'none':'default';}
  // ---------- operations board ----------
  function openOps(id){if(!scene)return;selected=id||selected||save.run?.mission||Meta.nextMission(save)?.id||'crash';if(!Meta.unlocked(save,selected))selected=Meta.nextMission(save)?.id||'crash';scene.audio?.stopAmbient();setMode('ops');renderOps();$('ops').scrollTop=0;$('deploy').focus({preventScroll:true});}
  function medalRow(id){const got=save.missions[id]?.medals||[];return Meta.medalsFor().map(m=>`<i class="${got.includes(m.id)?'on':''}" title="${m.name}"></i>`).join('');}
@@ -106,7 +111,7 @@
   $('brief-terrain').textContent=m.terrain;$('brief-threats').textContent=m.threats.map(t=>A[t].name).join(' · ');$('brief-best').textContent=st?.best?`${st.best.rating} · ${fmt(st.best.score)} · ${DL[st.best.difficulty].label}`:'—';$('brief-medals').innerHTML=medalRow(m.id);
   const rec=$('brief-rec');rec.replaceChildren();const head=document.createElement('p');head.className='rec-note';head.innerHTML=`<b>RECOMMENDED</b> ${esc(m.rec.note)}`;rec.append(head);
   for(const [kind,key] of [...m.rec.weapons.map(k=>['weapon',k]),...m.rec.gear.map(k=>['gear',k])]){const item=kind==='weapon'?W[key]:G[key],have=Meta.owns(save,kind,key),slot=kind==='weapon'?(item.slot===0?'primary':'secondary'):item.slot,on=save.loadout[slot]===key,cost=Meta.price(save,kind,key),b=document.createElement('button');b.type='button';b.className='rec-item'+(have?' owned':'')+(on?' on':'');
-   b.innerHTML=`<i class="rec-art">${ICON(kind,key)}</i><span>${esc(item.name)}</span><b>${on?'EQUIPPED':have?'EQUIP':save.credits>=cost?'BUY '+fmt(cost)+' CR':fmt(cost)+' CR'}</b>`;
+   const rk=have?0:Meta.locked(save,kind,key);b.innerHTML=`<i class="rec-art">${ICON(kind,key)}</i><span>${esc(item.name)}</span><b>${on?'EQUIPPED':have?'EQUIP':rk?'RANK '+rk:save.credits>=cost?'BUY '+fmt(cost)+' CR':fmt(cost-save.credits)+' CR SHORT'}</b>`;
    b.addEventListener('click',()=>{if(!have){const r=Meta.buy(save,kind,key);if(!r.ok){toast(r.reason);scene.audio.ui('deny');return;}scene.audio.ui('buy');toast(item.name+' PURCHASED');}save.loadout[slot]=key;save.loadout=Meta.loadout(save);persist();refreshWallet();renderOps();itemVoice(kind,key);});rec.append(b);}
   const dp=$('difficulty-pick');dp.replaceChildren();for(const d of DIFFS){const b=document.createElement('button');b.type='button';b.className=(settings.difficulty===d?'active ':'')+d;b.innerHTML=`<span>${DL[d].label}</span><small>×${DL[d].reward} CR</small>`;b.addEventListener('click',()=>{settings.difficulty=d;persist();renderOps();});dp.append(b);}
   $('difficulty-note').textContent={story:'Forgiving fire and frequent medkits. For the story.',standard:'The intended fight. Cover matters; mistakes are survivable.',intense:'Faster, deadlier enemies that throw grenades at campers.',insane:'Skill tier. Twice the soldiers, three-round bursts that lead your movement, grenades for anyone who camps. Fight from cover or die.'}[settings.difficulty];
@@ -117,39 +122,50 @@
  // The four loadout tiles (two guns, two gadgets), shared by the operations board and the squad lobby. A slot named in
  // "off" is shown but cannot be changed, with that note in place of its detail line.
  function loadoutSlots(box,off={}){const lo=Meta.loadout(save);box.replaceChildren();
+  // Three loadouts kept side by side. Picking one swaps the whole kit; whatever is changed afterwards is saved into it.
+  const row=document.createElement('div');row.className='presets';row.innerHTML='<small>LOADOUT</small>';
+  ['A','B','C'].forEach((name,i)=>{const b=document.createElement('button');b.type='button';b.className='preset'+(i===save.preset?' on':'');b.textContent=name;b.setAttribute('aria-label','Loadout '+name);b.dataset.preset=i;
+   b.addEventListener('click',()=>{if(i===save.preset)return;save.presets[save.preset]={...save.loadout};save.preset=i;save.loadout=Meta.loadout(save,save.presets[i]);persist();scene.audio.ui('select');loadoutChanged();});row.append(b);});box.append(row);
   for(const [slot,label] of [['primary','PRIMARY'],['secondary','SECONDARY'],['lethal','LETHAL'],['tactical','TACTICAL']]){const key=lo[slot],b=document.createElement('button');b.type='button';b.className='slot'+(off[slot]?' locked':'');b.dataset.slot=slot;const w=slot==='primary'||slot==='secondary'?W[key]:null;
    b.innerHTML=`<div class="slot-art">${key?ICON(w?'weapon':'gear',key):''}</div><small>${label}</small><b>${esc(w?w.short:gearName(key))}</b><span>${off[slot]?esc(off[slot]):w?esc(w.name.split(' / ')[1]):key?'×'+(G[key].count+(save.upgrades.bandolier||0)):'EMPTY / CHOOSE'}</span>`;b.addEventListener('click',()=>{if(off[slot]){scene.audio.ui('deny');return;}openPicker(slot);});box.append(b);}}
  function loadoutChanged(){if(mode==='lobby'){renderLobby();lobbySync();}else renderOps();}
- function openPicker(slot){const list=$('picker-list'),gun=slot==='primary'||slot==='secondary';list.replaceChildren();$('picker-eyebrow').textContent=slot.toUpperCase();$('picker-title').textContent=gun?'CHOOSE A WEAPON.':'CHOOSE A GADGET.';
+ function openPicker(slot){const list=$('picker-list'),gun=slot==='primary'||slot==='secondary';list.replaceChildren();list.classList.remove('maps');$('picker-eyebrow').textContent=slot.toUpperCase();$('picker-title').textContent=gun?'CHOOSE A WEAPON.':'CHOOSE A GADGET.';
   const keys=gun?Object.keys(W).filter(k=>W[k].slot===(slot==='primary'?0:1)):[null,...Object.keys(G).filter(k=>G[k].slot===slot)];
   for(const key of keys){const have=key===null||(gun?save.owned.weapons:save.owned.gear).includes(key),item=key&&(gun?W[key]:G[key]),b=document.createElement('button');b.type='button';b.className='pick'+(save.loadout[slot]===key?' on':'')+(have?'':' locked');
-   const lvl=gun?Meta.masteryLevel(save.mastery[key]||0):0;b.innerHTML=key===null?'<div class="pick-art"></div><div><b>NONE</b><span>Leave this slot empty.</span></div>':`<div class="pick-art">${ICON(gun?'weapon':'gear',key)}</div><div><b>${esc(item.name)}${gun&&lvl?' <em>'+'★'.repeat(lvl)+'</em>':''}</b><span>${have?esc(item.desc):'LOCKED · '+(item.drop?'DROPPED BY '+esc(item.drop).toUpperCase()+' · ':'')+'ARMORY '+fmt(item.price)+' CR'}</span></div>`;
+   const lvl=gun?Meta.masteryLevel(save.mastery[key]||0):0;b.innerHTML=key===null?'<div class="pick-art"></div><div><b>NONE</b><span>Leave this slot empty.</span></div>':`<div class="pick-art">${ICON(gun?'weapon':'gear',key)}</div><div><b>${esc(item.name)}${gun&&lvl?' <em>'+'★'.repeat(lvl)+'</em>':''}</b><span>${have?esc(item.desc):'LOCKED · '+(Meta.locked(save,gun?'weapon':'gear',key)?'RANK '+Meta.locked(save,gun?'weapon':'gear',key)+' · ':'')+'ARMORY '+fmt(Meta.price(save,gun?'weapon':'gear',key))+' CR'}</span></div>`;
    b.addEventListener('click',()=>{if(!have){$('picker').close();openArmory(gun?'weapons':'gear',key,mode==='lobby'?'lobby':'ops');return;}save.loadout[slot]=key;save.loadout=Meta.loadout(save);persist();$('picker').close();loadoutChanged();scene.audio.ui('select');itemVoice(gun?'weapon':'gear',key);});list.append(b);}
   $('picker').showModal();list.querySelector('.on,button')?.focus();}
  // ---------- armory ----------
- function openArmory(tab='weapons',item=null,from=mode==='ops'?'ops':mode==='complete'||mode==='dead'?'menu':'menu'){armoryTab=tab;armoryItem=item;armoryFrom=from;scene?.audio?.stopAmbient();setMode('armory');scene?.audio?.say('vo-armory',{rest:600});renderArmory();($('armory-list').querySelector('.active')||$('armory-list').querySelector('button'))?.focus();}
+ function openArmory(tab='weapons',item=null,from=mode==='ops'?'ops':mode==='complete'||mode==='dead'?'menu':'menu'){armoryTab=tab;armoryItem=item;armoryFrom=from;scene?.audio?.stopAmbient();setMode('armory');scene?.audio?.say('vo-armory',{cut:true,rest:0});renderArmory();($('armory-list').querySelector('.active')||$('armory-list').querySelector('button'))?.focus();}
  function armoryBack(){if(armoryFrom==='lobby'&&lobby)showLobby();else if(armoryFrom==='ops')openOps(selected);else menu();}
  function bars(w){const max={damage:240*1,rate:16,range:1900,mobility:1.1,capacity:75},dps=w.damage*w.pellets/w.rate;return [['DAMAGE',Math.min(1,w.damage*w.pellets/200)],['FIRE RATE',Math.min(1,(1/w.rate)/16)],['RANGE',w.range/max.range],['MOBILITY',(w.mobility-.6)/.5],['MAGAZINE',Math.min(1,w.capacity/max.capacity)],['DPS',Math.min(1,dps/420)]].map(([l,v])=>`<div class="bar"><span>${l}</span><i style="--v:${Math.max(.04,Math.min(1,v)).toFixed(2)}"></i></div>`).join('');}
  function renderArmory(){for(const b of $('armory-tabs').children)b.classList.toggle('active',b.dataset.tab===armoryTab);const list=$('armory-list'),detail=$('armory-detail');list.replaceChildren();refreshWallet();
   list.hidden=armoryTab==='record';detail.classList.toggle('wide',armoryTab==='record');if(armoryTab==='record'){renderRecord(detail);return;}
   const entries=armoryTab==='weapons'?Object.keys(W).sort((a,b)=>W[a].slot-W[b].slot||W[a].price-W[b].price).map(k=>['weapon',k]):armoryTab==='gear'?Object.keys(G).sort((a,b)=>G[a].slot.localeCompare(G[b].slot)||G[a].price-G[b].price).map(k=>['gear',k]):Object.keys(U).map(k=>['upgrade',k]);
   if(!armoryItem||!entries.some(e=>e[1]===armoryItem))armoryItem=entries[0][1];
+  const up=Meta.nextUp(save);
   for(const [kind,key] of entries){const item=kind==='weapon'?W[key]:kind==='gear'?G[key]:U[key],have=Meta.owns(save,kind,key),lvl=kind==='upgrade'?save.upgrades[key]||0:0,cost=Meta.price(save,kind,key),fresh=have&&kind!=='upgrade'&&!save.seen.includes(key)&&!['rifle','pistol'].includes(key),b=document.createElement('button');b.type='button';b.className='armory-item'+(key===armoryItem?' active':'')+(have?' owned':'');b.dataset.item=key;
-   const tag=kind==='upgrade'?(lvl>=3?'MAX':'LV '+lvl+' · '+fmt(cost)+' CR'):have?(Object.values(save.loadout).includes(key)?'EQUIPPED':'OWNED'):fmt(cost)+' CR';
+   // Locked by rank, marked down because it was found in the field, or the suggested next buy for the next operation.
+   const rk=have||cost==null?0:Meta.locked(save,kind,key),next=!!up&&up.kind===kind&&up.key===key;b.classList.toggle('locked',!!rk);b.classList.toggle('next',next);
+   const tag=(next?'NEXT UP · ':'')+(kind==='upgrade'?(lvl>=3?'MAX':'LV '+lvl+' · '+(rk?'RANK '+rk:fmt(cost)+' CR')):have?(Object.values(save.loadout).includes(key)?'EQUIPPED':'OWNED'):rk?'RANK '+rk:fmt(cost)+' CR'+(kind==='weapon'&&save.found.includes(key)?' · FOUND':''));
    b.innerHTML=`<span class="ai-art">${ICON(kind,key)}</span><span class="ai-kind">${kind==='weapon'?(item.slot===0?'PRIMARY':'SECONDARY'):kind==='gear'?item.slot.toUpperCase():'UPGRADE'}</span><b>${esc(item.name)}</b><span class="ai-tag${fresh?' new':''}">${fresh?'NEW · ':''}${tag}</span>`;
    b.addEventListener('click',()=>{armoryItem=key;renderArmory();});b.addEventListener('focus',()=>{if(armoryItem!==key){armoryItem=key;renderDetail(kind,key);for(const x of list.children)x.classList.toggle('active',x===b);}});list.append(b);}
   renderDetail(entries.find(e=>e[1]===armoryItem)[0],armoryItem);}
  function renderDetail(kind,key){const detail=$('armory-detail'),item=kind==='weapon'?W[key]:kind==='gear'?G[key]:U[key],have=Meta.owns(save,kind,key),cost=Meta.price(save,kind,key);
   if(have&&kind!=='upgrade'&&!save.seen.includes(key)){save.seen.push(key);persist();}
   let body='',actions=[];
-  if(kind==='weapon'){const kills=save.mastery[key]||0,lvl=Meta.masteryLevel(kills),next=Meta.MASTERY[lvl];const slot=item.slot===0?'primary':'secondary';
-   body=`<p class="ad-kind">${item.slot===0?'PRIMARY':'SECONDARY'} · ${item.cls.toUpperCase()}${item.pierce?' · PIERCES '+item.pierce:''}${item.explosive?' · EXPLOSIVE':''}${item.breach?' · BREACHES COVER':''}</p><h3>${esc(item.name)}</h3><p>${esc(item.desc)}</p><div class="bars">${bars(item)}</div>
-    <div class="mastery"><b>MASTERY ${'★'.repeat(lvl)}${'☆'.repeat(3-lvl)}</b><span>${kills} KILLS${next?' · '+(next-kills)+' TO '+Meta.MASTERY_PERKS[lvl].toUpperCase():' · MASTERED'}</span></div><p class="ad-source">${have?'IN YOUR ARMORY':item.drop?'FIELD DROP: '+esc(item.drop).toUpperCase()+' — KILL ONE AND WALK OVER THE GUN':'ARMORY ONLY'}</p>`;
-   if(have)actions.push([save.loadout[slot]===key?'EQUIPPED AS '+slot.toUpperCase():'EQUIP AS '+slot.toUpperCase(),()=>{save.loadout[slot]=key;save.loadout=Meta.loadout(save);persist();renderArmory();scene.audio.ui('select');itemVoice('weapon',key);}]);}
-  else if(kind==='gear'){body=`<p class="ad-kind">${item.slot.toUpperCase()} GADGET · ${item.count} CHARGES PER MISSION</p><h3>${esc(item.name)}</h3><p>${esc(item.desc)}</p><p class="ad-source">${have?'IN YOUR ARMORY':'ARMORY ONLY'} · ${item.slot==='lethal'?keyLabel('grenade'):keyLabel('tactical')} TO USE</p>`;
+  if(kind==='weapon'){const kills=save.mastery[key]||0,lvl=Meta.masteryLevel(kills),next=Meta.MASTERY[lvl];const slot=item.slot===0?'primary':'secondary',fitted=save.kit[key]||0,part=Meta.KIT[fitted],partCost=Meta.price(save,'kit',key);
+   body=`<p class="ad-kind">TIER ${item.tier} · ${item.slot===0?'PRIMARY':'SECONDARY'} · ${item.cls.toUpperCase()}${item.pierce?' · PIERCES '+item.pierce:''}${item.explosive?' · EXPLOSIVE':''}${item.breach?' · BREACHES COVER':''}</p><h3>${esc(item.name)}</h3><p>${esc(item.desc)}</p><div class="bars">${bars(item)}</div>
+    <div class="mastery"><b>MASTERY ${'★'.repeat(lvl)}${'☆'.repeat(3-lvl)}</b><span>${kills} KILLS${next?' · '+(next-kills)+' TO '+Meta.MASTERY_PERKS[lvl].toUpperCase():' · MASTERED'}</span></div><div class="kit-parts">${Meta.KIT.map((k,i)=>`<span class="${i<fitted?'on':''}"><b>${k.name}</b>${k.desc} ${i<fitted?'FITTED':'MASTERY '+'★'.repeat(i+1)}</span>`).join('')}</div>
+    <p class="ad-source">${have?'IN YOUR ARMORY':save.found.includes(key)?'FOUND IN THE FIELD · 25% OFF':item.drop?'CARRIED BY '+esc(item.drop).toUpperCase()+' — TAKE ONE IN THE FIELD TO USE IT FOR THAT RUN AND GET 25% OFF HERE':'ARMORY ONLY'}</p>`;
+   if(have)actions.push([save.loadout[slot]===key?'EQUIPPED AS '+slot.toUpperCase():'EQUIP AS '+slot.toUpperCase(),()=>{save.loadout[slot]=key;save.loadout=Meta.loadout(save);persist();renderArmory();scene.audio.ui('select');itemVoice('weapon',key);}]);
+   // Weapon kit: the next part can be fitted once the gun's mastery has reached that level.
+   if(have&&part)actions.push([lvl<=fitted?`${part.name} · NEEDS MASTERY ${'★'.repeat(fitted+1)}`:save.credits>=partCost?`FIT ${part.name} · ${fmt(partCost)} CR`:`${part.name} · ${fmt(partCost)} CR · NEED ${fmt(partCost-save.credits)} MORE`,()=>{const r=Meta.buy(save,'kit',key);if(!r.ok){toast(r.reason);scene.audio.ui('deny');return;}scene.audio.ui('buy');persist();renderArmory();banner('ARMORY',part.name,item.name+' · '+part.desc.toUpperCase(),2.2,'gold',ICON('weapon',key));}]);}
+  else if(kind==='gear'){body=`<p class="ad-kind">TIER ${item.tier} · ${item.slot.toUpperCase()} GADGET · ${item.count} CHARGES PER MISSION</p><h3>${esc(item.name)}</h3><p>${esc(item.desc)}</p><p class="ad-source">${have?'IN YOUR ARMORY':'ARMORY ONLY'} · ${item.slot==='lethal'?keyLabel('grenade'):keyLabel('tactical')} TO USE</p>`;
    if(have)actions.push([save.loadout[item.slot]===key?'EQUIPPED':'EQUIP',()=>{save.loadout[item.slot]=key;save.loadout=Meta.loadout(save);persist();renderArmory();scene.audio.ui('select');itemVoice('gear',key);}]);}
   else{const lvl=save.upgrades[key]||0;body=`<p class="ad-kind">PERMANENT UPGRADE · LEVEL ${lvl} / 3</p><h3>${esc(item.name)}</h3><p>${esc(item.desc)}</p><div class="pips">${[0,1,2].map(i=>`<i class="${i<lvl?'on':''}"></i>`).join('')}</div>`;}
-  if(!have&&cost!=null)actions.unshift([save.credits>=cost?`BUY · ${fmt(cost)} CR`:`${fmt(cost)} CR · NEED ${fmt(cost-save.credits)} MORE`,()=>{const r=Meta.buy(save,kind,key);if(!r.ok){toast(r.reason);scene.audio.ui('deny');return;}scene.audio.ui('buy');itemVoice(kind,key);if(kind==='weapon'){save.loadout[item.slot===0?'primary':'secondary']=key;}else if(kind==='gear')save.loadout[item.slot]=key;save.loadout=Meta.loadout(save);if(kind!=='upgrade')save.seen.push(key);persist();renderArmory();banner('ARMORY',kind==='upgrade'?item.name+' LV '+save.upgrades[key]:item.name,kind==='upgrade'?'UPGRADE INSTALLED':'PURCHASED · EQUIPPED',2.2,'gold',ICON(kind,key));}]);
+  const rk=have||cost==null?0:Meta.locked(save,kind,key);
+  if(!have&&cost!=null)actions.unshift([rk?`${fmt(cost)} CR · UNLOCKS AT RANK ${rk}`:save.credits>=cost?`BUY · ${fmt(cost)} CR`:`${fmt(cost)} CR · NEED ${fmt(cost-save.credits)} MORE`,()=>{const r=Meta.buy(save,kind,key);if(!r.ok){toast(r.reason);scene.audio.ui('deny');return;}scene.audio.ui('buy');itemVoice(kind,key);if(kind==='weapon'){save.loadout[item.slot===0?'primary':'secondary']=key;}else if(kind==='gear')save.loadout[item.slot]=key;save.loadout=Meta.loadout(save);if(kind!=='upgrade')save.seen.push(key);persist();renderArmory();banner('ARMORY',kind==='upgrade'?item.name+' LV '+save.upgrades[key]:item.name,kind==='upgrade'?'UPGRADE INSTALLED':'PURCHASED · EQUIPPED',2.2,'gold',ICON(kind,key));}]);
   detail.innerHTML=`<div class="ad-art ad-${kind}">${ICON(kind,key)}</div>`+body+'<div class="ad-actions"></div>';const box=detail.querySelector('.ad-actions');actions.forEach(([label,fn],i)=>{const b=document.createElement('button');b.type='button';b.className=i===0&&!have?'primary':'secondary';b.innerHTML=`<span>${label}</span>`;b.addEventListener('click',fn);box.append(b);});}
  function renderRecord(detail){const r=rank(),c=Meta.refreshContracts(save,today());persist();
   detail.innerHTML=`<div class="record-col"><p class="ad-kind">SERVICE RECORD / ROOK</p><h3>RANK ${r.rank} · ${esc(r.title)}</h3><div class="xp-track big"><i style="width:${(r.into/r.span*100).toFixed(1)}%"></i></div><p>${fmt(r.into)} / ${fmt(r.span)} XP TO RANK ${r.rank+1} · EVERY RANK PAYS ${150*(r.rank+1)} CR</p>
@@ -158,7 +174,7 @@
    <h4>RECORD</h4><div class="record"><span>HOSTILES <b>${fmt(save.stats.kills)}</b></span><span>OPERATIONS <b>${save.stats.missions}</b></span><span>DAILY STREAK <b>${save.daily.streak}</b></span><span>HOLDOUT BEST <b>${DIFFS.map(d=>save.holdout[d]?DL[d].label[0]+save.holdout[d]:'').filter(Boolean).join(' · ')||'—'}</b></span></div>
    <h4>MEDALS</h4><div class="medal-table">${MISSIONS.map(m=>`<span>${String(m.n).padStart(2,'0')} ${Meta.unlocked(save,m.id)?esc(m.title):'CLASSIFIED'}<b class="medals">${medalRow(m.id)}</b></span>`).join('')}</div></div>`;}
  // ---------- runs ----------
- function launch(o){if(!scene)return;scene.audio.unlock();scene.audio.stopAmbient();for(const t of debriefTimers)clearTimeout(t);debriefTimers=[];
+ function launch(o){if(!scene)return;if(!o.drill){drill=null;$('skip-drill').hidden=true;}scene.audio.unlock();scene.audio.stopAmbient();for(const t of debriefTimers)clearTimeout(t);debriefTimers=[];
   scene.sim=BPCore.create({training:o.mode==='training',mission:o.mission,difficulty:o.difficulty,checkpoint:o.checkpoint||null,loadout:o.loadout,owned:[...save.owned.weapons],profile:Meta.profile(save),seed:o.seed||1701,guest:o.guest||undefined});$('retry').hidden=false;scene.names=o.names||null;$('hud-name').textContent=lobby?callsign():'ROOK';
   const meta=missionMeta(o.mission),training=o.mode==='training',hold=o.mode==='holdout',hm=hold?holdoutMap(o.mission):null;padGadget=scene.sim.player.lethal||!scene.sim.player.tactical?'lethal':'tactical';
   scene.renderer.build(scene.sim);scene.accumulator=0;padAngle=padTarget=scene.sim.player.angle||0;padAimIdle=0;padReach=PAD_REACH;timeScale=1;scene.audio.startAmbient(scene.sim.map.theme);
@@ -175,16 +191,17 @@
  function startHoldout(mapId='holdout'){netRole='solo';run={mode:'holdout',mission:mapId,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};launch({mode:'holdout',mission:mapId,difficulty:run.difficulty,loadout:Meta.loadout(save),seed:1701+Math.floor(Math.random()*1e6)});}
  // HOLDOUT always opens the lobby: solo by default, and (desktop build only) the open squad slot can host or join a LAN game.
  function openHoldoutPicker(role='solo'){
-  const list=$('picker-list');list.replaceChildren();$('picker-eyebrow').textContent='HOLDOUT';$('picker-title').textContent='CHOOSE A KILLHOUSE.';
+  const list=$('picker-list');list.replaceChildren();list.classList.add('maps');$('picker-eyebrow').textContent='HOLDOUT';$('picker-title').textContent='CHOOSE A KILLHOUSE.';
+  // Each killhouse is shown by a screenshot of it in play (blackout/qa/killhouse-shots.cjs captures them).
   for(const h of HOLD){const open=holdoutOpen(h),b=document.createElement('button');b.type='button';b.className='pick'+(open?'':' locked')+(role==='lobby'&&lobby?.map===h.id?' on':'');
-   b.innerHTML=`<div class="pick-art"></div><div><b>${esc(h.title)}</b><span>${open?esc(h.sector):'LOCKED · COMPLETE '+esc(missionMeta(h.locks)?.title||'')+' TO UNLOCK'}</span></div>`;
+   b.innerHTML=`<div class="pick-art" style="background-image:url('blackout/assets/menu/killhouse-${h.id}.jpg')"></div><div><b>${esc(h.title)}</b><span>${open?esc(h.sector)+(h.pay>1?' · PAYS ×'+h.pay:''):'LOCKED · COMPLETE '+esc(missionMeta(h.locks)?.title||'')+' TO UNLOCK'}</span></div>`;
    b.addEventListener('click',()=>{if(!open){scene.audio.ui('deny');return;}$('picker').close();scene.audio.ui('select');if(role==='lobby')lobbySetMap(h.id);else startHoldout(h.id);});list.append(b);}
   if(!$('picker').open)$('picker').showModal();(list.querySelector('.on')||list.querySelector('button:not(.locked)'))?.focus();}
  // ---------- LAN co-op: squad lobby ----------
  // Both players sit in the same lobby screen. The host owns the killhouse, enemy pressure and the deploy countdown; each
  // side owns its own callsign, loadout and (for the guest) ready state. Guest -> host: hello, profile, chat, input.
  // Host -> guest: lobby, chat, countdown, countdownCancel, start, snapshot, events. Everything received is re-validated.
- const CALLSIGNS=['VIPER','GHOST','RAVEN','MAKO','ONYX','HAVOC','EMBER','NOMAD'],blueprints=new Map();
+ const CALLSIGNS=['VIPER','GHOST','RAVEN','MAKO','ONYX','HAVOC','EMBER','NOMAD'];
  function callsign(){if(!settings.callsign){settings.callsign=CALLSIGNS[Math.floor(Math.random()*CALLSIGNS.length)];persist();}return settings.callsign;}
  function myProfile(){return {name:callsign(),rank:rank().rank,loadout:Meta.loadout(save),ready:lobby?.role==='host'||!!lobby?.ready};}
  function cleanProfile(m){const lo=m?.loadout||{},rk=Math.max(1,Math.min(99,Math.floor(Number(m?.rank)||1)));
@@ -210,9 +227,6 @@
   setMode('lobby');$('status').textContent=lobby.role==='solo'?'HOLDOUT LOBBY':lobby.role==='host'?'SQUAD LOBBY / HOSTING':'SQUAD LOBBY';$('lobby').scrollTop=0;renderLobby();renderFeed();lobbySync();}
  // Leaving for the main menu ends the whole session: the host stops listening, the guest hangs up.
  function netLeave(){const l=lobby;netRole='solo';netConnected=false;netGuestInput={};if(!l)return;lobby=null;clearInterval(l.timer);$('retry').hidden=false;if(l.role==='host')LINK?.hostStop();else if(l.role==='guest')LINK?.guestDisconnect();LINK=null;}
- function blueprint(id){if(!blueprints.has(id)){let svg='';
-   try{const s=BPCore.create({mission:id,difficulty:'standard',seed:1});svg=`<svg viewBox="0 0 ${s.map.width} ${s.map.height}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">`+s.walls.filter(b=>!b.dead).map(b=>`<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" fill="${b.kind==='building'||b.kind==='rock'?'#8c9a7f':'#dfad70'}" opacity="${b.low?.3:.65}"/>`).join('')+'</svg>';}catch{}
-   blueprints.set(id,svg);}return blueprints.get(id);}
  // The guest's co-op kit is guns only (see stepGuest in core.js), so their card and loadout never advertise gadgets.
  function operatorKit(lo,gadgets){const tiles=[['weapon',lo.primary,W[lo.primary].short],['weapon',lo.secondary,W[lo.secondary].short]];
   if(gadgets)tiles.push(['gear',lo.lethal,lo.lethal?GEAR_SHORT[lo.lethal]:'NO LETHAL'],['gear',lo.tactical,lo.tactical?GEAR_SHORT[lo.tactical]:'NO TACTICAL']);
@@ -233,13 +247,15 @@
    :solo?`${top('SQUAD 02','OPEN SLOT')}<div class="op-figure">${BPIcons.soldier('rifle',1)}</div><div class="op-plate"><label>CO-OP</label><b class="op-name">BRING A FRIEND</b><small>${ONLINE&&NET?'PLAY TOGETHER ONLINE OR ON THE SAME NETWORK':ONLINE?'PLAY TOGETHER ONLINE WITH A ROOM CODE':NET?'TWO PLAYERS ON THE SAME NETWORK':'CO-OP NEEDS THE DESKTOP APP OR AN ONLINE SERVICE'}</small></div><div class="op-kit op-invite">${[[ONLINE,'online','ONLINE'],[NET,'lan','LAN']].filter(q=>q[0]).map(([,link,label])=>`<span class="invite-row"><em>${label}</em><button type="button" class="secondary" data-link="${link}" data-role="host">HOST</button><button type="button" class="secondary" data-link="${link}" data-role="guest">JOIN</button></span>`).join('')}</div>`
    :`${top(host?'SQUAD 02':'HOST',host?'OPEN SLOT':linked?'SYNCING':'NOT CONNECTED')}<div class="op-figure">${BPIcons.soldier('rifle',host?1:0)}</div><div class="op-plate"><label>${host?'SQUADMATE':'HOST'}</label><b class="op-name">${host?'WAITING<i>…</i>':'NO HOST YET'}</b><small>${host?(online?'SHARE YOUR ROOM CODE TO FILL THIS SLOT':'SHARE YOUR ADDRESS TO FILL THIS SLOT'):'CONNECT TO SEE THEIR LOBBY'}</small></div><div class="op-kit"></div>`);
   $('lobby-comms').hidden=solo;$('lobby-records').hidden=!solo;
-  if(solo)setHtml($('lobby-records'),`<h4>YOUR BEST HOLDOUT RUNS <small>ONE RECORD PER ENEMY PRESSURE</small></h4><div class="rec-tiles">${DIFFS.map(d=>`<span class="rec-tile${d===settings.difficulty?' on':''}"><small>${DL[d].label}</small><b>${save.holdout[d]?'WAVE '+save.holdout[d]:'—'}</b></span>`).join('')}</div>`);
+  // Each killhouse keeps its own records. The default one also shows records set before killhouses were tracked apart.
+  if(solo){const here=holdoutMap(l.map),rec=save.killhouse[l.map]||{},best=d=>rec[d]||(l.map==='holdout'?save.holdout[d]:0);
+   setHtml($('lobby-records'),`<h4>YOUR BEST RUNS / ${esc(here.title)} <small>${here.pay>1?'PAYS ×'+here.pay+' CREDITS · ':''}ONE RECORD PER ENEMY PRESSURE</small></h4><div class="rec-tiles">${DIFFS.map(d=>`<span class="rec-tile${d===settings.difficulty?' on':''}"><small>${DL[d].label}</small><b>${best(d)?'WAVE '+best(d):'—'}</b></span>`).join('')}</div>`);}
   $('lobby-join').hidden=lead||linked;$('lobby-brief').hidden=!lead&&!linked;$('lobby-join-status').textContent=lead?'':l.status;$('lobby-join-copy').textContent=online?'Ask the host for the five-character room code shown at the top of their lobby.':'Ask the host for the address shown at the top of their lobby.';$('lobby-ip').placeholder=online?'ROOM CODE':'192.168.1.23';$('lobby-ip').maxLength=online?5:64;$('lobby-connect').disabled=l.phase==='connecting';$('lobby-connect').textContent=l.phase==='connecting'?'CONNECTING…':'CONNECT';
-  const hm=holdoutMap(l.map),diff=lead?settings.difficulty:l.difficulty;$('lobby-map-title').textContent=hm.title;$('lobby-map-sector').textContent=hm.sector;setHtml($('lobby-map-art'),blueprint(l.map));$('lobby-map').disabled=!lead;$('lobby-map-note').textContent=$('lobby-diff-note').textContent=lead?'':'SET BY THE HOST';
+  const hm=holdoutMap(l.map),diff=lead?settings.difficulty:l.difficulty;$('lobby-map-title').textContent=hm.title;$('lobby-map-sector').textContent=hm.sector;$('lobby-map-art').style.backgroundImage='url("blackout/assets/menu/killhouse-'+l.map+'.jpg")';$('lobby-map').disabled=!lead;$('lobby-map-note').textContent=$('lobby-diff-note').textContent=lead?'':'SET BY THE HOST';
   // Rebuilt only when their content changes, so a squadmate's update never steals keyboard or controller focus.
   const dp=$('lobby-difficulty'),dsig=diff+'|'+lead;if(dp.dataset.sig!==dsig){dp.dataset.sig=dsig;dp.replaceChildren();for(const d of DIFFS){const b=document.createElement('button');b.type='button';b.className=(diff===d?'active ':'')+d;b.disabled=!lead;b.innerHTML=`<span>${DL[d].label}</span><small>×${DL[d].reward} CR</small>`;
     b.addEventListener('click',()=>{if(settings.difficulty===d)return;settings.difficulty=lobby.difficulty=d;persist();feed('ENEMY PRESSURE SET TO '+DL[d].label.toUpperCase());lobbyChanged();dp.querySelector('.active')?.focus({preventScroll:true});});dp.append(b);}}
-  const box=$('lobby-loadout'),lsig=JSON.stringify([mine.loadout,lead,save.upgrades.bandolier||0]);if(box.dataset.sig!==lsig){box.dataset.sig=lsig;loadoutSlots(box,lead?{}:{lethal:'HOST ONLY IN CO-OP',tactical:'HOST ONLY IN CO-OP'});}
+  const box=$('lobby-loadout'),lsig=JSON.stringify([mine.loadout,lead,save.upgrades.bandolier||0,save.preset]);if(box.dataset.sig!==lsig){box.dataset.sig=lsig;loadoutSlots(box,lead?{}:{lethal:'HOST ONLY IN CO-OP',tactical:'HOST ONLY IN CO-OP'});}
   $('lobby-loadout-note').textContent=lead?'TWO GUNS / ONE LETHAL / ONE TACTICAL':'TWO GUNS';
   const go=$('lobby-go'),label=go.querySelector('span');go.hidden=!lead&&!linked;go.classList.toggle('counting',counting);
   if(solo){go.disabled=false;label.textContent='DEPLOY';}
@@ -328,7 +344,7 @@
   if(!own||own.dead){pred.ready=false;return;}
   // Own operator: the host's movement rule (see stepGuest in core.js), run here on local input in the same fixed steps.
   if(!pred.ready)pred={ready:true,x:own.x,y:own.y,vx:own.vx||0,vy:own.vy||0,carry:0,angle:own.angle};
-  const w=W[own.slots[own.slot]]||W.rifle,len=Math.hypot(fi.mx,fi.my),nx=len?fi.mx/len:0,ny=len?fi.my/len:0,sprint=fi.sprint&&len>0&&own.stamina>4&&!fi.fire&&!fi.aiming&&!own.reload,speed=(sprint?360:fi.aiming?175:250)*w.mobility*(own.state==='melee'?.45:own.reload?.7:1),body={x:pred.x,y:pred.y,radius:16},step=BPCore.DT,ease=Math.min(1,step*(len?25:31));
+  const w=W[own.slots[own.slot]]||W.rifle,len=Math.hypot(fi.mx,fi.my),nx=len?fi.mx/len:0,ny=len?fi.my/len:0,sprint=fi.sprint&&len>0&&own.stamina>0&&!own.winded&&!fi.fire&&!fi.aiming&&!own.reload,speed=(sprint?360:fi.aiming?175:250)*w.mobility*(own.state==='melee'?.45:own.reload?.7:1),body={x:pred.x,y:pred.y,radius:16},step=BPCore.DT,ease=Math.min(1,step*(len?25:31));
   pred.carry=Math.min(pred.carry+dt,.1);while(pred.carry>=step){pred.carry-=step;pred.vx+=(nx*speed-pred.vx)*ease;pred.vy+=(ny*speed-pred.vy)*ease;BPCore.move(s,body,pred.vx*step,pred.vy*step);}
   pred.x=body.x;pred.y=body.y;if(Number.isFinite(fi.aimX))pred.angle=Math.atan2(fi.aimY-pred.y,fi.aimX-pred.x);
   Object.assign(own,{x:pred.x,y:pred.y,vx:pred.vx,vy:pred.vy,angle:pred.angle});own.shotAge+=dt;if(own.state!=='melee')own.state=sprint?'sprint':len?'run':'idle';if(Math.hypot(pred.vx,pred.vy)>8)own.moveAngle=Math.atan2(pred.vy,pred.vx);}
@@ -371,10 +387,10 @@
   banner('HOLDOUT',hm.title,'SURVIVE AS LONG AS YOU CAN',3);scene.audio.say('vo-mission',{cut:true,rest:25});}
  function startTraining(){run={mode:'training',mission:'range',difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};launch({mode:'training',mission:'range',difficulty:settings.difficulty});}
  // Hosting a squad: restarting from the pause menu restarts for both players; after a finished run it leads back to the lobby.
- function retry(){if(!run)return;if(lobby?.role==='host'&&lobby.inRun){if(mode==='paused')beginHostedRun(run.mission);else showLobby();return;}if(run.mode==='training')startTraining();else if(run.mode==='holdout')startHoldout(run.mission);else startMission(run.mission,!!save.run);}
+ function retry(){if(!run)return;if(lobby?.role==='host'&&lobby.inRun){if(mode==='paused')beginHostedRun(run.mission);else showLobby();return;}if(run.mode==='training'){if(run.drill&&!save.drill)startDrill();else startTraining();}else if(run.mode==='holdout')startHoldout(run.mission);else startMission(run.mission,!!save.run);}
  function pause(){if(mode!=='playing')return;if(netRole==='guest'&&LINK){netSeq++;LINK.guestSend({type:'input',seq:netSeq,input:{}});}setMode('paused');scene.audio.pause();$('resume').focus();}
  function resume(){if(mode!=='paused')return;scene.audio.unlock();scene.audio.resume();scene.audio.startAmbient(scene.sim.map.theme);setMode('playing');scene.accumulator=0;scene.game.canvas.focus();}
- function menu(){netLeave();scene?.audio.stopAmbient();scene?.audio.vitals(100,false);for(const t of debriefTimers)clearTimeout(t);debriefTimers=[];setMode('menu');updateContinue();$('continue').focus();}
+ function menu(){drill=null;$('skip-drill').hidden=true;netLeave();scene?.audio.stopAmbient();scene?.audio.vitals(100,false);for(const t of debriefTimers)clearTimeout(t);debriefTimers=[];setMode('menu');updateContinue();$('continue').focus();}
  function payDifficulty(){return DIFFS[Math.min(DIFFS.indexOf(run.difficulty),DIFFS.indexOf(run.floor||run.difficulty))];}
  function end(e){const s=scene.sim;scene.audio.say(e.type==='complete'?'vo-complete':'vo-failed',{cut:true,rest:6});scene.audio.stopAmbient();scene.audio.vitals(100,false);$('debrief').hidden=true;$('ending').classList.remove('tally');$('ending-next').hidden=true;$('ending-armory').hidden=run.mode==='training';
   if(e.type==='complete'&&run.mode==='campaign'){const meta=missionMeta(run.mission),summary=Meta.summarize(s,{rating:e.rating,score:e.score,deaths:run.deaths||0,difficulty:payDifficulty()}),report=Meta.settle(save,summary,today());save.run=null;persist();setMode('complete');
@@ -396,11 +412,14 @@
     const step=()=>{const k=Math.min(1,(performance.now()-start)/320);b.textContent='+'+fmt(l.value*k);$('debrief-credits').textContent=fmt(from+(to-from)*k);if(k<1)requestAnimationFrame(step);};requestAnimationFrame(step);box.scrollTop=box.scrollHeight;},t);t+=Math.max(140,420-report.lines.length*18);}
   later(()=>{$('debrief-credits').textContent=fmt(report.credits);scene.audio.ui('total');$('xp-fill').style.transition='width .9s cubic-bezier(.2,.8,.2,1)';$('xp-fill').style.width=(after.rank>before.rank?100:after.into/after.span*100)+'%';refreshWallet();},t+200);
   const award=(cls,eyebrow,title,sub,sound,art='')=>{const a=document.createElement('div');a.className='award '+cls;a.innerHTML=`${art?'<div class="award-art">'+art+'</div>':''}<small>${esc(eyebrow)}</small><b>${esc(title)}</b><span>${esc(sub)}</span>`;awards.append(a);scene.audio.ui(sound);};
-  t+=1150;for(const r of report.rankUps){later(()=>{$('xp-rank').textContent='RANK '+r.rank+' · '+r.title;$('xp-fill').style.transition='none';$('xp-fill').style.width='0%';requestAnimationFrame(()=>{$('xp-fill').style.transition='width .7s ease';$('xp-fill').style.width=(after.rank===r.rank?after.into/after.span*100:100)+'%';});award('gold','RANK UP','RANK '+r.rank+' · '+r.title,'+'+r.bonus+' CR','rank');},t);t+=700;}
+  t+=1150;for(const r of report.rankUps){later(()=>{$('xp-rank').textContent='RANK '+r.rank+' · '+r.title;$('xp-fill').style.transition='none';$('xp-fill').style.width='0%';requestAnimationFrame(()=>{$('xp-fill').style.transition='width .7s ease';$('xp-fill').style.width=(after.rank===r.rank?after.into/after.span*100:100)+'%';});award('gold','RANK UP','RANK '+r.rank+' · '+r.title,'+'+r.bonus+' CR'+(r.tier?' · ARMORY TIER '+r.tier+' OPEN':''),'rank');},t);t+=700;}
   for(const m of report.medals){later(()=>award('medal','MEDAL',m.name,'+150 CR','medal'),t);t+=380;}
   for(const m of report.mastery){later(()=>award('mastery','WEAPON MASTERY',W[m.weapon].short+' '+'★'.repeat(m.level),m.perk.toUpperCase(),'medal',ICON('weapon',m.weapon)),t);t+=380;}
   for(const c of report.contracts.filter(c=>c.done)){later(()=>award('contract','CONTRACT',c.text,'PAID','medal'),t);t+=300;}
-  if(report.newBest)later(()=>award('best','NEW PERSONAL BEST','RECORD','SAVED TO YOUR SERVICE RECORD','medal'),t);}
+  if(report.newBest)later(()=>award('best','NEW PERSONAL BEST','RECORD','SAVED TO YOUR SERVICE RECORD','medal'),t);
+  // One line under the tally naming what to aim for next.
+  const g=report.goal,parts=[];if(g?.item)parts.push(fmt(g.item.need)+' CR TO THE '+g.item.name);else if(g?.afford)parts.push('YOU CAN AFFORD THE '+g.afford.name);
+  if(g?.tier)parts.push(g.tier.ranks+(g.tier.ranks===1?' RANK':' RANKS')+' TO ARMORY TIER '+g.tier.tier);$('debrief-goal').textContent=parts.length?'NEXT · '+parts.join(' · '):'';}
  function onEvent(e,isGuest=false){const s=scene.sim;
   // A guest never owns save/run state (the host's save is authoritative for this pass), so it skips every
   // branch below that would persist() or settle() a run, and shows a plain message instead of a full ending.
@@ -410,15 +429,25 @@
   case 'radio':radio(e);break;case 'toast':toast(e.text);break;case 'flow':toast('PERFECT FLOW / MOMENTUM RETAINED',1.5);break;
   case 'checkpoint':if(run?.mode==='campaign'){save.run={...run,checkpoint:e.checkpoint};persist();}break;
   case 'unlock':for(const k of e.items){if(W[k]&&!save.owned.weapons.includes(k))save.owned.weapons.push(k);if(G[k]&&!save.owned.gear.includes(k))save.owned.gear.push(k);}persist();banner('SUPPLY CACHE','M870 + FRAG GRENADES','SHOTGUN ON THE GROUND · '+keyLabel('interact')+' TO SWAP IT IN',4,'gold',ICON('weapon','shotgun'));break;
-  case 'weaponfound':if(!save.owned.weapons.includes(e.weapon)){save.owned.weapons.push(e.weapon);persist();}banner('NEW WEAPON',W[e.weapon].name,'ADDED TO YOUR ARMORY · '+keyLabel('interact')+' TO EQUIP NOW',3.6,'gold',ICON('weapon',e.weapon));break;
+  // A gun taken from the field is the operator's for this run only; the first find marks it down in the armory for good.
+  case 'weaponfound':{const first=!save.found.includes(e.weapon)&&!save.owned.weapons.includes(e.weapon);if(first){save.found.push(e.weapon);persist();}
+   banner(first?'FIELD FIND':'FIELD WEAPON',W[e.weapon].name,keyLabel('interact')+' TO CARRY IT AS YOUR '+(W[e.weapon].slot===0?'PRIMARY':'SECONDARY')+' THIS RUN'+(first?' · NOW 25% OFF IN THE ARMORY':''),3.8,'gold',ICON('weapon',e.weapon));break;}
   case 'pickup':if(e.kind!=='weapon')toast(e.kind==='health'?'HEALTH RESTORED':e.kind==='armor'?'ARMOR REINFORCED':e.kind==='supply'?'FIELD EQUIPMENT RESTORED':e.kind==='lethal'?'LETHAL RESUPPLIED':e.kind==='tactical'?'TACTICAL RESUPPLIED':e.kind==='intel'||e.kind==='cache'?'':'AMMUNITION RECOVERED',1.5);break;
   case 'intel':banner('CLASSIFIED','INTEL RECOVERED','+200 CR ON COMPLETION · MEDAL',3,'gold',ICON('pickup','intel'));break;case 'cache':toast('CREDIT CACHE / +120 CR',2);break;
   case 'objective':banner(e.partial?'OBJECTIVE':'OBJECTIVE COMPLETE',e.partial?e.name:e.name.toUpperCase(),'',2.4);break;
   case 'stage':if(e.stage>0){voice('stage',{rest:30});const st=s.map.stages[e.stage];setTimeout(()=>{if(mode==='playing')banner('NEW OBJECTIVE',st.name.toUpperCase(),st.hint,3);},2500);}break;
   case 'kill':comboUntil=performance.now()+3500;if(e.combo>=2){const name={2:'DOUBLE KILL',3:'TRIPLE KILL',5:'RAMPAGE',8:'UNSTOPPABLE',12:'BLACKOUT'}[e.combo];if(name)banner('×'+e.combo+' COMBO',name,'',1.4,'combo');}
    if(e.boss){slowUntil=performance.now()+1100;banner('TARGET DOWN',A[e.enemy].name+' DESTROYED','',3,'gold');}break;
-  case 'waveclear':voice('lull',{rest:45});banner('WAVE '+e.wave+' CLEARED','+'+e.bonus+' CR','SUPPLIES RESTOCKED',2.6,'gold');slowUntil=performance.now()+700;break;
-  case 'wave':if(e.wave%5===0)scene.audio.say('vo-boss',{cut:true,rest:30});else if(e.wave>1)voice('wave',{rest:30});banner('HOLDOUT','WAVE '+e.wave,e.wave%5===0?'COMMANDER INBOUND':'',2,e.wave%5===0?'danger':'');break;
+  case 'waveclear':voice('lull',{rest:45});banner('WAVE '+e.wave+' CLEARED','+'+e.bonus+' CR',(e.modifier?BPCore.MODIFIERS[e.modifier]+' BONUS INCLUDED · ':'')+'SUPPLY DROP INBOUND',2.6,'gold');slowUntil=performance.now()+700;break;
+  case 'wave':if(e.wave%5===0)scene.audio.say('vo-boss',{cut:true,rest:30});else if(e.wave>1)voice('wave',{rest:30});banner('HOLDOUT','WAVE '+e.wave,e.wave%5===0?'COMMANDER INBOUND':e.modifier?MODIFIER_TEXT[e.modifier]:'',e.modifier?3:2,e.wave%5===0||e.modifier?'danger':'');break;
+  // The supply drop between holdout waves, paid for out of the credits earned so far in this run.
+  case 'supplydrop':toast('SUPPLY DROP / '+keyLabel('interact')+' AT A CRATE TO SPEND THIS RUN\'S CREDITS',3.6);break;
+  case 'bought':scene.audio.ui('buy');toast(offerName(e)+' / −'+fmt(e.cost)+' CR',1.8);break;
+  case 'deny':scene.audio.ui('deny');break;
+  // Stamina: run dry and the operator is winded; a roll asked for without the stamina flashes the bar.
+  case 'winded':if(!!e.guest===(netRole==='guest')){toast('WINDED / CATCH YOUR BREATH',1.6);scene.audio.noise(.5,{vol:.05,freq:650,q:.7,attack:.15});scene.audio.noise(.6,{vol:.04,freq:420,q:.6,attack:.05,delay:.55});}break;
+  case 'nostamina':if(!isGuest){const v=$('stamina-bar').parentElement;v.classList.remove('refused');void v.offsetWidth;v.classList.add('refused');if(performance.now()-scene.audio.uiAt>250)scene.audio.ui('deny');}break;
+  case 'dodge':if(!isGuest){slowUntil=performance.now()+260;toast('CLEAN DODGE / FLOW',1.2);}break;
   case 'armorbreak':toast('ARMOR BROKEN',1.4);break;case 'bossphase':toast('THE '+A[s.enemies.find(x=>x.id===e.id)?.type||'commander'].name+' IS ADAPTING',2);break;
   case 'flash':if(e.self&&!settings.flash){$('flashout').style.transition='none';$('flashout').style.opacity='.85';requestAnimationFrame(()=>{$('flashout').style.transition='opacity 1.3s ease-out';$('flashout').style.opacity='0';});}break;
   // Co-op: one operator down is a setback, not the end. Both players get told who fell and what happens next.
@@ -442,8 +471,40 @@
  // What X / E would do right now. Controller X reloads when this is empty.
  function context(){const s=scene.sim,p=s.player,st=BPCore.stageDef(s),own=me(s);
   // Co-op: standing on the revive station with a squadmate's tags turns interact into the revive hold.
-  if(s.station&&(s.tags||[]).some(q=>q.carrier===(own===s.guest?'guest':'player'))&&!own.dead&&BPCore.distance(own,s.station)<=64)return {kind:'revive',label:'HOLD TO REVIVE '+(scene.names?.[own===s.guest?'player':'guest']||'SQUADMATE')};if(!s.training&&['clear','extract'].includes(st.kind)&&BPCore.distance(st,p)<90)return {kind:'interact',label:st.kind==='extract'?'EXTRACT':'INTERACT'};const gun=BPCore.nearbyWeapon(s);if(gun)return {kind:'weapon',label:'SWAP FOR '+W[gun.weapon].short,weapon:gun.weapon};
+  if(s.station&&(s.tags||[]).some(q=>q.carrier===(own===s.guest?'guest':'player'))&&!own.dead&&BPCore.distance(own,s.station)<=64)return {kind:'revive',label:'HOLD TO REVIVE '+(scene.names?.[own===s.guest?'player':'guest']||'SQUADMATE')};if(!s.training&&['clear','extract'].includes(st.kind)&&BPCore.distance(st,p)<90)return {kind:'interact',label:st.kind==='extract'?'EXTRACT':'INTERACT'};const offer=own===s.player?BPCore.nearbyOffer(s):null;if(offer)return {kind:'offer',label:'BUY '+offerName(offer)+' · '+fmt(offer.cost)+' CR'+(s.stats.credits<offer.cost?' / NEED '+fmt(offer.cost-s.stats.credits)+' MORE':''),weapon:offer.weapon||undefined};
+  const gun=BPCore.nearbyWeapon(s);if(gun)return {kind:'weapon',label:'SWAP '+(W[gun.weapon].slot===0?'PRIMARY':'SECONDARY')+' FOR '+W[gun.weapon].short,weapon:gun.weapon};
   if(s.training&&s.pickups.some(o=>o.type==='supply'&&BPCore.distance(o,p)<100))return {kind:'interact',label:'RESUPPLY'};if(s.walls.some(b=>!b.dead&&b.low&&b.kind!=='underpass'&&BPCore.circleBox(p.x+Math.cos(p.angle)*48,p.y+Math.sin(p.angle)*48,35,b)||!b.dead&&b.low&&b.kind!=='underpass'&&BPCore.circleBox(p.x+p.vx*.2,p.y+p.vy*.2,35,b)))return {kind:'vault',label:'VAULT LOW COVER'};return null;}
+ const MODIFIER_TEXT={blackout:'BLACKOUT · THE LIGHTS ARE OUT',armoured:'ARMOURED · EVERY HOSTILE IS PLATED',swarm:'SWARM · RUSHERS, AND A LOT OF THEM',marksmen:'MARKSMEN · STAY OUT OF THE OPEN'};
+ const offerName=o=>o.item==='weapon'?W[o.weapon].short+' FOR THIS RUN':{ammo:'FULL AMMUNITION',armor:'+50 ARMOUR',health:'FULL HEALTH',stim:'ONE STIM',gadgets:'GADGET REFILL'}[o.item]||'SUPPLIES';
+ // Drawn over the battlefield every frame: an arrow at the screen edge for each hostile winding up an attack from
+ // outside the view, and HUD panels that turn see-through while a hostile or the aim point is underneath them.
+ const threatMarks=[],hudPanels={at:0,list:[]};
+ function overlay(){const s=scene.sim,cam=scene.cameras.main,v=cam.worldView,z=cam.zoom,cw=cam.width,ch=cam.height,own=watch(s),box=$('threats'),on=(x,y)=>({x:(x-v.x)*z,y:(y-v.y)*z}),c=on(own.x,own.y);let n=0;
+  for(const e of s.enemies){if(n>=6)break;if(e.dead||!e.active||!(e.attack>0)||e.gone>0)continue;const q=on(e.x,e.y);if(q.x>=0&&q.x<=cw&&q.y>=62&&q.y<=ch)continue;
+   let el=threatMarks[n];if(!el){el=threatMarks[n]=document.createElement('i');box.append(el);}n++;
+   el.hidden=false;el.style.transform=`translate(${Math.max(34,Math.min(cw-34,q.x)).toFixed(0)}px,${Math.max(96,Math.min(ch-34,q.y)).toFixed(0)}px) rotate(${Math.atan2(q.y-c.y,q.x-c.x).toFixed(2)}rad)`;el.style.opacity=(.45+.55*Math.min(1,(e.attackAge||0)/e.attack)).toFixed(2);}
+  for(let i=n;i<threatMarks.length;i++)threatMarks[i].hidden=true;
+  const now=performance.now();if(now-hudPanels.at>500){hudPanels.at=now;hudPanels.list=[...document.querySelectorAll('#hud .hud-panel')].map(el=>({el,r:el.getBoundingClientRect()}));}
+  const ptr=padActive?padPointer:scene.input.activePointer,pts=[{x:ptr.x,y:ptr.y}];for(const e of s.enemies)if(!e.dead&&e.active&&!(e.gone>0))pts.push(on(e.x,e.y));
+  for(const {el,r} of hudPanels.list)el.classList.toggle('seethrough',pts.some(q=>q.x>r.left-12&&q.x<r.right+12&&q.y>r.top-12&&q.y<r.bottom+12));}
+ // First-launch drill: on a brand-new save the campaign card opens the training range with a seven-step walk through
+ // the controls before the first operation. It can be skipped from the pause menu and is not offered again once done.
+ const DRILL=[['MOVE',()=>'Use '+(padActive?'the left stick':[settings.bindings.up,settings.bindings.left,settings.bindings.down,settings.bindings.right].map(displayKey).join(' '))+' to move.',d=>d.moved>260],
+  ['SPRINT',()=>'Hold '+keyLabel('sprint')+' while moving. Run the stamina bar dry and you are winded.',d=>d.sprint>.7],
+  ['SLIDE',()=>'While sprinting, press '+keyLabel('slide')+'.',(d,p)=>p.state==='slide'],
+  ['VAULT',()=>'Run at a low barricade and press '+keyLabel('interact')+'.',(d,p)=>p.state==='vault'],
+  ['FIRE',()=>'Aim with '+(padActive?'the right stick':'the mouse')+' and shoot a target.',(d,p,s)=>s.stats.hits>d.hits],
+  ['RELOAD',()=>'Press '+keyLabel('reload')+' to reload.',(d,p)=>p.reload>0],
+  ['SWAP',()=>'Press '+keyLabel('swap')+' to switch to your sidearm.',(d,p)=>p.slot!==d.slot]];
+ let drill=null;
+ function startDrill(){if(!scene)return;run={mode:'training',mission:'range',difficulty:settings.difficulty,floor:settings.difficulty,deaths:0,drill:true};launch({mode:'training',mission:'range',difficulty:settings.difficulty,drill:true});
+  const p=scene.sim.player;drill={step:0,moved:0,sprint:0,x:p.x,y:p.y,hits:0,slot:p.slot,at:performance.now()};$('skip-drill').hidden=false;$('pause-copy').textContent='A short drill before your first operation. Skip it whenever you like.';
+  banner('BEFORE YOU DEPLOY','MOVEMENT DRILL','SEVEN QUICK STEPS · '+(padActive?'START':'ESC')+' THEN SKIP TO LEAVE',3.4);}
+ function drillHud(s,p){const d=drill,now=performance.now(),dt=Math.min(.25,(now-d.at)/1000);d.at=now;d.moved+=Math.hypot(p.x-d.x,p.y-d.y);d.x=p.x;d.y=p.y;if(p.state==='sprint')d.sprint+=dt;
+  const [name,hint,done]=DRILL[d.step];$('objective').textContent='DRILL '+(d.step+1)+' / '+DRILL.length+' · '+name;$('objective-hint').textContent=hint();
+  if(done(d,p,s)){scene.audio.ui('select');d.step++;d.hits=s.stats.hits;d.slot=p.slot;d.moved=0;d.sprint=0;if(d.step>=DRILL.length)endDrill(true);else toast(name+' / DONE',1.2);}}
+ function endDrill(finished){drill=null;$('skip-drill').hidden=true;save.drill=true;persist();const on=()=>{openOps();voiceAny('campaign');};
+  if(!finished){scene.audio.resume();on();return;}banner('DRILL COMPLETE','READY TO DEPLOY','',2.2,'gold');debriefTimers.push(setTimeout(()=>{if(mode==='playing'&&run?.drill)on();},1900));}
  const ICON=(kind,key)=>BPIcons.svg(kind,key),GEAR_SHORT={frag:'FRAG',incendiary:'INCENDIARY',mine:'PROX MINE',flash:'FLASHBANG',smoke:'SMOKE',emp:'EMP',decoy:'DECOY',cover:'COVER'};
  function setArt(el,kind,key){const id=kind+':'+(key||'');if(el.dataset.art===id)return false;el.dataset.art=id;el.innerHTML=key?ICON(kind,key):'';return true;}
  // Equipped weapon panel: picture, slot, magazine (pips for small magazines), reserve, and the other gun waiting on the swap key.
@@ -464,22 +525,23 @@
    el.querySelector('kbd').textContent=padActive&&slot?keyLabel(picked?'grenade':'cycle'):keyLabel(action);el.classList.toggle('selected',picked);
    if(cnt.textContent!==txt){if(cnt.textContent){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}cnt.textContent=txt;}el.querySelector('.eq-name').textContent=name;el.classList.toggle('empty',!key||count<=0);el.classList.toggle('active',fill>0);el.querySelector('.eq-fill').style.width=(fill*100).toFixed(0)+'%';});}
  function hud(){const s=scene.sim,p=me(s),key=p.slots[p.slot],w=W[key],st=BPCore.stageDef(s),now=performance.now();$('objective').textContent=st.name;$('objective-hint').textContent=st.hint;
-  const prog=st.kind==='destroy'||st.kind==='survive'||st.kind==='endless';$('objective-progress').hidden=!prog;if(prog)$('objective-fill').style.width=(st.kind==='endless'?(s.director.phase==='rest'?100:0):s.progress*100)+'%';if(st.kind==='survive')$('objective-hint').textContent=`${Math.max(0,Math.ceil(st.time-s.director.clock))}s remaining · ${st.hint}`;if(st.kind==='endless')$('objective').textContent=s.director.wave?`Wave ${s.director.wave} · ${s.enemies.filter(e=>!e.dead).length+s.spawnWarnings.length+(s.director.queue?.length||0)} hostiles`:'Get ready';
+  const prog=st.kind==='destroy'||st.kind==='survive'||st.kind==='endless';$('objective-progress').hidden=!prog;if(prog)$('objective-fill').style.width=(st.kind==='endless'?(s.director.phase==='rest'?100:0):s.progress*100)+'%';if(st.kind==='survive')$('objective-hint').textContent=`${Math.max(0,Math.ceil(st.time-s.director.clock))}s remaining · ${st.hint}`;if(st.kind==='endless'){const d=s.director,resting=d.phase==='rest'&&d.wave>0;$('objective').textContent=resting?`Wave ${d.wave} cleared · next wave in ${Math.max(1,Math.ceil(d.timer||0))}s`:d.wave?`Wave ${d.wave}${d.modifier?' · '+BPCore.MODIFIERS[d.modifier]:''} · ${s.enemies.filter(e=>!e.dead).length+s.spawnWarnings.length+(d.queue?.length||0)} hostiles`:'Get ready';
+   if(resting)$('objective-hint').textContent='Supply drop: '+keyLabel('interact')+' at a crate to spend this run\'s credits.';}
   // Co-op with someone down: the objective line says what has to happen next, for whichever side of it you are on.
   if(s.guest&&!s.guest.vanished&&(s.player.dead||s.guest.dead)&&!s.dead){const mate=scene.names?.[p===s.guest?'player':'guest']||'Your squadmate',held=(s.tags||[]).some(q=>q.carrier);
    if(p.dead){$('objective').textContent='You are down';$('objective-hint').textContent=held?mate+' has your dog tags and is heading for the revive station.':mate+' has to pick up your dog tags and carry them to the revive station.';}
    else{$('objective').textContent=held?'Carry the tags to the revive station':'Recover '+mate+"'s dog tags";$('objective-hint').textContent=held?'Follow the green marker, then hold '+keyLabel('interact')+' on the pad for '+BPCore.REVIVE_TIME+' seconds.':'Follow the amber marker to where they fell.';}$('objective-progress').hidden=true;}
   // Commander call-outs for your own state, each on the moment it begins: health dropping into the red, and a gun running completely dry.
   const hurtNow=!p.dead&&p.health>0&&p.health<30,dryNow=!p.dead&&p.ammo[key]===0&&p.reserve[key]===0;if(hurtNow&&!voiceHurt)scene.audio.say('vo-low-health',{rest:45});if(dryNow&&!voiceDry)scene.audio.say('vo-dry',{rest:30});voiceHurt=hurtNow;voiceDry=dryNow;
-  $('health-number').textContent=Math.ceil(p.health);$('health-bar').style.width=p.health+'%';$('health-bar').style.background=p.health<30?'#d18b70':'#d3ddbb';$('armor-bar').style.width=Math.min(100,p.armor/p.maxArmor*100)+'%';$('stamina-bar').style.width=p.stamina+'%';$('armor').textContent=Math.ceil(p.armor);
+  $('health-number').textContent=Math.ceil(p.health);$('health-bar').style.width=p.health+'%';$('health-bar').style.background=p.health<30?'#d18b70':'#d3ddbb';$('armor-bar').style.width=Math.min(100,p.armor/p.maxArmor*100)+'%';$('stamina-bar').style.width=p.stamina+'%';$('stamina-bar').parentElement.classList.toggle('winded',!!p.winded);$('armor').textContent=Math.ceil(p.armor);
   gearHud(s);
   weaponHud(s);
   $('state-label').textContent=p.dead?'DOWN':p.heal>0?'HEALING':p.reload>0?'RELOADING':p.state==='idle'?'READY':p.state.toUpperCase();$('elapsed').textContent=formatTime(s.time);$('net-ping').hidden=!(lobby?.inRun&&lobby.ping!=null);if(lobby?.ping!=null)$('net-ping').textContent='PING '+lobby.ping+' MS';$('flow').textContent=s.flowTime>0?'PERFECT FLOW':'';$('minimap').innerHTML=minimap(s);
   $('run-credits').textContent=s.training?'RANGE':fmt(s.stats.credits)+' CR';const combo=now<comboUntil&&s.combo>=2;$('combo-mult').textContent=combo?'×'+s.combo+' COMBO':'';$('combo').classList.toggle('hot',combo);
   const boss=s.boss&&s.enemies.find(e=>e.id===s.boss);$('boss').hidden=!boss;if(boss){const t=A[boss.type];$('boss-name').textContent=t.name;$('boss-fill').style.width=Math.max(0,boss.hp/boss.maxHp*100)+'%';$('boss-note').textContent=t.barrier?(boss.barrierOff?'BARRIER DESTROYED':boss.shieldDown>0?'BARRIER DOWN · '+Math.ceil(boss.shieldDown)+'s':'BARRIER UP · BREAK A GENERATOR OR EMP IT'):t.armor?(boss.disabled>0?'SYSTEMS DOWN · FULL DAMAGE':'HEAVY ARMOUR · EXPLOSIVES'):t.blink?'RELOCATES AFTER EVERY SHOT':'';}
-  const c=context();$('interact-prompt').hidden=!c;if(c){$('interact-prompt').querySelector('kbd').textContent=keyLabel('interact');$('interact-prompt').querySelector('span').textContent=c.label;}$('interact-prompt').classList.toggle('has-art',c?.kind==='weapon');setArt($('prompt-art'),'weapon',c?.kind==='weapon'?c.weapon:null);
+  const c=context();$('interact-prompt').hidden=!c;if(c){$('interact-prompt').querySelector('kbd').textContent=keyLabel('interact');$('interact-prompt').querySelector('span').textContent=c.label;}$('interact-prompt').classList.toggle('has-art',!!c?.weapon);setArt($('prompt-art'),'weapon',c?.weapon||null);
   if(s.time>radioUntil)$('radio').hidden=true;if(now>toastUntil)$('toast').style.opacity='0';if(now>bannerUntil)$('banner').classList.remove('show');scene.audio.pressure(s.director.pressure);
-  document.body.classList.toggle('downed',!!p.dead&&!s.dead);const hurt=mode==='playing'&&p.health<35&&!s.dead&&!p.dead?1-p.health/35:0,el=$('danger');el.style.opacity=hurt?(.35+.6*hurt).toFixed(2):p.heal>0?'0':'0';el.classList.toggle('pulse',!!hurt&&!settings.flash);el.style.setProperty('--beat',(.45+.7*(p.health/35)).toFixed(2)+'s');document.body.classList.toggle('healing',p.heal>0);scene.audio.vitals(p.health,mode==='playing'&&!s.dead&&!p.dead);
+  document.body.classList.toggle('downed',!!p.dead&&!s.dead);const hurt=mode==='playing'&&p.health<35&&!s.dead&&!p.dead?1-p.health/35:0,el=$('danger');el.style.opacity=hurt?(.35+.6*hurt).toFixed(2):p.heal>0?'0':'0';el.classList.toggle('pulse',!!hurt&&!settings.flash);el.style.setProperty('--beat',(.45+.7*(p.health/35)).toFixed(2)+'s');document.body.classList.toggle('healing',p.heal>0);scene.audio.vitals(p.health,mode==='playing'&&!s.dead&&!p.dead);if(drill)drillHud(s,p);
  }
  function bindButton(list,label,value,listening,prompt,pick){const button=document.createElement('button');button.type='button';button.innerHTML=`<span>${label}</span><b>${listening?prompt:value}</b>`;button.classList.toggle('listening',listening);button.addEventListener('click',pick);list.append(button);return button;}
  function bindings(){const list=$('bindings'),padList=$('pad-bindings');list.replaceChildren();padList.replaceChildren();
@@ -490,7 +552,8 @@
  function settingsChanged(){settings.difficulty=$('difficulty').value;settings.volume=Number($('volume').value);settings.shake=Number($('shake').value);settings.music=$('music').checked;settings.voice=$('voice').checked;settings.flash=$('flash').checked;settings.gamepad=$('gamepad').checked;settings.aimAssist=$('aimAssist').checked;settings.quality=$('quality').value;padStatus();
   if(scene){scene.settings=settings;if(scene.sim&&['playing','paused'].includes(mode)&&run){scene.sim.difficulty=settings.difficulty;if(DIFFS.indexOf(settings.difficulty)<DIFFS.indexOf(run.floor||run.difficulty))run.floor=settings.difficulty;if(save.run&&run.mode==='campaign')save.run.floor=run.floor;}scene.audio.settings=settings;scene.audio.stopAmbient();if(mode==='playing')scene.audio.startAmbient(scene.sim.map.theme);score();backdrop();}if(mode==='ops')renderOps();if(mode==='lobby'&&lobby&&lobby.role!=='guest'&&lobby.difficulty!==settings.difficulty){lobby.difficulty=settings.difficulty;lobbyChanged();}persist();}
  // Picking a mode on the main menu gets a word from the commander about what you have just chosen.
- $('continue').addEventListener('click',()=>{openOps();voiceAny('campaign');});$('training').addEventListener('click',()=>{startTraining();voiceAny('range');});$('holdout').addEventListener('click',()=>{openLobby('solo');voiceAny('holdout');});$('armory-button').addEventListener('click',()=>openArmory('weapons',null,'menu'));
+ $('continue').addEventListener('click',()=>{if(!save.drill&&!save.run&&!Object.keys(save.missions).length){startDrill();return;}openOps();voiceAny('campaign');});$('skip-drill').addEventListener('click',()=>endDrill(false));
+ $('menu-notice').hidden=!save.notice;$('menu-notice-ok').addEventListener('click',()=>{save.notice='';persist();$('menu-notice').hidden=true;$('continue').focus();});$('training').addEventListener('click',()=>{startTraining();voiceAny('range');});$('holdout').addEventListener('click',()=>{openLobby('solo');voiceAny('holdout');});$('armory-button').addEventListener('click',()=>openArmory('weapons',null,'menu'));
  $('deploy').addEventListener('click',()=>startMission(selected,false));$('resume-run').addEventListener('click',()=>startMission(selected,true));$('ops-armory').addEventListener('click',()=>openArmory('weapons',null,'ops'));$('ops-settings').addEventListener('click',showSettings);$('ops-back').addEventListener('click',menu);
  $('armory-back').addEventListener('click',armoryBack);for(const b of $('armory-tabs').children)b.addEventListener('click',()=>{armoryTab=b.dataset.tab;armoryItem=null;renderArmory();});
  $('picker-close').addEventListener('click',()=>$('picker').close());
@@ -511,18 +574,35 @@
  for(const kind of ['lethal','tactical'])$('range-'+kind).addEventListener('change',()=>{if(!scene.sim?.training)return;scene.sim.player[kind]=$('range-'+kind).value;hud();});
  window.addEventListener('keydown',e=>{if(padActive)setPadActive(false);if(padBindingTarget&&e.code==='Escape'){e.preventDefault();padBindingTarget=null;bindings();return;}if(bindingTarget){e.preventDefault();if(e.code==='Escape'){bindingTarget=null;bindings();return;}if(!e.repeat){const old=settings.bindings[bindingTarget],other=Object.keys(settings.bindings).find(k=>settings.bindings[k]===e.code);if(other)settings.bindings[other]=old;settings.bindings[bindingTarget]=e.code;bindingTarget=null;bindings();persist();}return;}if($('settings').open||$('picker').open)return;
   if(mode==='lobby'&&e.target instanceof HTMLInputElement){if(e.code==='Escape')e.target.blur();return;}
-  if(e.code==='Escape'){e.preventDefault();if(mode==='playing')pause();else if(mode==='paused')resume();else if(mode==='ops'||mode==='lobby'){scene.audio.ui('back');menu();}else if(mode==='armory'){scene.audio.ui('back');armoryBack();}return;}if(mode!=='playing')return;if(Object.values(settings.bindings).includes(e.code)){e.preventDefault();if(!held.has(e.code))pressed.add(e.code);held.add(e.code);}}, {passive:false});
+  if(e.code==='Escape'){e.preventDefault();if(mode==='playing')pause();else if(mode==='paused')resume();else if(mode==='ops'||mode==='lobby'){scene.audio.ui('back');menu();}else if(mode==='armory'){scene.audio.ui('back');armoryBack();}else if(mode==='dead'||mode==='complete'){scene.audio.ui('back');menu();}return;}if(mode!=='playing')return;if(Object.values(settings.bindings).includes(e.code)){e.preventDefault();if(!held.has(e.code))pressed.add(e.code);held.add(e.code);}}, {passive:false});
  window.addEventListener('keyup',e=>held.delete(e.code));window.addEventListener('blur',()=>{clearInput();pause();});document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInput();pause();}});window.addEventListener('pagehide',()=>{if(scene){scene.audio.destroy();scene.game.destroy(true);}});
  window.addEventListener('wheel',e=>{if(mode==='playing'&&Math.abs(e.deltaY)>4)wheelSwap=true;},{passive:true});
  window.addEventListener('pointermove',e=>{if(padActive&&Math.hypot(e.movementX,e.movementY)>3)setPadActive(false);});window.addEventListener('pointerdown',()=>{if(padActive)setPadActive(false);});
  window.addEventListener('gamepadconnected',()=>{padStatus();if(settings.gamepad&&mode==='playing')toast((BPGamepad.brandName[pad.brand]||'CONTROLLER')+' CONNECTED');});window.addEventListener('gamepaddisconnected',()=>{padStatus();if(padActive&&mode==='playing')pause();});
  function menuRoot(){return $('picker').open?$('picker'):$(mode==='paused'?'pause':['dead','complete'].includes(mode)?'ending':mode);}
- function padMenu(state){const root=menuRoot(),header=$('picker').open?[]:[$('sound'),$('settings-button')],buttons=[...root.querySelectorAll('button'),...header].filter(b=>b&&b.offsetParent!==null&&!b.disabled),at=buttons.indexOf(document.activeElement),flick=Math.abs(state.move.y)>.6?Math.sign(state.move.y):0;
-  let dir=Number(state.tap.has('down')||state.tap.has('right'))-Number(state.tap.has('up')||state.tap.has('left'));if(flick!==padMenuStick){padMenuStick=flick;dir=dir||flick;}
+ // Picks whichever other button actually sits in the pressed direction on screen (by its bounding box), not just the
+ // next one in markup order - so a real 2D layout like the main menu's mode cards steers the way it looks, instead of
+ // down behaving exactly like right. Candidates behind the press, or too far off to the side of it, are ignored;
+ // among what is left, the closest one wins. Returns null if nothing qualifies, so callers can fall back.
+ function focusDirection(buttons,dirX,dirY){const cur=document.activeElement;if(!buttons.includes(cur))return null;
+  const a=cur.getBoundingClientRect(),ax=a.left+a.width/2,ay=a.top+a.height/2;let best=null,bestScore=Infinity;
+  for(const b of buttons){if(b===cur)continue;const r=b.getBoundingClientRect(),dx=r.left+r.width/2-ax,dy=r.top+r.height/2-ay,primary=dx*dirX+dy*dirY;if(primary<=1)continue;
+   const perp=Math.abs(dx*dirY-dy*dirX);if(perp>primary*1.5+40)continue;const score=primary+perp*2;if(score<bestScore){bestScore=score;best=b;}}
+  return best;}
+ function padMenu(state){const root=menuRoot(),header=$('picker').open?[]:[$('sound'),$('settings-button')],buttons=[...root.querySelectorAll('button'),...header].filter(b=>b&&b.offsetParent!==null&&!b.disabled),at=buttons.indexOf(document.activeElement),flickY=Math.abs(state.move.y)>.6?Math.sign(state.move.y):0,flickX=Math.abs(state.move.x)>.6?Math.sign(state.move.x):0;
+  let vdir=Number(state.tap.has('down'))-Number(state.tap.has('up'));if(flickY!==padMenuStick){padMenuStick=flickY;vdir=vdir||flickY;}
+  let hdir=Number(state.tap.has('right'))-Number(state.tap.has('left'));if(flickX!==padMenuStickX){padMenuStickX=flickX;hdir=hdir||flickX;}
   if(mode==='armory'&&!$('picker').open&&(state.tap.has('lb')||state.tap.has('rb'))){const tabs=['weapons','gear','upgrades','record'];armoryTab=tabs[(tabs.indexOf(armoryTab)+(state.tap.has('rb')?1:3))%4];armoryItem=null;renderArmory();$('armory-list').querySelector('button')?.focus();return;}
-  if(state.tap.has('b')){if($('picker').open||['paused','ops','lobby','armory'].includes(mode))scene.audio.ui('back');if($('picker').open)$('picker').close();else if(mode==='paused')resume();else if(mode==='ops'||mode==='lobby')menu();else if(mode==='armory')armoryBack();return;}
-  if(at<0){if(dir||state.tap.has('a'))buttons[0]?.focus();return;}
-  if(dir){const nextBtn=buttons[(at+dir+buttons.length)%buttons.length];nextBtn.focus();nextBtn.scrollIntoView({block:'nearest'});}if(state.tap.has('a'))buttons[at].click();}
+  if(state.tap.has('b')){if($('picker').open||['paused','ops','lobby','armory','dead','complete'].includes(mode))scene.audio.ui('back');if($('picker').open)$('picker').close();else if(mode==='paused')resume();else if(mode==='ops'||mode==='lobby')menu();else if(mode==='armory')armoryBack();else if(mode==='dead'||mode==='complete')menu();return;}
+  if(at<0){if(vdir||hdir||state.tap.has('a'))buttons[0]?.focus();return;}
+  if(vdir||hdir){
+   // A geometric neighbor in the pressed direction wins when there is one; otherwise this steps through markup order
+   // (wrapping at the ends), which is the only thing that still matters for the plain single-column lists most
+   // other screens use, and is exactly how this already behaved before direction-aware navigation existed.
+   const next=(vdir&&focusDirection(buttons,0,vdir))||(hdir&&focusDirection(buttons,hdir,0))||buttons[(at+(vdir||hdir)+buttons.length)%buttons.length];
+   next.focus();next.scrollIntoView({block:'nearest'});
+  }
+  if(state.tap.has('a'))buttons[at].click();}
  // Full controller navigation for the settings dialog: up/down moves between every control (buttons, selects,
  // checkboxes, ranges); left/right adjusts the focused control's value when it has one, otherwise also navigates.
  function padSettings(state){
@@ -532,9 +612,9 @@
   if(bindingTarget)return;
   if(state.tap.has('b')||state.tap.has('start')){$('settings').close();return;}
   const fields=[...$('settings').querySelectorAll('button,select,input')].filter(el=>el.offsetParent!==null&&!el.disabled),at=fields.indexOf(document.activeElement);
-  const flick=Math.abs(state.move.y)>.6?Math.sign(state.move.y):0;
+  const flick=Math.abs(state.move.y)>.6?Math.sign(state.move.y):0,flickX=Math.abs(state.move.x)>.6?Math.sign(state.move.x):0;
   let vdir=Number(state.tap.has('down'))-Number(state.tap.has('up'));if(flick!==padMenuStick){padMenuStick=flick;vdir=vdir||flick;}
-  const hdir=Number(state.tap.has('right'))-Number(state.tap.has('left'));
+  let hdir=Number(state.tap.has('right'))-Number(state.tap.has('left'));if(flickX!==padMenuStickX){padMenuStickX=flickX;hdir=hdir||flickX;}
   if(at<0){if(vdir||hdir||state.tap.has('a'))fields[0]?.focus();return;}
   const field=fields[at],adjustable=field.tagName==='SELECT'||field.type==='range'||field.type==='checkbox';
   if(hdir&&adjustable){
@@ -582,7 +662,7 @@
   }
   update(time,delta){let dt=Math.min(delta/1000,.05);pollPad(dt);if(mode!=='playing'||!this.sim)return;
    if(netRole==='guest'){guestFrame(this.sim,dt);
-    this.renderer.update(this.sim,dt,padActive?padPointer:this.input.activePointer,watch(this.sim));
+    this.renderer.update(this.sim,dt,padActive?padPointer:this.input.activePointer,watch(this.sim));overlay();
     if(time-lastHud>70){lastHud=time;hud();}return;}
    const now=performance.now();timeScale+=((now<slowUntil?.32:1)-timeScale)*Math.min(1,dt*(now<slowUntil?14:5));dt*=timeScale;this.accumulator+=dt;
    let frameInput=input();if(netRole==='host'){
@@ -595,7 +675,7 @@
       guest:netRole==='host'?{...frameInput.guest,swap:false,melee:false,reload:false,slot:undefined}:undefined};}
    drain();
    if(netRole==='host'&&netConnected){netBroadcastAt-=dt;if(netBroadcastAt<=0){netBroadcastAt=lobby?.link==='online'?1/20:1/30;LINK.hostSend(JSON.stringify({type:'snapshot',payload:buildSnapshot(this.sim)},NET_ROUND));}}
-   if(mode==='playing'||mode==='dead')this.renderer.update(this.sim,dt,padActive?padPointer:this.input.activePointer,watch(this.sim));if(time-lastHud>70&&mode==='playing'){lastHud=time;hud();}}
+   if(mode==='playing'||mode==='dead')this.renderer.update(this.sim,dt,padActive?padPointer:this.input.activePointer,watch(this.sim));if(mode==='playing')overlay();if(time-lastHud>70&&mode==='playing'){lastHud=time;hud();}}
  }
  function renderType(){const choice=new URLSearchParams(location.search).get('renderer');if(choice==='canvas')return Phaser.CANVAS;if(choice==='webgl')return Phaser.WEBGL;
   try{const testCanvas=document.createElement('canvas'),gl=testCanvas.getContext('webgl',{failIfMajorPerformanceCaveat:true});if(!gl)return Phaser.CANVAS;const ext=gl.getExtension('WEBGL_debug_renderer_info'),name=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'';const software=/swiftshader|llvmpipe|software/i.test(name);gl.getExtension('WEBGL_lose_context')?.loseContext();return software?Phaser.CANVAS:Phaser.AUTO;}catch{return Phaser.CANVAS;}}

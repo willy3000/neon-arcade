@@ -1,7 +1,43 @@
 # Windows Desktop Packaging — Blackout Protocol
 
-Status: isolated project established, Electron shell scaffolded, not yet built or run as
-a packaged `.exe`. This document records what was found, what was done, and what's left.
+Status (13 October 2026): **built and run as a packaged game.** `npm run dist:win` produces,
+in `release/`:
+
+- `Blackout-Protocol-Setup-0.2.0.exe` — the installer (choose a folder, desktop and Start
+  menu shortcuts, uninstaller; saves are kept on uninstall).
+- `Blackout-Protocol-0.2.0-Portable.exe` — a single file that runs without installing.
+- `win-unpacked/Blackout Protocol.exe` — the game as a plain folder.
+
+All three carry the game's logo (`build/icon.ico`) and the product details "Blackout
+Protocol / Neon Arcade / 0.2.0". The installer's side panel and header and the portable
+exe's splash are drawn from the same logo by `npm run dist:art`
+(`build/make-installer-art.cjs`).
+
+What was checked on the packaged build: it launches, the menu and a run render, the bundled
+typefaces and all seven killhouse pictures load, it makes no outside network requests on
+start-up, and progress written in one launch is there in the next (each launch uses a
+different local port). The portable exe was started and reached its window. The installer
+was run: its first page shows the logo in the title bar and header; a silent install into a
+scratch folder put down the game, the uninstaller, desktop and Start menu shortcuts and an
+Apps list entry ("Blackout Protocol 0.2.0, Neon Arcade"); the installed game launched and
+started a run; and the uninstaller removed all of it while leaving the save folder alone.
+The later wizard pages (folder choice, progress, finish) were not looked at by eye.
+
+Things to know:
+
+- **Not code-signed.** Windows SmartScreen will warn on first run until it is signed.
+- **Saves** live in `%APPDATA%\Blackout Protocol\save-store.json`. A copy that ran before
+  packaging kept its save under `%APPDATA%\blackout-protocol-windows`; the first start under
+  the new name copies that across.
+- **One copy at a time.** Starting the game again brings the running window forward.
+- `dist:win` first runs `npm run verify` (`blackout/tools/verify-static.cjs`), which checks
+  every referenced file exists, asset hashes match, and no stylesheet or script loads from
+  the network.
+
+The rest of this document is the original scaffolding note, kept for the reasoning behind
+the local-server design. Where it says something is "not yet built", "not installed" or
+"left alone", the list above is the current state: fonts are now bundled, the icon exists
+and the build has been produced.
 
 ## Why Electron, and why a local server instead of `file://`
 

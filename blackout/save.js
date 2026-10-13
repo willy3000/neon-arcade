@@ -1,13 +1,13 @@
 (function(root,factory){const api=factory(typeof module==='object'?require('./world.js'):root.BPWorld);if(typeof module==='object')module.exports=api;else root.BPSave=api;})(globalThis,function(World){
   'use strict';
-  const KEY='blackout-protocol-progress',VERSION=2;
+  const KEY='blackout-protocol-progress',VERSION=3;
   const bindings={up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',sprint:'ShiftLeft',roll:'Space',slide:'ControlLeft',interact:'KeyE',reload:'KeyR',swap:'KeyX',gadget:'KeyQ',melee:'KeyF',grenade:'KeyG',tactical:'KeyC',slot1:'Digit1',slot2:'Digit2'};
   // Y toggles weapons. X interacts/vaults and, when there is nothing to interact with, reloads; D-pad up is a dedicated reload.
   // D-pad left injects a stim, D-pad right switches the selected gadget (lethal <-> tactical) and RB deploys whichever is selected.
   // D-pad down is deliberately unbound: rocker pads report it by accident while right is pressed. PAD_LAYOUT bumps reset saved pad bindings.
   const padBindings={fire:'rt',aim:'lt',sprint:'lb',roll:'a',slide:'b',interact:'x',swap:'y',reload:'up',gadget:'left',melee:'rs',grenade:'rb',cycle:'right'},padButtons=['a','b','x','y','lb','rb','lt','rt','back','ls','rs','up','down','left','right'];
   const PAD_LAYOUT=3,W=World.weapons,G=World.gear,U=World.upgrades,MISSIONS=World.missions.map(m=>m.id),DIFFS=World.order;
-  function defaults(){return {version:VERSION,credits:0,xp:0,owned:{weapons:['rifle','pistol'],gear:[]},upgrades:{},loadout:{primary:'rifle',secondary:'pistol',lethal:null,tactical:null},missions:{},run:null,holdout:{},mastery:{},contracts:{day:-1,list:[]},daily:{day:-1,streak:0},stats:{kills:0,missions:0,deaths:0},seen:[],
+  function defaults(){return {version:VERSION,credits:0,xp:0,owned:{weapons:['rifle','pistol'],gear:[]},upgrades:{},loadout:{primary:'rifle',secondary:'pistol',lethal:null,tactical:null},missions:{},run:null,holdout:{},mastery:{},contracts:{day:-1,list:[]},daily:{day:-1,streak:0},stats:{kills:0,missions:0,deaths:0},seen:[],found:[],kit:{},killhouse:{},presets:[0,1,2].map(()=>({primary:'rifle',secondary:'pistol',lethal:null,tactical:null})),preset:0,drill:false,notice:'',
     settings:{difficulty:'standard',volume:.65,music:true,voice:true,shake:.45,flash:false,quality:'high',muted:false,gamepad:true,aimAssist:true,callsign:'',lastHost:'',bindings:{...bindings},padBindings:{...padBindings},padLayout:PAD_LAYOUT}};}
   // LAN lobby identity: the callsign other players see, and the last host address joined (pre-filled next time).
   const callsign=t=>String(t??'').toUpperCase().replace(/[^A-Z0-9 _-]/g,'').trim().slice(0,12);
@@ -30,19 +30,29 @@
     if(a.completed===true||a.best){d.missions.crash={done:true,best:a.best&&Number.isFinite(a.best.time)?{time:a.best.time,score:num(a.best.score,0,1e6),rating:['S','A','B','C'].includes(a.best.rating)?a.best.rating:'C',difficulty:'standard'}:null,medals:['complete'],diffs:['standard'],intel:false};}
     const unl=Array.isArray(a.unlocks)?a.unlocks:[];if(unl.includes('shotgun')||a.checkpoint?.stage>=2||a.completed)d.owned.weapons.push('shotgun');if(unl.includes('frag')||a.checkpoint?.stage>=2||a.completed)d.owned.gear.push('frag');
     for(const k of ['rifle','shotgun','pistol'])if(Number(a.mastery?.[k])>0)d.mastery[k]=num(a.mastery[k],0,1e7);
-    const s={...(a.settings||{})};delete s.padBindings;if(s.bindings){s.bindings={...s.bindings};delete s.bindings.slot3;}settings(d,s);return d;}
-  function decode(raw){const d=defaults();try{const a=JSON.parse(raw);if(!a||typeof a!=='object')return d;if(a.version===1)return migrate(a,d);if(a.version!==VERSION)return d;
-    d.credits=Math.floor(num(a.credits,0,1e8));d.xp=Math.floor(num(a.xp,0,1e9));
+    const s={...(a.settings||{})};delete s.padBindings;if(s.bindings){s.bindings={...s.bindings};delete s.bindings.slot3;}settings(d,s);d.drill=!!(a.completed||a.checkpoint);return d;}
+  // A loadout can only name things the save owns, each in its own kind of slot.
+  const kitOf=(lo,d)=>({primary:W[lo?.primary]?.slot===0&&d.owned.weapons.includes(lo.primary)?lo.primary:'rifle',secondary:W[lo?.secondary]?.slot===1&&d.owned.weapons.includes(lo.secondary)?lo.secondary:'pistol',lethal:G[lo?.lethal]?.slot==='lethal'&&d.owned.gear.includes(lo.lethal)?lo.lethal:null,tactical:G[lo?.tactical]?.slot==='tactical'&&d.owned.gear.includes(lo.tactical)?lo.tactical:null});
+  function decode(raw){const d=defaults();try{const a=JSON.parse(raw);if(!a||typeof a!=='object')return d;if(a.version===1)return migrate(a,d);if(a.version!==VERSION&&a.version!==2)return d;
+    // Version 2 predates the economy rebalance (new prices, rank-gated tiers, field drops no longer kept). Its credits,
+    // rank, purchases and loadout start again; campaign progress, records, mastery, stats and settings carry over.
+    const old=a.version===2;if(!old){
+    d.credits=Math.floor(num(a.credits,0,1e8));d.xp=Math.floor(num(a.xp,0,1e9));d.seen=ids(a.seen,80);
     d.owned.weapons=Array.from(new Set(['rifle','pistol',...ids(a.owned?.weapons).filter(k=>W[k])]));d.owned.gear=Array.from(new Set(ids(a.owned?.gear).filter(k=>G[k])));
     for(const k of Object.keys(U))if(a.upgrades?.[k])d.upgrades[k]=Math.floor(num(a.upgrades[k],0,3));
-    const lo=a.loadout||{};d.loadout={primary:W[lo.primary]?.slot===0&&d.owned.weapons.includes(lo.primary)?lo.primary:'rifle',secondary:W[lo.secondary]?.slot===1&&d.owned.weapons.includes(lo.secondary)?lo.secondary:'pistol',lethal:G[lo.lethal]?.slot==='lethal'&&d.owned.gear.includes(lo.lethal)?lo.lethal:null,tactical:G[lo.tactical]?.slot==='tactical'&&d.owned.gear.includes(lo.tactical)?lo.tactical:null};
+    d.found=ids(a.found).filter(k=>W[k]);for(const k of Object.keys(W))if(a.kit?.[k])d.kit[k]=Math.floor(num(a.kit[k],0,3));
+    d.loadout=kitOf(a.loadout,d);d.preset=Math.floor(num(a.preset,0,2));d.presets=[0,1,2].map(i=>kitOf(a.presets?.[i]||d.loadout,d));d.drill=a.drill===true;d.notice=a.notice==='rebalance'?'rebalance':'';}
     for(const id of MISSIONS){const m=a.missions?.[id];if(!m)continue;const b=m.best;d.missions[id]={done:m.done===true,best:b&&Number.isFinite(b.score)?{score:num(b.score,0,1e6),rating:['S','A','B','C'].includes(b.rating)?b.rating:'C',time:num(b.time,0,86400),difficulty:DIFFS.includes(b.difficulty)?b.difficulty:'standard'}:null,medals:ids(m.medals,5),diffs:ids(m.diffs,4).filter(x=>DIFFS.includes(x)),intel:m.intel===true};}
     const r=a.run;if(r&&(r.mode==='campaign'&&MISSIONS.includes(r.mission))&&DIFFS.includes(r.difficulty)){const cp=checkpoint(r.checkpoint);if(cp)d.run={mode:'campaign',mission:r.mission,difficulty:r.difficulty,floor:DIFFS.includes(r.floor)?r.floor:r.difficulty,deaths:Math.floor(num(r.deaths,0,999)),checkpoint:cp};}
     for(const k of DIFFS)if(a.holdout?.[k])d.holdout[k]=Math.floor(num(a.holdout[k],0,999));
     for(const k of Object.keys(W))if(a.mastery?.[k])d.mastery[k]=Math.floor(num(a.mastery[k],0,1e7));for(const k of ['melee','grenade','mine','incendiary'])if(a.mastery?.[k])d.mastery[k]=Math.floor(num(a.mastery[k],0,1e7));
     if(a.contracts&&Number.isInteger(a.contracts.day)&&Array.isArray(a.contracts.list))d.contracts={day:a.contracts.day,list:a.contracts.list.filter(c=>c&&typeof c.id==='string').slice(0,3).map(c=>({id:c.id,progress:Math.floor(num(c.progress,0,1e6)),done:c.done===true}))};
     if(a.daily&&Number.isInteger(a.daily.day))d.daily={day:a.daily.day,streak:Math.floor(num(a.daily.streak,0,9999))};
-    for(const k of ['kills','missions','deaths'])d.stats[k]=Math.floor(num(a.stats?.[k],0,1e9));d.seen=ids(a.seen,80);
+    for(const k of ['kills','missions','deaths'])d.stats[k]=Math.floor(num(a.stats?.[k],0,1e9));
+    for(const h of World.holdoutMaps){const r=a.killhouse?.[h.id];if(r&&typeof r==='object')for(const k of DIFFS)if(r[k])(d.killhouse[h.id]||(d.killhouse[h.id]={}))[k]=Math.floor(num(r[k],0,999));}
+    // The opening operation's supply cache is a story reward, so a reset save that has finished it keeps what it gave.
+    if(old){if(d.missions.crash?.done){d.owned.weapons.push('shotgun');d.owned.gear.push('frag');}d.drill=true;d.notice='rebalance';}
+    d.presets[d.preset]={...d.loadout};
     settings(d,a.settings||{});
   }catch{}return d;}
   function load(storage){try{return decode(storage.getItem(KEY));}catch{return defaults();}}

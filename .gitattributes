@@ -1,1 +1,4 @@
 blackout/assets/licenses/kenney-props.txt text eol=lf
+blackout/assets/licenses/fonts-OFL.txt text eol=lf
+# Hashed in blackout/assets/integrity.json, so they must not pick up CRLF on a Windows checkout.
+blackout/assets/*.svg text eol=lf

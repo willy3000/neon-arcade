@@ -14,6 +14,7 @@ function pathTo(s,target){const W=Math.ceil(s.map.width/TILE),H=Math.ceil(s.map.
 // Clear shot to a destructible objective: the target itself may be the only thing in the way.
 function clearShot(s,p,box){const c={x:box.x+box.w/2,y:box.y+box.h/2};return !s.walls.some(w=>w!==box&&!w.dead&&!w.pass&&w.kind!=='glass'&&Core.segmentBox(p.x,p.y,c.x,c.y,w)!==null);}
 // Ordinary control packets only: movement, aim, fire, reload, stim, grenade, gadget, swap and interact. Nothing in the simulation is edited.
+// The bot walks while it reloads (it lets go of sprint), as it did before reloading at a jog existed; its routes were tuned to that pace.
 const LOADOUTS={crash:{primary:'rifle',secondary:'pistol'},ruins:{primary:'shotgun',secondary:'pistol',lethal:'frag'},kestrel:{primary:'marksman',secondary:'pistol',lethal:'frag',tactical:'smoke'},underground:{primary:'shotgun',secondary:'pistol',lethal:'frag',tactical:'flash'},convoy:{primary:'rifle',secondary:'rocket',lethal:'frag'},meridian:{primary:'pulse',secondary:'thumper',lethal:'frag',tactical:'emp'},holdout:{primary:'rifle',secondary:'pistol',lethal:'frag'}};
 function run(difficulty='standard',checkpoint=null,mission='crash',options={}){const loadout=options.loadout||(mission==='crash'?undefined:LOADOUTS[mission]);
  const s=Core.create({difficulty,checkpoint,mission,loadout,owned:Object.keys(World.weapons),profile:options.profile});let nav=[],lastTarget='',lastStage=s.stage;const records=[],limit=options.limit||72000,human={id:'',seen:0,angle:null};
@@ -33,7 +34,7 @@ function run(difficulty='standard',checkpoint=null,mission='crash',options={}){c
    interact:(st.kind==='clear'||st.kind==='extract')&&!target&&Core.distance(p,st)<80&&i%20===0,melee:!!target&&dist<70&&i%60===0};
   if(target&&los&&dist<480&&dist>150&&dest===target){const angle=Math.atan2(target.y-p.y,target.x-p.x),side=(Math.floor(i/260)%2?1:-1);input.mx=-Math.sin(angle)*side;input.my=Math.cos(angle)*side;input.aiming=true;input.roll=!p.reload&&target.attack>0&&target.attackAge>target.attack*.7&&i%20===0;}
   else if(target&&World.archetypes[target.type].stomp&&Core.distance(p,target)<230){const angle=Math.atan2(p.y-target.y,p.x-target.x);input.mx=Math.cos(angle);input.my=Math.sin(angle);input.melee=false;}
-  else if(!(aimProp&&dist<300)){while(nav.length&&Core.distance(p,nav[0])<18)nav.shift();if(nav[0]){const dx=nav[0].x-p.x,dy=nav[0].y-p.y,len=Math.hypot(dx,dy);input.mx=dx/len;input.my=dy/len;input.sprint=!target;}}
+  else if(!(aimProp&&dist<300)){while(nav.length&&Core.distance(p,nav[0])<18)nav.shift();if(nav[0]){const dx=nav[0].x-p.x,dy=nav[0].y-p.y,len=Math.hypot(dx,dy);input.mx=dx/len;input.my=dy/len;input.sprint=!target&&!p.reload;}}
   if(st.kind==='survive'&&!target&&Core.distance(p,st)<140){input.mx=0;input.my=0;}
   // Respect cycling laser grids like a player would: hold position while a beam ahead is live.
   if(input.mx||input.my){const len=Math.hypot(input.mx,input.my)||1,ax=p.x+input.mx/len*34,ay=p.y+input.my/len*34,inside=s.hazards.some(h=>Core.circleBox(p.x,p.y,18,h));if(!inside&&s.hazards.some(h=>Core.circleBox(ax,ay,20,h)&&(h.on||((s.time+.35+h.phase)%h.period)<h.period*h.duty))){input.mx=0;input.my=0;input.sprint=false;}}

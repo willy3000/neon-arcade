@@ -1,23 +1,26 @@
 {
   "name": "blackout-protocol-windows",
+  "productName": "Blackout Protocol",
   "version": "0.2.0",
   "private": true,
-  "description": "Blackout Protocol: standalone Windows desktop build (Electron shell around the unmodified Phaser game).",
+  "description": "Blackout Protocol - top-down tactical action",
   "type": "commonjs",
   "main": "electron/main.js",
   "scripts": {
-    "test": "node blackout/tests/core.cjs && node blackout/tests/walkthrough.cjs && node blackout/tests/coop.cjs && node electron/net/test.cjs",
+    "test": "node blackout/tests/core.cjs && node blackout/tests/progression.cjs && node blackout/tests/walkthrough.cjs && node blackout/tests/coop.cjs && node electron/net/test.cjs",
     "test:browser": "node blackout/tests/browser.cjs",
     "test:tactical": "node blackout/tests/tactical.cjs",
     "test:e2e": "node electron/net/e2e.cjs",
     "serve": "python -m http.server 8127 --bind 127.0.0.1",
     "start": "electron .",
-    "dist:win": "electron-builder --win",
+    "dist:win": "node blackout/tools/verify-static.cjs && electron-builder --win",
     "test:relay": "node server/test.cjs",
     "test:e2e:online": "node electron/net/e2e-online.cjs",
     "relay": "node server/relay.js",
     "start:rich": "electron . --credits=99999",
-    "start:windowed": "electron . --windowed"
+    "start:windowed": "electron . --windowed",
+    "verify": "node blackout/tools/verify-static.cjs",
+    "dist:art": "node build/make-installer-art.cjs"
   },
   "devDependencies": {
     "playwright": "1.58.2",
@@ -60,11 +63,30 @@
           ]
         }
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "legalTrademarks": "Blackout Protocol"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Blackout-Protocol-Setup-${version}.${ext}",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "installerHeader": "build/installerHeader.bmp",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Blackout Protocol",
+      "uninstallDisplayName": "Blackout Protocol",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "Blackout-Protocol-${version}-Portable.${ext}",
+      "splashImage": "build/portableSplash.bmp"
     }
-  }
+  },
+  "author": "Neon Arcade"
 }

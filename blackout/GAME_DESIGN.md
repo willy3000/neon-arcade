@@ -9,7 +9,7 @@ Phaser 3.90.0 (MIT), vendored locally: sprite atlases, layered game objects, ren
 ## Modes
 
 - **Campaign** — six operations unlocked in order from the operations board. Each has a briefing, recommended equipment (with a buy button), a difficulty choice and a loadout. Checkpoints resume a run; dying keeps the checkpoint and counts against the NO DEATHS medal.
-- **HOLDOUT** — endless killhouse waves (unlocked by finishing THE CRASH). Budgeted, escalating compositions; a commander every fifth wave; credits for every cleared wave; best wave saved per difficulty.
+- **HOLDOUT** — endless killhouse waves (unlocked by finishing THE CRASH). Budgeted, escalating compositions; a commander every fifth wave; a named modifier (Blackout, Armoured, Swarm, Marksmen) on every third wave that is not a commander wave; credits for every cleared wave. After each wave a supply drop lands three priced crates (ammunition, armour, health, a stim, a gadget refill or a gun for the run) bought with that run's credits. Seven killhouses: the default one and one per campaign operation, which pay ×1.1 to ×1.6 and keep their own best wave per difficulty.
 - **Training range** — every weapon and gadget, never touches progress.
 
 ## Difficulty
@@ -46,7 +46,7 @@ Riflemen, rushers, marksmen, shields, drones and the commander are joined by sco
 
 ## Economy and retention
 
-Credits come from kill bounties (combo multiplier up to ×3 for chained kills, ×1.5 knife), mission completion, rating, flows, NO DEATHS, intel, first clears per difficulty, medals (5 per operation), daily contracts (3 rotating per day), a daily-operation streak bonus, rank-ups (150 × rank) and the Scavenger upgrade. They buy guns, gadgets and seven three-level upgrades. Each later operation is tuned around specific gear the briefing recommends: smoke and a long rifle for Dead Frequency, flashbangs for Underground, explosives for the Bulwark, EMP for Site Meridian.
+Credits come from kill bounties (+10% per chained kill up to +80%, ×1.5 knife, ×1.25 mid-slide, and ×0.6 in HOLDOUT where hostiles are far more numerous), mission completion, rating, flows, NO DEATHS, intel, first clears per difficulty, medals (5 per operation), daily contracts (3 rotating per day), a daily-operation streak bonus, rank-ups (150 × rank) and the Scavenger upgrade. They buy guns, gadgets, seven three-level upgrades and, once a gun's mastery allows, three kit parts per gun. The armory opens in five tiers at ranks 1, 4, 7, 10 and 13. A gun dropped by an enemy can be carried for that run only; finding one makes it 25% off in the armory for good. Prices and the rank curve are paced so the whole catalogue takes roughly twelve hours (`node blackout/qa/economy-report.cjs` prints the payout tables and that estimate, with its assumptions). The reasoning and the numbers are in `docs/BLACKOUT_GAMEPLAY_PLAN.md`. Each later operation is tuned around specific gear the briefing recommends: smoke and a long rifle for Dead Frequency, flashbangs for Underground, explosives for the Bulwark, EMP for Site Meridian.
 
 Feedback: animated debrief tally, XP bar and award cards; NEW WEAPON / combo / objective banners; credit popups; hit and kill markers; slow-motion on boss kills and wave clears; damage-direction arcs; low-health red pulse with heartbeat and laboured breathing until healed; flashbang white-out and ringing; bullet whiz; per-theme ambience and weather.
 

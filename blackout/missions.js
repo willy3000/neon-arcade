@@ -252,8 +252,10 @@
 
   // Endless variants of the campaign maps: same geometry, pickups and theme, but the scripted stages/enemies are
   // replaced with a single wave-survival stage (as in holdout() above) so the existing director spawns every enemy.
+  // The campaign's gates are left out: nothing in a killhouse ever opens them, and shut they cut the spawn points off
+  // from the operator (every one of them in Site Meridian), so a wave there could never be cleared.
   function endlessVariant(build,baseId){const base=build(),start=at(base.start);
-    return finish({...base,id:'holdout-'+baseId,enemies:[],
+    return finish({...base,id:'holdout-'+baseId,enemies:[],walls:base.walls.filter(w=>w.kind!=='gate'),
       stages:[{kind:'endless',zone:0,x:start.x,y:start.y,name:'Survive the waves',hint:'Supplies drop between waves. Every fifth wave brings a commander.',spawn:start}],
       intro:radio('LARK','Killhouse simulation, overlaid on a live operation zone. They keep coming until you stop.',6)});}
   const builders={crash,ruins,kestrel,underground,convoy,meridian,holdout,range,
@@ -269,8 +271,8 @@
     {id:'meridian',outro:'Every name on the Blackout list is now public. Voss has traced Lark. ACT III / THE TRUTH — the assault on the Citadel — is in development. Your record, gear and rank carry over.',n:6,act:'ACT II / THE HUNT',title:'GHOST SIGNAL',sector:'SITE MERIDIAN / BLACK SITE',terrain:'LAB CORRIDORS / SENTRIES / LASERS',brief:'Break into the Halcyon black site, crack the core and upload every name on the Blackout list.',threats:['turret','elite','shield','drone','mech'],rec:{weapons:['pulse','rail'],gear:['emp'],note:'Armoured sentries and a shielded Warden. An EMP opens every lock in this building.'},par:540,reward:1250}];
   function build(id){return (builders[id]||builders.crash)();}
   // Holdout map picker metadata. The Killhouse is always unlocked; every other killhouse is a campaign map,
-  // locked until that operation is marked done.
-  const holdoutMaps=[{id:'holdout',title:'KILLHOUSE',sector:'ENDLESS',locks:null},
-    ...list.map(m=>({id:'holdout-'+m.id,title:m.title,sector:m.sector,locks:m.id}))];
+  // locked until that operation is marked done, and pays a little more the later in the campaign it comes ("pay").
+  const holdoutMaps=[{id:'holdout',title:'KILLHOUSE',sector:'ENDLESS',locks:null,pay:1},
+    ...list.map((m,i)=>({id:'holdout-'+m.id,title:m.title,sector:m.sector,locks:m.id,pay:+(1.1+.1*i).toFixed(1)}))];
   return {CELL,list,build,builders,canvas,parse,box,enemy,holdoutMaps};
 });
