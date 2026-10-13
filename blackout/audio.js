@@ -1,5 +1,5 @@
 (function(root){'use strict';
- const files=['footstep-concrete-0.ogg','footstep-concrete-1.ogg','footstep-wood.ogg','footstep-snow-0.ogg','footstep-snow-1.ogg','metal.ogg','body.ogg','wood.ogg','glass.ogg','explosion.ogg','rumble.ogg','boom.ogg','radio.ogg','reload-rifle.wav','reload-pistol.wav','reload-shotgun.wav','pistol.ogg','rifle.ogg','shotgun.ogg','smg.ogg','laser.ogg','laser-large.ogg','forcefield.ogg','door.ogg','bell.ogg','plate.ogg','punch.ogg','points.ogg','healthpack.ogg','empty.ogg','pickup.ogg','heal.ogg','flow.ogg','wind.ogg','ambience.ogg','vo-welcome.ogg','vo-mission.ogg','vo-stay-sharp.ogg','vo-watch-six.ogg','vo-move-out.ogg',
+ const files=['footstep-concrete-0.ogg','footstep-concrete-1.ogg','footstep-wood.ogg','footstep-snow-0.ogg','footstep-snow-1.ogg','metal.ogg','body.ogg','wood.ogg','glass.ogg','explosion.ogg','rumble.ogg','boom.ogg','radio.ogg','reload-rifle.wav','reload-pistol.wav','reload-shotgun.wav','pistol.wav','rifle.ogg','shotgun.ogg','smg.ogg','laser.ogg','laser-large.ogg','forcefield.ogg','door.ogg','bell.ogg','plate.ogg','punch.ogg','points.ogg','healthpack.ogg','empty.ogg','pickup.ogg','heal.ogg','flow.ogg','wind.ogg','ambience.ogg','vo-welcome.ogg','vo-mission.ogg','vo-stay-sharp.ogg','vo-watch-six.ogg','vo-move-out.ogg',
   // Generated in the same voice (see blackout/tools/voice/): orders, direction between fights, and the quiet moments.
   'vo-hostiles.ogg','vo-contact.ogg','vo-boss.ogg','vo-hold.ogg','vo-low-health.ogg','vo-dry.ogg','vo-mate-down.ogg','vo-on-your-feet.ogg','vo-objective.ogg','vo-failed.ogg','vo-squad.ogg','vo-range.ogg','vo-area-clear.ogg','vo-quiet.ogg','vo-complete.ogg','vo-armory.ogg','vo-mode-holdout.ogg','vo-mode-campaign.ogg',
   // More ways of announcing each mode, and the commander's word on every gun (vo-w-<weapon>) and gadget (vo-g-<gadget>) as it is bought or equipped.
@@ -17,9 +17,24 @@
  // Per-theme ambience bed (sample, volume, rate) layered under the drone score.
  const BEDS={city:[['wind',.035,.7],['ambience',.055,.7]],ruins:[['wind',.05,.55],['ambience',.05,.6]],snow:[['wind',.09,.45]],subway:[['ambience',.07,.45],['wind',.02,1.3]],desert:[['wind',.07,.85]],facility:[['ambience',.06,.9],['wind',.02,1.6]],range:[['wind',.035,.7],['ambience',.055,.7]]};
  const MUSIC='blackout/assets/audio/menu-music.mp3',MUSIC_VOLUME=.5;
- // How each gun sounds from far off on the title screen: [recording, loudness, pitch]. A heavier gun is louder and deeper.
- const FAR={rifle:['rifle',1,.92],battle:['rifle',1.2,.72],marksman:['rifle',1.35,.6],precision:['rifle',1.4,.54],lmg:['rifle',.95,.8],smg:['smg',.9,1],machinepistol:['smg',.8,1.14],
-  pistol:['pistol',.95,.92],magnum:['pistol',1.3,.66],shotgun:['shotgun',1.45,.82],sawedoff:['shotgun',1.5,.72],autoshotgun:['shotgun',1.3,.92],pulse:['laser',.7,.9]};
+ // How each gun sounds from a few streets away on the title screen. The rifle and shotgun recordings are almost all
+ // thump (below 350 Hz), which a menu score buries and a small speaker cannot play at all, so a far-off gun is built
+ // from layers: its own recording for the body, lifted above 1 kHz, and for most a second recording for the crack.
+ // A layer is [recording, loudness, pitch, cut below Hz, lift above 1 kHz in dB, cut above Hz, fade in seconds (0 = let
+ // it ring)]; gap is the soonest the same kind of gun is heard again, in ms. Loudness is set per recording because the
+ // recordings are far from equally loud. A heavier gun is deeper, duller and slower; a lighter one brighter and faster.
+ const FAR={
+  rifle:{gap:95,layers:[['rifle',.15,.92,120,12,5000,0],['pistol',.22,1.25,1000,0,6000,.12],['explosion',.26,1.9,500,0,5000,.09]]},
+  battle:{gap:125,layers:[['rifle',.19,.72,100,10,4200,0],['pistol',.26,.9,800,0,4800,.14],['explosion',.3,1.5,400,0,4200,.12]]},
+  marksman:{gap:220,layers:[['rifle',.23,.58,90,10,3600,0],['pistol',.34,.7,600,0,4000,.2],['explosion',.2,1.5,300,0,3000,.22]]},
+  lmg:{gap:70,layers:[['rifle',.14,.8,140,14,4600,.1],['smg',1.1,.78,0,0,5000,0]]},
+  smg:{gap:55,layers:[['smg',1.6,1,0,0,6500,0]]},
+  pistol:{gap:150,layers:[['pistol',.48,.95,0,0,6000,0]]},
+  magnum:{gap:240,layers:[['pistol',.5,.66,0,0,4800,0],['rifle',.1,.8,120,8,3000,0]]},
+  shotgun:{gap:260,layers:[['shotgun',.17,.82,90,10,3600,0],['explosion',.3,1.35,400,0,4200,.16]]},
+  sawedoff:{gap:260,layers:[['shotgun',.19,.7,90,10,3200,0],['explosion',.34,1.15,300,0,3600,.2]]}},
+  // The whole far-off battle is turned down by this much: at full strength it was too loud for a title screen.
+  FAR_LEVEL=.25,FAR_BOOM={gap:0,layers:[['explosion',.5,.78,0,0,2400,0]]};
  class Audio {
   constructor(scene,settings){this.scene=scene;this.settings=settings;this.pools=new Map();this.step=0;this.ambience=[];this.nodes=[];this.unlocked=false;this.beatAt=0;this.breathAt=0;this.vitalsOn=false;this.lastWhiz=0;this.uiAt=0;this.voice=null;this.voices=new Map();this.rested={};this.duckUntil=0;
    // Menu score state. Browsers refuse to start sound before the first click or key press, so a refused start is retried on the next one.
@@ -36,23 +51,32 @@
    const p=this.scene.sim?.player;let attenuation=1,pan=0;if(p&&x!==null){const d=Math.hypot(x-p.x,y-p.y);attenuation=Math.max(0,1-d/1100);pan=Math.max(-1,Math.min(1,(x-p.x)/500));}
    if(attenuation<.02)return;voice.play({volume:Math.min(1,volume*this.settings.volume*attenuation),rate,pan});
   }
-  // The title screen's battle, heard from a few streets away: the game's own gunfire and explosions, quiet, pitched
-  // down and through a low-pass filter. Each kind of gun has a voice of its own (FAR: which recording, how loud, how
-  // deep), so a mixed firefight sounds like one. Every explosion is heard but not every shot (about three in four),
-  // and never two from the same kind of gun close together, so it is a texture behind the score and not a rhythm; it
-  // drops further while the commander is speaking. Like the rest of the sound it needs the effects volume up, sound
-  // on and the window in front.
+  // The title screen's battle, heard from a few streets away: the game's own gunfire and explosions, each kind of gun
+  // with a voice of its own (FAR), so a mixed firefight sounds like one. Distance is told by an echo off the buildings
+  // and a softened top end, not by burying it: it is meant to be heard over the score. A shot is placed left or right
+  // by where it is fired on screen. Not quite every shot is heard, and never two from the same kind of gun on top of
+  // each other; it drops back while the commander is speaking. Like the rest of the sound it needs the effects volume
+  // up, sound on and the window in front.
   distant(e){const ctx=this.scene.sound.context,now=performance.now(),boom=e.type==='explosion';if(e.type!=='shot'&&!boom)return false;
-   if(!this.live||this.away||!ctx||ctx.state!=='running'||typeof ctx.createBufferSource!=='function'||(this.farLive||0)>=7)return false;
-   const voice=boom?['explosion',1.7,.78]:FAR[e.weapon]||FAR.rifle,key=voice[0],at=this.farAt||(this.farAt={});
-   if(!boom){if(now<(at[e.weapon]||0)||Math.random()<.25)return false;at[e.weapon]=now+90+Math.random()*130;}
-   const buf=this.scene.cache.audio.get(key);
-   if(!buf||typeof buf.getChannelData!=='function')return false;
-   const src=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain(),t=ctx.currentTime,level=.1*voice[1]*this.settings.volume*(now<this.duckUntil?.35:1)*(.8+Math.random()*.4);
-   src.buffer=buf;src.playbackRate.value=voice[2]*(.96+Math.random()*.08);f.type='lowpass';f.frequency.value=boom?480:700+Math.random()*450;f.Q.value=.4;g.gain.value=level;
-   // A little to one side or the other, as a street away would be.
-   let out=g;if(typeof ctx.createStereoPanner==='function'){out=ctx.createStereoPanner();out.pan.value=Math.random()*1.2-.6;g.connect(out);}
-   src.connect(f).connect(g);out.connect(ctx.destination);this.farLive=(this.farLive||0)+1;src.onended=()=>{this.farLive--;src.disconnect();f.disconnect();g.disconnect();if(out!==g)out.disconnect();};src.start(t);return true;}
+   if(!this.live||this.away||!ctx||ctx.state!=='running'||typeof ctx.createBufferSource!=='function'||(this.farLive||0)>=16)return false;
+   const voice=boom?FAR_BOOM:FAR[e.weapon]||FAR.rifle,at=this.farAt||(this.farAt={});
+   if(!boom){if(now<(at[e.weapon]||0)||Math.random()<.15)return false;at[e.weapon]=now+voice.gap*(1+Math.random()*.5);}
+   // Guns that fire in the same frame are set a few hundredths of a second apart, as they would arrive from different distances.
+   const street=this.street(ctx),t=ctx.currentTime+Math.random()*.04,scale=FAR_LEVEL*this.settings.volume*(now<this.duckUntil?.35:1)*(.8+Math.random()*.4),bend=.96+Math.random()*.08;let out=street,left=0;
+   if(typeof ctx.createStereoPanner==='function'){out=ctx.createStereoPanner();out.pan.value=Math.max(-.8,Math.min(.8,typeof e.pan==='number'?e.pan:Math.random()*1.2-.6));out.connect(street);}
+   for(const [key,loud,pitch,low,lift,high,fade] of voice.layers){const buf=this.scene.cache.audio.get(key);if(!buf||typeof buf.getChannelData!=='function')continue;
+    const src=ctx.createBufferSource(),g=ctx.createGain(),chain=[src],filter=(type,freq,gain=0)=>{const f=ctx.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=.5;f.gain.value=gain;chain.push(f);};
+    src.buffer=buf;src.playbackRate.value=pitch*bend;if(low)filter('highpass',low);if(lift)filter('highshelf',1000,lift);filter('lowpass',high);g.gain.value=loud*scale;if(fade)g.gain.setTargetAtTime(0,t+fade*.25,fade*.3);chain.push(g);
+    chain.reduce((a,b)=>(a.connect(b),b)).connect(out);left++;this.farLive=(this.farLive||0)+1;src.onended=()=>{this.farLive--;for(const n of chain)n.disconnect();if(!--left&&out!==street)out.disconnect();};src.start(t);if(fade)src.stop(t+fade*2.5);}
+   if(!left&&out!==street)out.disconnect();return left>0;}
+  // What every far-off sound passes through, built once: the sound itself, plus a dull echo of it a fifth of a second
+  // later that repeats and dies away, which is what a report sounds like coming down a street. It ends in a soft
+  // ceiling: a single shot passes untouched, but several guns going off in the same instant are rounded off below
+  // full scale instead of piling up into distortion on top of the score.
+  street(ctx){if(this.far&&this.far.ctx===ctx)return this.far.node;let node=ctx.destination;
+   try{const dry=ctx.createGain(),echo=ctx.createDelay(.5),dull=ctx.createBiquadFilter(),back=ctx.createGain(),wet=ctx.createGain(),limit=ctx.createWaveShaper(),curve=new Float32Array(1025);for(let i=0;i<1025;i++){const x=i/512-1,a=Math.abs(x);curve[i]=Math.sign(x)*(a<=.35?a:.35+.3*Math.tanh((a-.35)/.3));}limit.curve=curve;echo.delayTime.value=.19;dull.type='lowpass';dull.frequency.value=1400;back.gain.value=.34;wet.gain.value=.42;
+    dry.connect(limit);dry.connect(echo);echo.connect(dull);dull.connect(wet);dull.connect(back);back.connect(echo);wet.connect(limit);limit.connect(ctx.destination);node=dry;}catch(err){}
+   this.far={ctx,node};return node;}
   // Small Web Audio synth for interface feedback, heartbeat and breathing. Silent when the sound manager has no Web Audio context.
   tone(freq,dur=.12,{type='sine',vol=.08,to=null,attack=.004,delay=0}={}){const ctx=this.scene.sound.context;if(!this.live||!ctx||ctx.state!=='running')return;const t=ctx.currentTime+delay,o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);if(to)o.frequency.exponentialRampToValueAtTime(Math.max(20,to),t+dur);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol*this.settings.volume,t+attack);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+dur+.02);}
   noise(dur=.3,{vol=.05,freq=900,q=1,type='bandpass',attack=.02,delay=0,sweep=null}={}){const ctx=this.scene.sound.context;if(!this.live||!ctx||ctx.state!=='running')return;const t=ctx.currentTime+delay,len=Math.ceil(ctx.sampleRate*dur),buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;

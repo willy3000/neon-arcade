@@ -111,9 +111,9 @@
       "sha256": "246c0ed6d8fce9849a032f6018d507f6a36e45541bd6c705a6cac1b910860a94"
     },
     {
-      "file": "audio/pistol.ogg",
-      "bytes": 12504,
-      "sha256": "49b5954f78ef55b10b884b62b95f01650834d8104a7667b900203dd5c1023c30"
+      "file": "audio/pistol.wav",
+      "bytes": 31796,
+      "sha256": "c2bbefcb71970a220a3997db173530ab0e1cb4f2dbf96774c350a0361b7a3b82"
     },
     {
       "file": "audio/plate.ogg",

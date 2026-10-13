@@ -65,7 +65,7 @@ copies = {
     'reload-rifle.wav': 'reload-rifle.wav',
     'reload-pistol.wav': 'reload-pistol.wav',
     'reload-shotgun.wav': 'reload-shotgun.wav',
-    'pistol.ogg': 'residue/residue-sfx/pxx.ogg',
+    # The pistol is no longer taken from the pack (pxx.ogg sounded like a laser): tools/make-pistol.cjs writes pistol.wav.
     'rifle.ogg': 'residue/residue-sfx/mrrl.ogg',
     'shotgun.ogg': 'residue/residue-sfx/hurker.ogg',
     'smg.ogg': 'residue/residue-sfx/zipper.ogg',

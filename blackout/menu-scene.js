@@ -14,7 +14,7 @@
  const OX=240,OY=440,MAP_W=2280,MAP_H=1960;
  const POSTS=[{x:958,y:432},{x:688,y:646}];
  const SPAWNS=[[1900,360],[1900,450],[780,1440],[890,1440],[780,-360],[890,-360]];
-  // The cast is mixed on purpose, so the street sounds like a battle and not one gun repeated: riflemen (some with the
+ // The cast is mixed on purpose, so the street sounds like a battle and not one gun repeated: riflemen (some with the
  // heavier battle rifle), scouts with submachine guns, shields with pistols, breachers with sawed-off shotguns and a
  // machine gunner, against Rook's assault rifle and his squadmate's marksman rifle.
  const WAVES=[[0,0,'infantry:0','infantry:1'],[7,3,'rusher:2','breacher:3'],[15,3,'scout:4','infantry:5','rusher:0'],[25,3,'shield:1','gunner:2','scout:4'],[36,3,'infantry:4','breacher:3','infantry:0'],[47,4,'scout:5','infantry:1','shield:2']];
@@ -76,6 +76,8 @@
  // The same per-archetype sprite tints and palette render.js uses.
  const TINTS={infantry:0xb2a797,rusher:0xb8a58e,sniper:0x8dafa1,shield:0xaaa58e,commander:0xc9aa89,scout:0x9fb08a,breacher:0x8e8d84,gunner:0x9a8c7a},ROOK=0xc4cfad,CORPSE=0x747761,C={shadow:0x111b15,amber:0xe2b074,red:0xd3846c};
  const DUST={spark:0xddb170,cloth:0x987c62,dust:0xa7a087,casing:0xad9b64,smoke:0x596457};
+ // Guns that throw a spread of sparks, and guns with a bigger, longer muzzle flash.
+ const SCATTER=['shotgun','sawedoff','autoshotgun'],HEAVY=[...SCATTER,'magnum','marksman','lmg'];
  class MenuScene {
   constructor(host,{still=false,front=null,onEvent=null}={}){this.onEvent=onEvent;this.anims=[];this.playing=false;this.ready=false;this.low=false;this.host=host;this.front=front||host;if(!host||still||typeof host.animate!=='function')return;
    // The scatter of embers and smoke is seeded, so the fire looks the same on every launch.
@@ -119,7 +121,7 @@
     this.parts.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,life:kind==='smoke'?1.4+Math.random()*1.4:.2+Math.random()*.6,kind,size:kind==='smoke'?7+Math.random()*14:1+Math.random()*4});}}
   // The same reactions render.js has to simulation events: muzzle flash and casing, cloth off a hit, sparks off a wall.
   react(e){switch(e.type){
-   case 'shot':this.emit(e.x,e.y,4,'spark',e.angle);this.emit(e.x,e.y,2,'smoke',e.angle);this.emit(e.x-Math.cos(e.angle)*16,e.y-Math.sin(e.angle)*16,1,'casing',e.angle+Math.PI/2);this.flashes.push({x:e.x,y:e.y,angle:e.angle,life:.055,big:e.weapon==='magnum'});break;
+   case 'shot':{const heavy=HEAVY.includes(e.weapon);this.emit(e.x,e.y,SCATTER.includes(e.weapon)?13:4,'spark',e.angle);this.emit(e.x,e.y,heavy?4:2,'smoke',e.angle);this.emit(e.x-Math.cos(e.angle)*16,e.y-Math.sin(e.angle)*16,1,'casing',e.angle+Math.PI/2);this.flashes.push({x:e.x,y:e.y,angle:e.angle,life:heavy?.075:.055,big:heavy});break;}
    case 'hit':{this.emit(e.x,e.y,5,'cloth',e.angle);const a=this.actors.get(e.id);if(a)a.hit=.14;break;}
    case 'bulletimpact':this.emit(e.x,e.y,5,'spark');break;case 'meleeimpact':this.emit(e.x,e.y,12,'dust');break;case 'action':if(['slide','roll','dive','vault'].includes(e.action))this.emit(e.x,e.y,7,'dust');break;}}
   actor(id){let a=this.actors.get(id);if(!a){a={phase:0,hit:0};this.actors.set(id,a);}a.seen=this.stampTime;return a;}
@@ -136,12 +138,14 @@
    if(pass===1&&a.hit>0)a.hit=Math.max(0,a.hit-dt);if(a.hit>0){angle+=Math.sin(a.hit/.14*Math.PI)*.18;scaleX*=1-a.hit*.7;}
    if(pass===1){g.save();g.translate(e.x+5,e.y+9);g.scale(1-lift/55,1-lift/55);g.fillStyle=css(C.shadow,.5);g.beginPath();g.ellipse(0,0,20,12,0,0,Math.PI*2);g.fill();g.restore();return;}
    const frame=group+'/'+seq+'/'+Math.max(0,Math.min(count-1,Math.floor(((bodyTime%count)+count)%count))),feet='feet/'+feetSeq+'/'+(feetSeq==='idle'?0:Math.floor(((footTime%20)+20)%20));
-   const recoil=e.shotAge<.12?(1-e.shotAge/.12)*2:0,big=e.type==='scout'?.94:1;
+   const recoil=e.shotAge<.12?(1-e.shotAge/.12)*(w.cls==='shotgun'?5:2):0,big=e.type==='gunner'?1.12:e.type==='scout'?.94:1;
    this.stamp(g,feet,tint,e.x,e.y-lift*.45,face,1,state==='roll'?.72:1);this.stamp(g,frame,tint,e.x-Math.cos(face)*recoil,e.y-lift-Math.sin(face)*recoil,angle,scaleX*big,scaleY*big);
    g.save();g.translate(e.x,e.y-lift);g.rotate(angle);g.lineCap='butt';const line=(x1,y1,x2,y2,width,color,alpha)=>{g.strokeStyle=css(color,alpha);g.lineWidth=width;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();};
    if(op){line(-8,-15,-2,-13,4,0xd1b170,.95);line(-11,-18,-9,-7,2,0x272e21,.7);g.fillStyle=css(0xa89c76,.7);g.fillRect(-14,-8,4,6);}else line(-8,-15,-2,-13,4,0x9a705b,.9);
    if(e.type==='shield'){g.fillStyle=css(0x677064,.95);g.strokeStyle=css(0xa8ad90,.7);g.lineWidth=2;g.beginPath();g.roundRect(20,-28,10,56,3);g.fill();g.stroke();line(21,-7,28,-7,3,0xe0b572,.6);}
    if(e.type==='scout')line(-10,-12,-10,12,2,0xb9c48d,.7);
+   if(e.type==='breacher'){g.fillStyle=css(0x4b4c44,.95);g.fillRect(-6,-13,14,26);g.strokeStyle=css(0x8a8a7c,.7);g.lineWidth=2;g.strokeRect(-6,-13,14,26);}
+   if(e.type==='gunner'){g.fillStyle=css(0x4a4639,.95);g.fillRect(-16,6,14,12);g.fillStyle=css(0x6a6450);for(const y of [-17,17]){g.beginPath();g.arc(-4,y,7,0,Math.PI*2);g.fill();}}
    g.restore();}
   draw(dt){const g=this.pen,s=this.battle.sim,box=this.canvas,k=box.width/1600,A=root.BPWorld.archetypes,[rook,mate]=this.battle.crew();this.stampTime=(this.stampTime||0)+1;
    g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,box.width,box.height);g.setTransform(k,0,0,box.height/1000,0,0);g.translate(900,500);g.rotate(TILT);g.translate(-900-OX,-500-OY);
@@ -167,7 +171,8 @@
     try{this.fit();for(const e of this.battle.update(dt)){this.react(e);this.heard(e);}this.draw(dt);}catch(err){this.battle=null;this.ticking=false;this.canvas.remove();console.warn('Menu skirmish disabled',err);return;}
     requestAnimationFrame(frame);};requestAnimationFrame(frame);}
   // Whoever made the scene can listen in on the battle (the game plays it as far-off gunfire). A fault there is theirs, not the scene's.
-  heard(e){if(!this.onEvent)return;try{this.onEvent(e);}catch(err){this.onEvent=null;console.warn('Menu skirmish sound disabled',err);}}
+  // A shot or a blast is passed on with where it is on screen, from the left edge (-1) to the right (1).
+  heard(e){if(!this.onEvent)return;try{this.onEvent(e.type==='shot'||e.type==='explosion'?{...e,pan:(100+(e.x-OX-900)*Math.cos(TILT)-(e.y-OY-500)*Math.sin(TILT))/800}:e);}catch(err){this.onEvent=null;console.warn('Menu skirmish sound disabled',err);}}
   // Runs only while asked to. Pausing freezes the battle where it stands and releases the tinted sprite frames.
   play(on){on=!!on&&this.ready;if(on===this.playing)return;this.playing=on;for(const a of this.anims)on?a.play():a.pause();if(on)this.loop();else this.tinted?.clear();}
   // Low visual detail keeps the fire and the fight but drops the embers, half the smoke and half the sparks.
