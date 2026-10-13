@@ -126,7 +126,7 @@
   standard:{helmet:'#6b7a4c',rim:'#4d5937',skin:'#dcab80',eye:'#191713',band:'#39422f'},
   intense:{helmet:'#4b4a3a',rim:'#33322a',skin:'#b78763',eye:'#120f0c',band:'#24241d'},
   insane:{helmet:'#1b1e21',rim:'#0d0f11',skin:'#4c4340',eye:'#ff3b2f',band:'#7a1a14'}};
- function head(mood,dx=0,dy=0,k=1){const m=MOODS[mood],evil=mood==='insane',hard=mood==='intense';
+ function head(mood,dx=0,dy=0,k=1){if(typeof mood!=='string')return `<g transform="translate(${dx} ${dy}) scale(${k})">${mood.ai?droid(mood):human(mood)}</g>`;const m=MOODS[mood],evil=mood==='insane',hard=mood==='intense';
   const brows=mood==='story'?st('M17 29 Q22 26 27 29',O,2.2)+st('M33 29 Q38 26 43 29',O,2.2):mood==='standard'?ln(17,29,27,29.5,O,2.4)+ln(43,29,33,29.5,O,2.4):ln(16,26.5,27,31.5,O,evil?3.4:3)+ln(44,26.5,33,31.5,O,evil?3.4:3);
   const eyes=evil?c(22.5,35,5,m.eye,NS+' opacity=".35"')+c(37.5,35,5,m.eye,NS+' opacity=".35"')+c(22.5,35,2.7,m.eye,NS)+c(37.5,35,2.7,m.eye,NS)+c(22.5,35,1,'#ffd9d2',NS)+c(37.5,35,1,'#ffd9d2',NS)
    :c(22.5,35,2.7,m.eye,NS)+c(37.5,35,2.7,m.eye,NS)+(mood==='story'?c(23.4,34,1,'#fff',NS)+c(38.4,34,1,'#fff',NS):'');
@@ -138,5 +138,15 @@
  function pressure(level){const mood=MOODS[level]?level:'standard',n=mood==='insane'?3:mood==='intense'?2:1,w=n===1?60:n===2?92:118;
   const heads=n===1?head(mood):n===2?head(mood,34,3,.94)+head(mood,0,0):head(mood,0,6,.86)+head(mood,66,6,.86)+head(mood,29,0);
   return `<svg class="pressure-icon pressure-${mood}" viewBox="0 0 ${w} 58" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><g stroke="${O}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">${heads}</g></svg>`;}
- root.BPIcons={svg,uri,art,load,keyOf,soldier,pressure,size:k=>W[k]?{w:W[k][0],h:W[k][1]}:{w:S,h:S}};
+ // Lobby seats: a head for whoever holds one, in their team's helmet (Alpha blue, Delta red). A player is a face; an AI
+ // operator is a masked head with a lit visor and an antenna, so the two are told apart at a glance. An empty seat is an outline.
+ const TEAM_KIT=[{helmet:'#4f7f9c',rim:'#7fb0cc',band:'#27404f'},{helmet:'#9c5647',rim:'#cf8b78',band:'#4f2a22'}];
+ function human(m){return c(13,34,3.6,'#dcab80')+c(47,34,3.6,'#dcab80')+c(30,33,17,'#dcab80')+c(22.5,35,2.7,'#191713',NS)+c(37.5,35,2.7,'#191713',NS)+c(23.4,34,1,'#fff',NS)+c(38.4,34,1,'#fff',NS)+ln(17,29,27,29.5,O,2.4)+ln(43,29,33,29.5,O,2.4)+st('M24 42.5 Q30 46.5 36 42.5',O,2.2)
+   +p('M11.5 33 Q7 8 30 8 Q53 8 48.5 33 Q40 25.5 30 25.5 Q20 25.5 11.5 33Z',m.helmet)+st('M12.5 28 Q30 19.5 47.5 28',m.band,3)+st('M17 17 Q23 11 31 10.5',m.rim,2.4,.8);}
+ function droid(m){return ln(44,12,49,2,G2,2.2)+c(49,2,2,CY,NS)+c(30,33,17,'#4a535a')+r(13,29,34,10,'#10161a',3)+r(16,31.5,28,5,CY,2,NS+' opacity=".9"')+r(16,31.5,9,5,'#e9fbff',2,NS+' opacity=".7"')
+   +p('M17 42 H43 L40 50 H20Z','#2c3338')+ln(24,44,24,48,G2,1.4)+ln(30,44,30,48,G2,1.4)+ln(36,44,36,48,G2,1.4)
+   +p('M11.5 33 Q7 8 30 8 Q53 8 48.5 33 Q40 25.5 30 25.5 Q20 25.5 11.5 33Z',m.helmet)+st('M12.5 28 Q30 19.5 47.5 28',m.band,3)+r(27,9,6,9,m.rim,1,NS);}
+ function face(kind,team=0){const m={...TEAM_KIT[team?1:0],ai:kind==='ai'},body=kind==='open'?`<g opacity=".3">${c(30,33,17,'none')+p('M11.5 33 Q7 8 30 8 Q53 8 48.5 33 Q40 25.5 30 25.5 Q20 25.5 11.5 33Z','none')}</g>`:head(m);
+  return `<svg class="face face-${kind}" viewBox="0 0 60 58" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><g stroke="${kind==='open'?'#8b9684':O}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"${kind==='open'?' stroke-dasharray="3 3"':''}>${body}</g></svg>`;}
+ root.BPIcons={svg,uri,art,load,keyOf,soldier,pressure,face,size:k=>W[k]?{w:W[k][0],h:W[k][1]}:{w:S,h:S}};
 })(globalThis);

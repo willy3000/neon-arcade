@@ -59,6 +59,19 @@ const save = (callsign, extra = {}) => ({ version: 3, drill: true, xp: 60000, se
     await one.win.fill('#lobby-ip', '127.0.0.1');
     await one.win.click('#lobby-connect');
     await one.win.waitForFunction(() => window.BPApp.snapshot().lobby?.mySeat >= 0, null, { timeout: 10000 });
+    // With one guest in the lobby: changing a gun shows on that guest's own seat at once, and on the host's screen.
+    const swapGun = async (label, key) => {
+      await one.win.click('#lobby-loadout [data-slot="primary"]');
+      await one.win.click('#picker-list button:has-text("' + label + '")');
+      await one.win.waitForFunction((l) => !!document.querySelector('#teams .seat.me .kit-i[title^="' + l + '"]'), label, { timeout: 4000 });
+      await host.win.waitForFunction((k) => window.BPApp.snapshot().lobby.squad[4]?.loadout.primary === k, key, { timeout: 4000 });
+    };
+    await swapGun('MK18', 'rifle');
+    await swapGun('M870', 'shotgun');
+    assert.equal(await one.win.locator('#teams .seat.me .seat-kit .kit-i').count(), 7, 'a seat shows the whole kit: two guns, two gadgets, field support and two perks');
+    assert.equal(await one.win.locator('#teams .seat.player .face-player').count(), 2, 'players have a face');
+    assert.equal(await one.win.locator('#teams .seat.ai .face-ai').count(), 6, 'and AI operators a visored mask');
+    console.log("PASS a guest's change of gun shows on their own seat and the host's; seats show the whole kit and tell players from AI");
     await two.win.click('#holdout');
     await two.win.click('#teams [data-link="lan"][data-role="guest"]');
     await modeIs(two, 'lobby');
@@ -95,6 +108,10 @@ const save = (callsign, extra = {}) => ({ version: 3, drill: true, xp: 60000, se
     // The match starts once everyone who has joined is ready.
     assert.equal(await host.win.isDisabled('#lobby-go'), true, 'nobody is ready yet');
     await one.win.click('#lobby-go');
+    // READY is green on everyone's screen, on either team.
+    await host.win.waitForFunction(() => { const el = document.querySelector('#teams .team.delta .seat-state.ready'); return !!el && getComputedStyle(el).backgroundColor === 'rgb(168, 196, 143)'; }, null, { timeout: 5000 });
+    await one.win.waitForFunction(() => { const el = document.querySelector('#teams .seat.me .seat-state.ready'); return !!el && /READY/.test(el.textContent) && getComputedStyle(el).backgroundColor === 'rgb(168, 196, 143)'; }, null, { timeout: 5000 });
+    assert.equal(await host.win.locator('#teams .seat-state.wait').count(), 1, 'and the player who is not ready yet is marked so');
     await two.win.click('#lobby-go');
     await host.win.waitForFunction(() => !document.getElementById('lobby-go').disabled, null, { timeout: 5000 });
     await host.win.click('#lobby-go');

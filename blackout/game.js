@@ -111,8 +111,9 @@
  function itemVoice(kind,key){const tag={weapon:'w',gear:'g',support:'s',perk:'p'}[kind];if(key&&tag)scene?.audio.say('vo-'+tag+'-'+key,{cut:true,rest:90});}
  // The animated title-screen backdrop (fire over the cover painting, plus a small live battle run by the real
  // simulation - see menu-scene.js) only runs while the main menu is the screen in front and the window has focus.
+ // While it runs, its gunfire and explosions are heard as a far-off battle under the score (audio.distant).
  // Reduced motion leaves the painting still.
- const menuScene=new BPMenuScene($('menu-scene'),{still:reduced,front:$('menu-troops')});
+ const menuScene=new BPMenuScene($('menu-scene'),{still:reduced,front:$('menu-troops'),onEvent:e=>{if(scene&&mode==='menu')scene.audio.distant(e);}});
  function backdrop(){menuScene.lite(settings.quality==='low');menuScene.play(!!scene&&mode==='menu'&&!document.hidden&&document.hasFocus());}
  for(const type of ['focus','blur'])window.addEventListener(type,backdrop);document.addEventListener('visibilitychange',backdrop);
  // Menu navigation sounds: a soft tick whenever the pointer, keyboard or controller lands on a control, a confirm when a
@@ -314,7 +315,7 @@
  function seatMove(l,who,n){if(!Number.isInteger(n)||n<0||n>7)return false;const cur=l.seats[n];if(cur&&cur!=='bot')return false;const from=l.seats.findIndex(q=>who==='host'?q==='host':!!q&&q.peer===who);if(from<0||from===n)return false;
   l.seats[n]=l.seats[from];l.seats[from]=cur;return true;}
  // The seats as everyone sees them: who is in each, by name, with what they carry.
- function seatsView(l){if(l.role==='guest')return l.seats8||[];const taken=[callsign(),...l.peers.map(p=>p.name)],free=CALLSIGNS.filter(c=>!taken.includes(c));
+ function seatsView(l){if(l.role==='guest')return (l.seats8||[]).map((q,n)=>q&&n===l.mySeat?{...q,...myProfile(),title:rank().title,bot:false,host:false}:q);const taken=[callsign(),...l.peers.map(p=>p.name)],free=CALLSIGNS.filter(c=>!taken.includes(c));
   return l.seats.map((q,n)=>{if(!q)return null;if(q==='bot')return {name:free[n%free.length]||'AI '+(n+1),bot:true,ready:true,rank:0,title:'AI OPERATOR',loadout:{...BOT_KITS[n%BOT_KITS.length],lethal:'frag',tactical:null,support:null,perks:[null,null,null]}};
    if(q==='host')return {...myProfile(),title:rank().title,host:true,ready:true};const p=l.peers.find(x=>x.id===q.peer);return p?{...p}:null;});}
  // The roster a match is built from: the lobby leader first, then every other filled seat in order.
@@ -324,8 +325,14 @@
   return {roster,vs:{squad:roster.map(r=>({team:r.team,loadout:r.loadout,bot:!!r.bot})),names,limit:l.limit,support:l.support}};}
  function renderTeams(l){const lead=l.role!=='guest',view=seatsView(l),mine=lead?l.seats.indexOf('host'):l.mySeat,linked=lobbyLinked();
   const tools=l.role==='solo'&&NET?`<span class="team-tools"><em>PLAY WITH FRIENDS OVER LAN</em><button type="button" class="secondary" data-link="lan" data-role="host">HOST A MATCH</button><button type="button" class="secondary" data-link="lan" data-role="guest">JOIN A MATCH</button></span>`:'';
+  // One seat: a head (a face for a player, a visored mask for an AI, in the team's helmet), who is in it, their whole
+  // kit - both guns, both gadgets, field support and perks - and at the right either how ready they are or, for a seat
+  // that can be taken or changed, the buttons for that.
+  const kit=lo=>[['weapon',lo.primary],['weapon',lo.secondary],['gear',lo.lethal],['gear',lo.tactical],['support',lo.support],...(lo.perks||[]).map(k=>['perk',k])].filter(x=>x[1]&&itemTable(x[0])[x[1]])
+   .map(([kind,key])=>`<i class="kit-i kit-${kind}" data-rar="${RAR(kind,key)}" title="${esc(itemTable(kind)[key].name)}">${ICON(kind,key)}</i>`).join('');
   const row=(q,n)=>{const me=n===mine,move=!me&&(!q||q.bot)&&(lead||linked)?`<button type="button" class="chip-button" data-seat="${n}">${q?'TAKE SEAT':'MOVE HERE'}</button>`:'',ai=lead&&(!q||q.bot)?`<button type="button" class="chip-button" data-ai="${n}">${q?'REMOVE AI':'ADD AI'}</button>`:'';
-   return `<div class="seat${q?q.bot?' ai':' player':' open'}${me?' me':''}" data-rar="${q?RAR('weapon',q.loadout.primary):0}"><i class="seat-art">${q?ICON('weapon',q.loadout.primary):''}</i><span class="seat-who"><b>${q?esc(q.name):'OPEN SLOT'}</b><small>${!q?'NOBODY HERE':q.bot?'AI OPERATOR':'RANK '+q.rank+' · '+esc(q.title||'')}</small></span><span class="seat-state">${!q?'':q.bot?'AI':me?'YOU':q.host?'HOST':q.ready?'READY':'NOT READY'}</span><span class="seat-acts">${move}${ai}</span></div>`;};
+   const ready=q&&(q.host||(me?lead||l.ready:q.ready)),state=!q||q.bot?'':`<span class="seat-state ${q.host?'host':ready?'ready':'wait'}">${me?'YOU · ':''}${q.host?'HOST':ready?'READY':'NOT READY'}</span>`;
+   return `<div class="seat${q?q.bot?' ai':' player':' open'}${me?' me':''}"><i class="seat-head">${BPIcons.face(q?q.bot?'ai':'player':'open',teamOf(n))}</i><span class="seat-who"><b>${q?esc(q.name):'OPEN SLOT'}</b><small>${!q?'NOBODY HERE':q.bot?'AI OPERATOR':'RANK '+q.rank+' · '+esc(q.title||'')}</small></span><span class="seat-side">${state}${move}${ai}</span>${q?`<span class="seat-kit">${kit(q.loadout)}</span>`:''}</div>`;};
   const team=(t,name)=>{const four=[0,1,2,3].map(i=>view[t*4+i]||null),pl=four.filter(q=>q&&!q.bot).length,ai=four.filter(q=>q&&q.bot).length;
    return `<div class="team ${t?'delta':'alpha'}"><h4>TEAM ${name} <small>${pl} PLAYER${pl===1?'':'S'} · ${ai} AI</small></h4>${four.map((q,i)=>row(q,t*4+i)).join('')}</div>`;};
   setHtml($('teams'),tools+team(0,'ALPHA')+team(1,'DELTA'));}
@@ -488,7 +495,7 @@
     else if(m){m.dead=true;m.vanished=true;sim.tags=[];if(sim.player.dead&&!sim.dead){sim.dead=true;sim.events.push({type:'death'});}else toast('PLAYER DISCONNECTED / CONTINUING SOLO');}}
    renderLobby();lobbySync();}
   else if(!peer)return;
-  else if(msg.type==='profile'){const was=peer.ready;Object.assign(peer,cleanProfile(msg));if(was!==peer.ready){feed(peer.name+(peer.ready?' IS READY':' STOOD DOWN'));if(mode==='lobby')scene.audio.ui(peer.ready?'select':'tick');if(!peer.ready)cancelCountdown();}renderLobby();if(l.peers.length>1)lobbySync();}
+  else if(msg.type==='profile'){const was=peer.ready;Object.assign(peer,cleanProfile(msg));if(was!==peer.ready){feed(peer.name+(peer.ready?' IS READY':' STOOD DOWN'));if(mode==='lobby')scene.audio.ui(peer.ready?'select':'tick');if(!peer.ready)cancelCountdown();}renderLobby();if(l.peers.length>1||l.mode==='tdm')lobbySync();}
   // A guest asking for another seat in team deathmatch.
   else if(msg.type==='seat'){if(l.mode==='tdm'&&!l.inRun&&seatMove(l,peer.id,msg.seat))lobbyChanged();}
   // A line of chat is shown here and passed on to everyone else in the squad under the sender's name.

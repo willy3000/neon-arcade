@@ -14,12 +14,15 @@
  const OX=240,OY=440,MAP_W=2280,MAP_H=1960;
  const POSTS=[{x:958,y:432},{x:688,y:646}];
  const SPAWNS=[[1900,360],[1900,450],[780,1440],[890,1440],[780,-360],[890,-360]];
- const WAVES=[[0,0,'infantry:0','infantry:1'],[7,3,'rusher:2','infantry:3'],[15,3,'scout:4','infantry:5','rusher:0'],[25,3,'shield:1','infantry:2','scout:4'],[36,3,'infantry:4','rusher:3','infantry:0'],[47,4,'scout:5','infantry:1','shield:2']];
+  // The cast is mixed on purpose, so the street sounds like a battle and not one gun repeated: riflemen (some with the
+ // heavier battle rifle), scouts with submachine guns, shields with pistols, breachers with sawed-off shotguns and a
+ // machine gunner, against Rook's assault rifle and his squadmate's marksman rifle.
+ const WAVES=[[0,0,'infantry:0','infantry:1'],[7,3,'rusher:2','breacher:3'],[15,3,'scout:4','infantry:5','rusher:0'],[25,3,'shield:1','gunner:2','scout:4'],[36,3,'infantry:4','breacher:3','infantry:0'],[47,4,'scout:5','infantry:1','shield:2']];
  function battleMap(){const M=root.BPMissions,wall=(id,x,y,w,h,...rest)=>M.box(id,x+OX,y+OY,w,h,...rest),at=([x,y])=>({x:x+OX,y:y+OY}),start=at([POSTS[0].x,POSTS[0].y]);
   const stages=[{kind:'hold',zone:0,x:start.x,y:start.y,name:'Hold the wreck',hint:'',spawn:start,
    waves:WAVES.map(([after,max,...who])=>({after,max:max||undefined,entries:who.map(q=>{const [type,spot]=q.split(':');return {type,at:+spot};})}))}];
   return {id:'backdrop',theme:'city',width:MAP_W,height:MAP_H,start,threat:1,stages,objectives:stages,checkpointSpawns:[start],spawnPoints:SPAWNS.map(at),enemies:[],pickups:[],hazards:[],areas:[],fires:[],lights:[],perches:[],floors:[],
-   guns:{infantry:'rifle',scout:'smg',shield:'pistol'},
+   guns:{infantry:'rifle',scout:'smg',shield:'pistol',breacher:'sawedoff',gunner:'lmg'},
    walls:[wall('block-nw',-240,-440,840,678),wall('block-ne',1040,-440,1000,697),wall('block-sw',-240,547,840,973),wall('block-se',1050,550,990,970),
     // The helicopter is solid cover; the kerbside crates and the two in the roadway are low cover, as painted.
     wall('wreck-nose',858,452,62,66),wall('wreck-body',792,500,92,96),wall('wreck-aft',742,596,66,74),wall('wreck-tail',690,684,44,70),
@@ -30,7 +33,7 @@
   constructor(seed=1){this.seed=seed;this.events=[];if(!root.BPMissions.builders.backdrop)root.BPMissions.builders.backdrop=battleMap;this.reset();}
   // Seeded like the simulation itself, so a given battle always plays out the same way.
   rnd(lo=0,hi=1){this.roll=(Math.imul(this.roll,1664525)+1013904223)>>>0;return lo+(hi-lo)*this.roll/4294967296;}
-  reset(){const Core=root.BPCore;this.roll=this.seed*7919;this.sim=Core.create({mission:'backdrop',difficulty:'standard',seed:1701+this.seed++,loadout:{primary:'rifle',secondary:'pistol'},guest:{loadout:{primary:'rifle',secondary:'pistol'}}});this.sim.events.length=0;this.carry=0;
+  reset(){const Core=root.BPCore;this.roll=this.seed*7919;this.sim=Core.create({mission:'backdrop',difficulty:'standard',seed:1701+this.seed++,loadout:{primary:'rifle',secondary:'pistol'},guest:{loadout:{primary:'marksman',secondary:'magnum'}}});this.sim.events.length=0;this.carry=0;
    this.bots=POSTS.map((post,i)=>({post:{x:post.x+OX,y:post.y+OY},goal:{x:post.x+OX,y:post.y+OY},wait:0,aim:i?2.2:-.2,burst:0,rest:0,side:i?1:-1,dodge:-1,swing:0,foe:null,react:0,sway:i*2}));
    this.crew().forEach((op,i)=>{op.x=this.bots[i].post.x;op.y=this.bots[i].post.y;op.angle=this.bots[i].aim;});}
   crew(){return [this.sim.player,this.sim.guest];}
@@ -63,16 +66,18 @@
    // Stage management, kept off screen: the operators are patched up and resupplied rather than allowed to lose, and
    // bodies are cleared after a while. The wave script restarts by itself whenever the street is clear.
    for(const op of this.crew()){if(op.dead){op.dead=false;op.state='idle';op.health=0;s.tags.length=0;}if(op.health<45){op.health=100;op.armor=Math.max(op.armor,25);}const key=op.slots[op.slot];if(op.reserve[key]<60)op.reserve[key]=150;}
+   // About half the riflemen carry the battle rifle instead: the same soldier, a deeper report.
+   for(const e of s.enemies)if(e.type==='infantry'&&!e.armed){e.armed=true;if(this.rnd()<.5)e.gun='battle';}
    s.enemies=s.enemies.filter(e=>!(e.dead&&e.deathAge>14));if(s.dead||s.completed||s.cinematic>0)this.reset();
    return this.events.splice(0);}
  }
  const make=(tag,attrs={},parent=null)=>{const n=document.createElementNS(SVG,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);if(parent)parent.append(n);return n;};
  const f=n=>+n.toFixed(1),move=(x,y,more='')=>`translate(${f(x)}px,${f(y)}px)${more}`,css=(hex,alpha=1)=>`rgba(${hex>>16&255},${hex>>8&255},${hex&255},${alpha})`;
  // The same per-archetype sprite tints and palette render.js uses.
- const TINTS={infantry:0xb2a797,rusher:0xb8a58e,sniper:0x8dafa1,shield:0xaaa58e,commander:0xc9aa89,scout:0x9fb08a},ROOK=0xc4cfad,CORPSE=0x747761,C={shadow:0x111b15,amber:0xe2b074,red:0xd3846c};
+ const TINTS={infantry:0xb2a797,rusher:0xb8a58e,sniper:0x8dafa1,shield:0xaaa58e,commander:0xc9aa89,scout:0x9fb08a,breacher:0x8e8d84,gunner:0x9a8c7a},ROOK=0xc4cfad,CORPSE=0x747761,C={shadow:0x111b15,amber:0xe2b074,red:0xd3846c};
  const DUST={spark:0xddb170,cloth:0x987c62,dust:0xa7a087,casing:0xad9b64,smoke:0x596457};
  class MenuScene {
-  constructor(host,{still=false,front=null}={}){this.anims=[];this.playing=false;this.ready=false;this.low=false;this.host=host;this.front=front||host;if(!host||still||typeof host.animate!=='function')return;
+  constructor(host,{still=false,front=null,onEvent=null}={}){this.onEvent=onEvent;this.anims=[];this.playing=false;this.ready=false;this.low=false;this.host=host;this.front=front||host;if(!host||still||typeof host.animate!=='function')return;
    // The scatter of embers and smoke is seeded, so the fire looks the same on every launch.
    let seed=7;this.rnd=(lo,hi)=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return lo+(hi-lo)*seed/4294967296;};
    // The backdrop is decoration: if anything about it fails, the title screen simply keeps its still painting.
@@ -159,8 +164,10 @@
   fit(){const box=this.front.getBoundingClientRect(),scale=Math.min(root.devicePixelRatio||1,1920/Math.max(1,box.width)),w=Math.max(1,Math.round(box.width*scale)),h=Math.max(1,Math.round(box.height*scale));if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h;}this.pen=this.pen||this.canvas.getContext('2d');}
   loop(){if(this.ticking||!this.battle)return;this.ticking=true;let last=performance.now();
    const frame=now=>{if(!this.playing){this.ticking=false;return;}const dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;
-    try{this.fit();for(const e of this.battle.update(dt))this.react(e);this.draw(dt);}catch(err){this.battle=null;this.ticking=false;this.canvas.remove();console.warn('Menu skirmish disabled',err);return;}
+    try{this.fit();for(const e of this.battle.update(dt)){this.react(e);this.heard(e);}this.draw(dt);}catch(err){this.battle=null;this.ticking=false;this.canvas.remove();console.warn('Menu skirmish disabled',err);return;}
     requestAnimationFrame(frame);};requestAnimationFrame(frame);}
+  // Whoever made the scene can listen in on the battle (the game plays it as far-off gunfire). A fault there is theirs, not the scene's.
+  heard(e){if(!this.onEvent)return;try{this.onEvent(e);}catch(err){this.onEvent=null;console.warn('Menu skirmish sound disabled',err);}}
   // Runs only while asked to. Pausing freezes the battle where it stands and releases the tinted sprite frames.
   play(on){on=!!on&&this.ready;if(on===this.playing)return;this.playing=on;for(const a of this.anims)on?a.play():a.pause();if(on)this.loop();else this.tinted?.clear();}
   // Low visual detail keeps the fire and the fight but drops the embers, half the smoke and half the sparks.

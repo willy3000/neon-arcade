@@ -17,6 +17,9 @@
  // Per-theme ambience bed (sample, volume, rate) layered under the drone score.
  const BEDS={city:[['wind',.035,.7],['ambience',.055,.7]],ruins:[['wind',.05,.55],['ambience',.05,.6]],snow:[['wind',.09,.45]],subway:[['ambience',.07,.45],['wind',.02,1.3]],desert:[['wind',.07,.85]],facility:[['ambience',.06,.9],['wind',.02,1.6]],range:[['wind',.035,.7],['ambience',.055,.7]]};
  const MUSIC='blackout/assets/audio/menu-music.mp3',MUSIC_VOLUME=.5;
+ // How each gun sounds from far off on the title screen: [recording, loudness, pitch]. A heavier gun is louder and deeper.
+ const FAR={rifle:['rifle',1,.92],battle:['rifle',1.2,.72],marksman:['rifle',1.35,.6],precision:['rifle',1.4,.54],lmg:['rifle',.95,.8],smg:['smg',.9,1],machinepistol:['smg',.8,1.14],
+  pistol:['pistol',.95,.92],magnum:['pistol',1.3,.66],shotgun:['shotgun',1.45,.82],sawedoff:['shotgun',1.5,.72],autoshotgun:['shotgun',1.3,.92],pulse:['laser',.7,.9]};
  class Audio {
   constructor(scene,settings){this.scene=scene;this.settings=settings;this.pools=new Map();this.step=0;this.ambience=[];this.nodes=[];this.unlocked=false;this.beatAt=0;this.breathAt=0;this.vitalsOn=false;this.lastWhiz=0;this.uiAt=0;this.voice=null;this.voices=new Map();this.rested={};this.duckUntil=0;
    // Menu score state. Browsers refuse to start sound before the first click or key press, so a refused start is retried on the next one.
@@ -33,6 +36,23 @@
    const p=this.scene.sim?.player;let attenuation=1,pan=0;if(p&&x!==null){const d=Math.hypot(x-p.x,y-p.y);attenuation=Math.max(0,1-d/1100);pan=Math.max(-1,Math.min(1,(x-p.x)/500));}
    if(attenuation<.02)return;voice.play({volume:Math.min(1,volume*this.settings.volume*attenuation),rate,pan});
   }
+  // The title screen's battle, heard from a few streets away: the game's own gunfire and explosions, quiet, pitched
+  // down and through a low-pass filter. Each kind of gun has a voice of its own (FAR: which recording, how loud, how
+  // deep), so a mixed firefight sounds like one. Every explosion is heard but not every shot (about three in four),
+  // and never two from the same kind of gun close together, so it is a texture behind the score and not a rhythm; it
+  // drops further while the commander is speaking. Like the rest of the sound it needs the effects volume up, sound
+  // on and the window in front.
+  distant(e){const ctx=this.scene.sound.context,now=performance.now(),boom=e.type==='explosion';if(e.type!=='shot'&&!boom)return false;
+   if(!this.live||this.away||!ctx||ctx.state!=='running'||typeof ctx.createBufferSource!=='function'||(this.farLive||0)>=7)return false;
+   const voice=boom?['explosion',1.7,.78]:FAR[e.weapon]||FAR.rifle,key=voice[0],at=this.farAt||(this.farAt={});
+   if(!boom){if(now<(at[e.weapon]||0)||Math.random()<.25)return false;at[e.weapon]=now+90+Math.random()*130;}
+   const buf=this.scene.cache.audio.get(key);
+   if(!buf||typeof buf.getChannelData!=='function')return false;
+   const src=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain(),t=ctx.currentTime,level=.1*voice[1]*this.settings.volume*(now<this.duckUntil?.35:1)*(.8+Math.random()*.4);
+   src.buffer=buf;src.playbackRate.value=voice[2]*(.96+Math.random()*.08);f.type='lowpass';f.frequency.value=boom?480:700+Math.random()*450;f.Q.value=.4;g.gain.value=level;
+   // A little to one side or the other, as a street away would be.
+   let out=g;if(typeof ctx.createStereoPanner==='function'){out=ctx.createStereoPanner();out.pan.value=Math.random()*1.2-.6;g.connect(out);}
+   src.connect(f).connect(g);out.connect(ctx.destination);this.farLive=(this.farLive||0)+1;src.onended=()=>{this.farLive--;src.disconnect();f.disconnect();g.disconnect();if(out!==g)out.disconnect();};src.start(t);return true;}
   // Small Web Audio synth for interface feedback, heartbeat and breathing. Silent when the sound manager has no Web Audio context.
   tone(freq,dur=.12,{type='sine',vol=.08,to=null,attack=.004,delay=0}={}){const ctx=this.scene.sound.context;if(!this.live||!ctx||ctx.state!=='running')return;const t=ctx.currentTime+delay,o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);if(to)o.frequency.exponentialRampToValueAtTime(Math.max(20,to),t+dur);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol*this.settings.volume,t+attack);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+dur+.02);}
   noise(dur=.3,{vol=.05,freq=900,q=1,type='bandpass',attack=.02,delay=0,sweep=null}={}){const ctx=this.scene.sound.context;if(!this.live||!ctx||ctx.state!=='running')return;const t=ctx.currentTime+delay,len=Math.ceil(ctx.sampleRate*dur),buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;

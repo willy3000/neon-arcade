@@ -430,3 +430,12 @@ body.fit .tally .award-art{position:absolute;right:8px;top:5px}body.fit .tally .
 body.fit .killfeed{zoom:var(--hud-scale,1)}
 .scoreboard.teams2{grid-template-columns:1fr 1fr;column-gap:10px;grid-auto-flow:column;grid-template-rows:repeat(5,auto)}.scoreboard.teams2 div{padding:4px 8px;grid-template-columns:1fr 34px 40px}.scoreboard.teams2 b{font-size:14px}
 .scoreboard.teams2 .head.us span:first-child{color:#8fc7e8}.scoreboard.teams2 .head.them span:first-child{color:#e39a82}.scoreboard.teams2 .head span:first-child{font:600 9px var(--mono);letter-spacing:1.4px}
+/* Team seats, second pass: a head, the whole kit, and READY in green whatever the team. */
+.seat{grid-template-columns:40px minmax(0,1fr) auto;grid-template-areas:"head who side" "head kit kit";gap:4px 9px;min-height:62px;padding:6px 9px;align-items:center}
+.seat-head{grid-area:head;display:flex;align-items:center;justify-content:center}.seat-head .face{width:40px;height:auto;filter:drop-shadow(0 2px 2px #0008)}.seat.ai .seat-head .face{filter:drop-shadow(0 0 3px #8fe3ff55)}
+.seat-side{grid-area:side;display:flex;gap:5px;align-items:center;justify-content:flex-end}.seat-side .chip-button{font-size:7px;padding:4px 7px;white-space:nowrap}
+.seat-kit{grid-area:kit;display:flex;align-items:center;gap:3px;min-width:0;overflow:hidden}
+.kit-i{flex:none;display:flex;align-items:center;justify-content:center;height:20px;padding:2px 3px;background:#141a15;border-bottom:2px solid var(--rar,#8a927f)}.kit-i .icon{height:14px;width:auto;max-width:14px}.kit-i.kit-weapon .icon{max-width:30px}
+.kit-i.kit-support,.kit-i.kit-perk{margin-left:1px}.kit-i.kit-support{background:#16201a}
+.seat-state{grid-area:auto;white-space:nowrap}.seat-state.ready{color:#1b221b;background:#a8c48f;border-color:#a8c48f}.seat-state.wait{color:#b9c1ad;border-color:#ccd3b84d;background:none}.seat-state.host{color:var(--amber);border-color:#dfad7088;background:none}
+.seat.me .seat-state.ready{color:#1b221b;background:#a8c48f;border-color:#a8c48f}.seat.me .seat-state.wait{color:#1b221b;background:#d9c877;border-color:#d9c877}.seat.me .seat-state.host{color:#1b221b;background:var(--amber);border-color:var(--amber)}
