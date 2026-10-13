@@ -76,6 +76,35 @@ await check('a detected PlayStation controller shows brand-correct glyphs, and t
   await tapUntil(0,()=>document.getElementById('music').checked===false);
   await tapUntil(1,()=>!document.getElementById('settings').open);
   await ctx.close();});
+await check('settings draw the controls: the keyboard by default, the controller when one is connected - an Xbox pad as itself, anything else as a PlayStation pad',async()=>{
+  const open=async id=>{const ctx=await browser.newContext({viewport:{width:1366,height:768}});
+   await ctx.addInitScript(id=>{localStorage.setItem('blackout-protocol-progress',JSON.stringify({version:3,drill:true,settings:{volume:0}}));if(!id)return;window.__pad={id,index:0,connected:true,mapping:'standard',axes:[0,0,0,0],buttons:Array.from({length:17},()=>({pressed:false,value:0}))};navigator.getGamepads=()=>[window.__pad];},id);
+   const p=await ctx.newPage();p.on('pageerror',e=>errors.push(e.message));await ready(p,url);await p.click('#settings-button');return {ctx,p};};
+  const view=p=>p.evaluate(()=>({tab:document.querySelector('.control-tabs [aria-selected="true"]').id,keys:!document.getElementById('controls-keys').hidden,pad:!document.getElementById('controls-pad').hidden,art:document.querySelector('.pad-diagram').className.split(' ')[1]}));
+  const text=(p,selector)=>p.locator(selector).innerText();
+  // No controller: the keyboard is in front, with every binding written on its key.
+  let {ctx,p}=await open(null),v=await view(p);assert.deepEqual([v.tab,v.keys,v.pad,v.art],['tab-keys',true,false,'pad-ps']);
+  assert.equal(await text(p,'.key[data-key="KeyR"] span'),'RELOAD');assert.equal(await text(p,'.key[data-key="Escape"] span'),'PAUSE');assert.equal(await p.locator('.key.bound').count(),17,'all seventeen actions are on the keyboard');
+  // With a mouse alone: click the key on the picture, then the key it should move to.
+  await p.click('.key[data-key="KeyR"]');assert.equal(await text(p,'[data-action="reload"] b'),'PRESS KEY');await p.click('.key[data-key="KeyT"]');
+  assert.equal(await text(p,'.key[data-key="KeyT"] span'),'RELOAD');assert.equal(await p.locator('.key[data-key="KeyR"] span').count(),0);assert.equal(await text(p,'[data-action="reload"] b'),'T');
+  // The pause key is not on offer, and a key that is not drawn is still listed.
+  await p.click('[data-action="reload"]');await p.click('.key[data-key="Escape"]');assert.equal(await text(p,'[data-action="reload"] b'),'PRESS KEY','the pause key cannot be taken');
+  await p.keyboard.press('Numpad5');assert.equal((await text(p,'.kb-extra')).includes('NUMPAD5'),true,'a binding off the picture is named under it');
+  // The other tab by hand: with no controller it is drawn as a PlayStation pad, with PlayStation names.
+  await p.click('#tab-pad');v=await view(p);assert.deepEqual([v.tab,v.keys,v.pad],['tab-pad',false,true]);
+  assert.equal(await text(p,'.call[data-pad="a"] b'),'✕');assert.equal(await text(p,'.call[data-pad="a"] span'),'ROLL / DIVE');assert.equal(await text(p,'.call[data-pad="start"] span'),'PAUSE');assert.equal(await text(p,'.call[data-pad="ls"] span'),'MOVE');
+  await p.click('.call[data-pad="a"]');assert.equal(await text(p,'[data-pad-action="roll"] b'),'PRESS BUTTON');await p.click('.call[data-pad="start"]');assert.equal(await text(p,'[data-pad-action="roll"] b'),'PRESS BUTTON','the pause button cannot be taken');
+  await p.click('.call[data-pad="down"]');assert.equal(await text(p,'.call[data-pad="down"] span'),'ROLL / DIVE');assert.equal(await text(p,'.call[data-pad="a"] span'),'NOT USED');
+  assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('blackout-protocol-progress')).settings.padBindings.roll),'down','and the change is saved');
+  // Nothing in either picture overflows its box.
+  assert.deepEqual(await p.evaluate(()=>[...document.querySelectorAll('.call b,.call span')].filter(n=>n.scrollWidth>n.clientWidth+1).map(n=>n.textContent)),[]);
+  await ctx.close();
+  // An Xbox pad: its tab is in front and it is drawn as an Xbox pad, with Xbox names.
+  ({ctx,p}=await open('Xbox 360 Controller (XInput STANDARD GAMEPAD)'));v=await view(p);assert.deepEqual([v.tab,v.keys,v.pad,v.art],['tab-pad',false,true,'pad-xbox']);
+  assert.equal(await text(p,'.call[data-pad="a"] b'),'A');assert.equal(await text(p,'.call[data-pad="back"] b'),'VIEW');await ctx.close();
+  // A pad of no known make: still its tab, drawn as a PlayStation pad.
+  ({ctx,p}=await open('USB Gamepad (Vendor: 0079 Product: 0006)'));v=await view(p);assert.deepEqual([v.tab,v.art],['tab-pad','pad-ps']);await ctx.close();});
 await check('low health pulses a red vignette that clears after healing',async()=>{const ctx=await browser.newContext({viewport:{width:1366,height:768}});const qp=await ctx.newPage();qp.on('pageerror',e=>errors.push(e.message));await ready(qp,url+'?qa=1');await qp.click('#training');await qp.waitForFunction(()=>BPApp.snapshot().mode==='playing');
   await qp.evaluate(()=>{const s=BPQA.sim();s.enemies=[];s.player.health=20;});await qp.waitForFunction(()=>BPApp.snapshot().danger>.4);assert(await qp.locator('#danger.pulse').count());await qp.screenshot({path:path.join(root,'blackout/qa/low-health.png')});await qp.keyboard.press('KeyQ');await qp.waitForFunction(()=>BPApp.snapshot().health>=70);await qp.waitForFunction(()=>BPApp.snapshot().danger===0);await ctx.close();});
 await check('campaign checkpoint fixtures migrate from version 1 and restore position, story equipment and continue label',async()=>{await page.evaluate(()=>{localStorage.setItem('blackout-protocol-progress',JSON.stringify({version:1,checkpoint:{stage:2,time:100,kills:7},settings:{difficulty:'story',flash:true,volume:0}}));});await ready(page,url);assert.equal(await page.locator('#continue-title').innerText(),'THE CRASH');assert((await page.locator('#continue-sub').innerText()).includes('CONTINUE'));await page.click('#continue');await page.click('#resume-run');await page.waitForFunction(()=>BPApp.snapshot().mode==='playing');const s=await snapshot(page);assert.equal(s.stage,2);assert.equal(s.x,1470);assert.equal(s.y,1150);assert.equal(s.grenades,3);await page.screenshot({path:path.join(root,'blackout/qa/courtyard-route.png')});await page.keyboard.press('Escape');await page.click('#exit');});

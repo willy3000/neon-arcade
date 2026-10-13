@@ -439,3 +439,41 @@ body.fit .killfeed{zoom:var(--hud-scale,1)}
 .kit-i.kit-support,.kit-i.kit-perk{margin-left:1px}.kit-i.kit-support{background:#16201a}
 .seat-state{grid-area:auto;white-space:nowrap}.seat-state.ready{color:#1b221b;background:#a8c48f;border-color:#a8c48f}.seat-state.wait{color:#b9c1ad;border-color:#ccd3b84d;background:none}.seat-state.host{color:var(--amber);border-color:#dfad7088;background:none}
 .seat.me .seat-state.ready{color:#1b221b;background:#a8c48f;border-color:#a8c48f}.seat.me .seat-state.wait{color:#1b221b;background:#d9c877;border-color:#d9c877}.seat.me .seat-state.host{color:#1b221b;background:var(--amber);border-color:var(--amber)}
+/* Settings: the controls, drawn. */
+/* The settings dialog is wide enough for a keyboard; its two tabs show the keyboard with the mouse, or the controller. */
+#settings{width:920px}
+.control-tabs{display:flex;gap:4px;border-bottom:1px solid #d3d8ba40;margin-bottom:12px}
+.control-tabs button{padding:10px 16px;border:1px solid transparent;border-bottom:0;color:#a4b195;background:none;margin-bottom:-1px}
+.control-tabs button:hover{color:var(--paper)}.control-tabs button[aria-selected="true"]{color:var(--amber);background:#1b221b;border-color:#d3d8ba40}
+.controls-panel[hidden]{display:none}.controls-hint{font:6px var(--mono);letter-spacing:.7px;color:#8c9a7f;margin:0 0 10px}#keys-art,#pad-art{margin-bottom:12px}
+.controls-panel .bindings{grid-template-columns:repeat(4,1fr)}.bindings button.hot{outline:1px solid var(--paper);outline-offset:1px}
+/* The keyboard: five rows on a 64-column grid (a key is four columns), bound keys in amber with what they do. */
+.kb{display:grid;grid-template-columns:minmax(0,1fr) 124px;gap:16px;align-items:center}.kb-row{display:grid;grid-template-columns:repeat(64,minmax(0,1fr))}
+.key{min-width:0;height:40px;margin:2px;padding:4px 5px 3px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;font-style:normal;background:#232a22;border:1px solid #d3d8ba30;border-bottom-width:3px;border-radius:5px}
+.key.gap{visibility:hidden}.key b{font:500 7px var(--mono);letter-spacing:.3px;color:#7f8a74;white-space:nowrap}.key span{font:600 10px/1 var(--display);letter-spacing:.3px;white-space:nowrap}
+.key.bound{background:var(--amber);border-color:#f3cf9c #c8935a #9c6f3e;cursor:pointer}.key.bound b{color:#5a4324}.key.bound span{color:#1b221b}
+.key.fixed{background:#3a4338;border-color:#d3d8ba55}.key.fixed span{color:#c9d3bb}
+.picking .key:not(.fixed):not(.gap){cursor:pointer}.picking .key:not(.fixed):not(.gap):hover,.key.hot{outline:2px solid var(--paper);outline-offset:-1px}
+.key.listening{background:var(--paper);border-color:#fff;animation:key-wait .8s ease-in-out infinite alternate}.key.listening b,.key.listening span{color:#1b221b}@keyframes key-wait{to{background:#b9c1ad}}
+.kb-extra{font:7px/1.7 var(--mono);letter-spacing:.5px;color:#a4b195;margin:8px 0 0}.kb-extra b{color:var(--amber);font-weight:400}
+.kb-mouse svg{display:block;width:74px;margin:0 auto 8px}.kb-mouse .m-body{fill:#232a22;stroke:#d3d8ba55;stroke-width:2}.kb-mouse .m-left,.kb-mouse .m-right{fill:var(--amber)}.kb-mouse .m-right{opacity:.6}.kb-mouse .m-line{fill:none;stroke:#1b221b;stroke-width:2}
+.kb-mouse .m-wheel{fill:#1b221b;stroke:var(--paper);stroke-width:1.5}.kb-mouse text{font:600 13px var(--mono);fill:#1b221b;text-anchor:middle}
+.kb-mouse ul{list-style:none;margin:0;padding:0;font:600 10px/1.2 var(--display);letter-spacing:.4px;color:var(--paper)}.kb-mouse li{display:flex;gap:6px;align-items:baseline;padding:3px 0;border-bottom:1px solid var(--line)}.kb-mouse li b{font:500 7px var(--mono);color:var(--amber);width:36px;flex:none}
+/* The controller: one drawing with a call-out for every button. Text scales with the drawing (cqw = 1% of its width). */
+.pad-diagram{position:relative;aspect-ratio:900/430;container-type:inline-size}.pad-diagram svg{position:absolute;inset:0;width:100%;height:100%}
+.call{position:absolute;display:flex;align-items:center;justify-content:space-between;gap:1cqw;padding:0 1.1cqw;overflow:hidden;white-space:nowrap;font-style:normal;background:#232a22;border:1px solid #d3d8ba30}
+.call b{flex:none;font:500 9px var(--mono);font-size:1.3cqw;letter-spacing:.05cqw;color:#a4b195}.call span{min-width:0;overflow:hidden;text-overflow:ellipsis;font:600 12px/1 var(--display);font-size:1.62cqw;letter-spacing:.06cqw;color:var(--paper)}
+.call-l{flex-direction:row-reverse}.call-t{flex-direction:column;justify-content:center;gap:.3cqw}
+.call.bound{border-color:#dfad7066;cursor:pointer}.call.bound b{color:var(--amber)}.call.free span{color:#6f7a66}.call.fixed{background:#3a4338}
+.picking .call:not(.fixed){cursor:pointer}.picking .call:not(.fixed):hover,.call.hot{outline:2px solid var(--paper);outline-offset:-1px}
+.call.listening{background:var(--paper);border-color:#fff;animation:key-wait .8s ease-in-out infinite alternate}.call.listening b,.call.listening span{color:#1b221b}
+.lead polyline{fill:none;stroke:#d3d8ba45;stroke-width:1.5}.lead circle{fill:#d3d8ba88}.lead.bound polyline{stroke:#dfad7099}.lead.bound circle{fill:var(--amber)}.lead.hot polyline,.lead.listening polyline{stroke:var(--paper);stroke-width:2.5}.lead.hot circle,.lead.listening circle{fill:var(--paper)}
+/* Xbox: a dark shell. PlayStation: a pale shell round a dark middle, with the lit edges of the touch pad. */
+.pad-body *{stroke-linejoin:round;stroke-linecap:round}.p-shell{fill:#2b332b;stroke:#aab39a;stroke-width:2}.p-trig{fill:#222922;stroke:#8f987f;stroke-width:2}.p-bump{fill:#343d33;stroke:#8f987f;stroke-width:2}
+.p-well{fill:#171c17;stroke:#8f987f55;stroke-width:1.5}.p-stick{fill:#3a4338;stroke:#aab39a;stroke-width:1.5}.p-cap{fill:#2b332b;stroke:#8f987f;stroke-width:1}.p-btn{fill:#1d231d;stroke:#aab39a;stroke-width:1.5}
+.p-letter{font:700 12px var(--mono);text-anchor:middle}.p-mark{fill:none;stroke:#c9d3bb;stroke-width:1}.p-guide{fill:#1d231d;stroke:#e7e8de;stroke-width:2}.p-guide-in{fill:none;stroke:#e7e8de88;stroke-width:1.5}.p-sym{fill:none;stroke-width:1.8}
+.pad-ps .p-shell{fill:#b7bdab;stroke:#eceee2}.pad-ps .p-trig{fill:#8d9483;stroke:#d5d9c9}.pad-ps .p-bump{fill:#a1a896;stroke:#e1e4d6}.pad-ps .p-inner{fill:#1d231d;stroke:#0f130f;stroke-width:1.5}
+.pad-ps .p-touch{fill:#c7ccbc;stroke:#eceee2;stroke-width:1.5}.pad-ps .p-light{fill:none;stroke:#8fd6ea;stroke-width:2.5}.pad-ps .p-pill{fill:#c7ccbc;stroke:#6f7767;stroke-width:1}.pad-ps .p-btn{fill:#d3d7c8;stroke:#7b8372}
+.pad-ps .p-inner~.p-btn{fill:#d3d7c8}.pad-ps .p-well{fill:#0f130f}.pad-ps .p-stick{fill:#2b332b;stroke:#8f987f}.pad-ps .p-cap{fill:#1d231d}
+@media(max-width:900px){.kb{grid-template-columns:1fr}.kb-mouse{display:flex;gap:14px;align-items:center}.kb-mouse svg{margin:0}.key{height:30px;margin:1px;padding:2px}.key b{font-size:5px}.key span{font-size:7px}.controls-panel .bindings{grid-template-columns:repeat(2,1fr)}}
+/* End of the drawn controls. */
