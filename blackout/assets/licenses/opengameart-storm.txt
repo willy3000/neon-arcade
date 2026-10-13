@@ -1,0 +1,17 @@
+Storm, helicopter and drone recordings used by the opening (blackout/intro.js)
+
+All four were published on OpenGameArt.org by their authors under Creative Commons Zero (CC0 1.0 Universal),
+http://creativecommons.org/publicdomain/zero/1.0/ - no rights reserved, credit not required.
+Downloaded, and the licence read on each page, on 14 October 2026.
+
+intro-chopper.ogg   from "Helicopter Sounds" by aquinn
+                    https://opengameart.org/content/helicopter-sounds (helicopter.mp3)
+intro-rain.ogg      from "Rain (loopable)" by Ylmir
+                    https://opengameart.org/content/rain-loopable (Rain OGG.zip, 2.ogg)
+intro-thunder.ogg   from "100 CC0 SFX #2" by rubberduck
+                    https://opengameart.org/content/100-cc0-sfx-2 (sfx_100_v2.zip, sfx100v2_thunder_01.ogg)
+intro-drone.ogg     from "Dark Cavern Ambient" by Paul Wortmann
+                    https://opengameart.org/content/dark-cavern-ambient (dark_cavern_ambient_002.ogg)
+
+Each was cut to a few seconds and re-encoded (Ogg Vorbis); the helicopter, rain and drone cuts were cross-faded
+end to start so that they loop.

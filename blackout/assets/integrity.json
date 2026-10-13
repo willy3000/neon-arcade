@@ -86,6 +86,26 @@
       "sha256": "33a4effe94c5ea62ee205d466b15f1c946339bb3f53916c0483f238f0ba8a1ef"
     },
     {
+      "file": "audio/intro-chopper.ogg",
+      "bytes": 28677,
+      "sha256": "2deb8697e3bd0956ceaa2f922ee7095366066197863fa46a6b37f57c55b34f71"
+    },
+    {
+      "file": "audio/intro-drone.ogg",
+      "bytes": 140851,
+      "sha256": "a2e14217fa73c210c5cfbaa1d9d0c5ef5af91c67429343a2f750703b5021c23a"
+    },
+    {
+      "file": "audio/intro-rain.ogg",
+      "bytes": 109967,
+      "sha256": "ddb1a8635317ff990888e016fc01b37a6230f57a6c2cf2873075cb2291f4e56b"
+    },
+    {
+      "file": "audio/intro-thunder.ogg",
+      "bytes": 45521,
+      "sha256": "cbbe4475ebca84c129c0d6115c58a578f64ecdbc7fb7f54c925e15db4e29e154"
+    },
+    {
       "file": "audio/laser-large.ogg",
       "bytes": 25566,
       "sha256": "a56d95794cd732d6c2d66ce488c14cf557fe526c282897c9a77675c2bd9b77e6"
@@ -796,6 +816,11 @@
       "sha256": "7cc66558f255d3e4ed208395468943d8ed95f47ead32ad721babbba25f050fdc"
     },
     {
+      "file": "licenses/characters-CC-BY-3.0.txt",
+      "bytes": 757,
+      "sha256": "66de915d134fbe8d5eda300383dfd06b7f7e86af386ffc3110a4db61984a44c9"
+    },
+    {
       "file": "licenses/fonts-OFL.txt",
       "bytes": 4864,
       "sha256": "b2d761fc026cd730d9bd675c00a50f4d3da434ed4e08c3907caf2968f580f84e"
@@ -814,6 +839,21 @@
       "file": "licenses/kenney-scifi.txt",
       "bytes": 571,
       "sha256": "a9767b25c3533f69d03af136480efad08efba19a9f0d89616992b34c79fd6186"
+    },
+    {
+      "file": "licenses/music-pixabay.txt",
+      "bytes": 968,
+      "sha256": "3dddcb41f12a2228a5a0f95933cd08a33e9a314632526410923f6f541c2533a1"
+    },
+    {
+      "file": "licenses/opengameart-sfx.txt",
+      "bytes": 756,
+      "sha256": "ed58f322f1f779973bcc5f728696a0b2ea714a678f684d79b98ba3523c054a56"
+    },
+    {
+      "file": "licenses/opengameart-storm.txt",
+      "bytes": 1107,
+      "sha256": "1a1711bb52093806de60c024e978abab411788cf578a90f973d560c51f1b373a"
     },
     {
       "file": "menu/campaign-convoy.jpg",

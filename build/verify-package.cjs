@@ -109,7 +109,7 @@ const pass = (what) => { passed++; console.log('PASS', what); };
   pass(`exe is "${strings.ProductName}" ${strings.ProductVersion} by ${strings.CompanyName}, with the checksum of this app.asar embedded`);
 
   // ---- the folder around it ----
-  for (const f of ['THIRD-PARTY-NOTICES.txt', 'licenses/fonts-OFL.txt', 'licenses/phaser-LICENSE.md', 'LICENSE.electron.txt', 'LICENSES.chromium.html']) assert(fs.existsSync(path.join(appDir, f)), `${f} is missing from the game folder`);
+  for (const f of ['THIRD-PARTY-NOTICES.txt', 'licenses/fonts-OFL.txt', 'licenses/phaser-LICENSE.md', 'licenses/characters-CC-BY-3.0.txt', 'licenses/music-pixabay.txt', 'licenses/opengameart-sfx.txt', 'licenses/opengameart-storm.txt', 'licenses/kenney-props.txt', 'licenses/kenney-impact.txt', 'licenses/kenney-scifi.txt', 'LICENSE.electron.txt', 'LICENSES.chromium.html']) assert(fs.existsSync(path.join(appDir, f)), `${f} is missing from the game folder`);
   const locales = fs.readdirSync(path.join(appDir, 'locales'));
   assert.deepEqual(locales, ['en-US.pak'], 'only the English Chromium locale should ship');
   const junk = walk(appDir).filter((f) => /\.(pdb|map|log|blockmap)$/i.test(f) || /(^|\\)(builder-debug\.yml|\.DS_Store)$/i.test(f));

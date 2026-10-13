@@ -72,7 +72,7 @@ under *Store Page → Graphical Assets* before making them.
 - [ ] At least five screenshots of real play, at 1920×1080 or larger. The captures in `blackout/qa/` are 1366×768
       test images — take new ones. Show what a buyer gets: a campaign operation, HOLDOUT, the armory, the co-op
       lobby. Do not use the menu's painted cover as a "screenshot".
-- [ ] A trailer of real play. If it uses the menu music, clear that track first (licence register, item 3).
+- [ ] A trailer of real play. The menu music may be used in it (Pixabay Content License, confirmed 14 October 2026); check first that the track is not registered with a content-matching service (licence register, item 3).
 
 Capsule art must not carry review quotes, award laurels or discount text, and must show the game's actual logo.
 
@@ -105,7 +105,7 @@ These are your declarations to Valve. What follows is what the code and assets s
 - **Gambling, real-money purchases:** none. "Credits" are earned in play only; the game has no shop that takes money.
 - **Real-world weapons:** real firearm designations are used as item names (licence register, item 4).
 - **AI-generated content — this needs a careful, truthful answer.**
-  - 51 of the 56 commander voice lines were generated with a voice-cloning model (Chatterbox), from a recording whose
+  - 104 of the 109 commander voice lines (counted 14 October 2026) were generated with a voice-cloning model (Chatterbox), from a recording whose
     origin is not documented. That is pre-generated AI content that players hear. Reporting on Valve's January 2026
     wording says this is exactly what must be disclosed
     ([summary](https://legalmoveslawfirm.com/steam-ai-policy/)); read the current wording of the survey itself at

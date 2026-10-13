@@ -304,7 +304,12 @@ async function createWindow() {
   const credits = !app.isPackaged && process.argv.map((a) => /^--credits=(\d+)$/.exec(a)).find(Boolean);
   // Development only as well: '--qa' gives the end-to-end tests a handle on the running simulation (window.BPQA).
   const qa = !app.isPackaged && process.argv.includes('--qa');
-  const query = [credits ? 'credits=' + credits[1] : '', qa ? 'qa' : ''].filter(Boolean).join('&');
+  // The opening (blackout/intro.js) is left out for anything driving the window through a debugging port, which is
+  // how the end-to-end and packaged tests do it, and with --no-intro.
+  // '--intro' plays it all the same (blackout/qa/intro-check.cjs measures it that way).
+  const intro = process.argv.includes('--intro');
+  const nointro = !intro && process.argv.some((a) => a === '--no-intro' || a.startsWith('--remote-debugging-port'));
+  const query = [credits ? 'credits=' + credits[1] : '', qa ? 'qa' : '', intro ? 'intro' : '', nointro ? 'nointro' : ''].filter(Boolean).join('&');
   mainWindow.loadURL(`${origin}/${ENTRY}${query ? '?' + query : ''}`).catch(() => { /* reported by did-fail-load */ });
 
   mainWindow.on('closed', () => { mainWindow = null; });

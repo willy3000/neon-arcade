@@ -72,11 +72,13 @@
  // The in-run HUD grows with the window in the same way, so it is as readable on a 1440p or 4K screen as on the
  // 1366x768 it is drawn for (--hud-scale); it never shrinks below its drawn size, which a smaller window keeps as it is.
  const FIT_MIN=.63;let hudScale=1;
- function fitScreens(){const raw=Math.min(innerWidth/1366,innerHeight/768),fit=raw>=FIT_MIN,k=fit?Math.min(2.6,raw):1,root=document.documentElement.style;root.setProperty('--ui-scale',k.toFixed(3));hudScale=Math.max(1,k);root.setProperty('--hud-scale',hudScale.toFixed(3));root.setProperty('--screen-w',(innerWidth/k).toFixed(1));root.setProperty('--screen-h',(innerHeight/k).toFixed(1));
+ function fitScreens(){const raw=Math.min(innerWidth/1366,innerHeight/768),fit=raw>=FIT_MIN,k=fit?Math.min(2.6,raw):1,root=document.documentElement.style;root.setProperty('--ui-scale',k.toFixed(3));hudScale=Math.max(1,k);root.setProperty('--hud-scale',hudScale.toFixed(3));scene?.renderer?.textScale(hudScale);root.setProperty('--screen-w',(innerWidth/k).toFixed(1));root.setProperty('--screen-h',(innerHeight/k).toFixed(1));
   document.body.classList.toggle('fit',fit);document.body.classList.toggle('tall',fit&&innerHeight/k>=850);}
  window.addEventListener('resize',fitScreens);fitScreens();
  // The menu score plays on every screen in SCREENS and hands over to the mission's own ambience once a run starts.
- function score(){scene?.audio?.music(SCREENS.includes(mode));}
+ // The menu score also plays over the end of a run (the debrief, or the screen after being killed): the mission's own
+ // ambience and drone have stopped by then.
+ function score(){scene?.audio?.music(SCREENS.includes(mode)||mode==='dead'||mode==='complete');}
  // Commander voice-over cues. The welcome is spoken once per launch, the first time the main menu can make sound: at
  // once in the desktop app, after the first click or key press in a browser. The rest are in launch(), beginGuestRun()
  // and onEvent(); audio.js decides whether a line may actually speak.
@@ -113,7 +115,7 @@
  // simulation - see menu-scene.js) only runs while the main menu is the screen in front and the window has focus.
  // While it runs, its gunfire and explosions are heard as a far-off battle under the score (audio.distant).
  // Reduced motion leaves the painting still.
- const menuScene=new BPMenuScene($('menu-scene'),{still:reduced,front:$('menu-troops'),onEvent:e=>{if(scene&&mode==='menu')scene.audio.distant(e);}});
+ const menuScene=new BPMenuScene($('menu-scene'),{still:reduced,front:$('menu-troops'),onEvent:e=>{if(scene&&mode==='menu'&&!window.BPIntro?.active)scene.audio.distant(e);}});
  function backdrop(){menuScene.lite(settings.quality==='low');menuScene.play(!!scene&&mode==='menu'&&!document.hidden&&document.hasFocus());}
  for(const type of ['focus','blur'])window.addEventListener(type,backdrop);document.addEventListener('visibilitychange',backdrop);
  // Menu navigation sounds: a soft tick whenever the pointer, keyboard or controller lands on a control, a confirm when a
@@ -136,7 +138,7 @@
  function medalRow(id){const got=save.missions[id]?.medals||[];return Meta.medalsFor().map(m=>`<i class="${got.includes(m.id)?'on':''}" title="${m.name}"></i>`).join('');}
  function renderOps(){const list=$('mission-list');list.replaceChildren();
   for(const m of MISSIONS){const st=save.missions[m.id],open=Meta.unlocked(save,m.id),b=document.createElement('button');b.type='button';b.className='mission-card'+(m.id===selected?' active':'')+(open?'':' locked')+(st?.done?' done':'');b.dataset.mission=m.id;
-   b.innerHTML=`<span class="mc-n">${String(m.n).padStart(2,'0')}</span><span class="mc-body"><b>${open?m.title:'CLASSIFIED'}</b><small>${open?m.act:'COMPLETE '+esc(MISSIONS[m.n-2]?.title||'')+' TO DECLASSIFY'}</small><span class="medals">${medalRow(m.id)}</span></span><span class="mc-tag">${save.run?.mission===m.id?'CHECKPOINT':st?.best?st.best.rating+' / '+DL[st.best.difficulty].label:open?'NEW':'🔒'}</span>`;
+   b.innerHTML=`<span class="mc-n">${String(m.n).padStart(2,'0')}</span><span class="mc-body"><b>${open?m.title:'CLASSIFIED'}</b><small>${open?m.act:'CLEAR '+esc(MISSIONS[m.n-2]?.title||'')+' FIRST'}</small><span class="medals">${medalRow(m.id)}</span></span><span class="mc-tag">${save.run?.mission===m.id?'CHECKPOINT':st?.best?st.best.rating+' / '+DL[st.best.difficulty].label:open?'NEW':'🔒'}</span>`;
    b.addEventListener('click',()=>{selected=m.id;renderOps();});list.append(b);}
   const m=missionMeta(selected),st=save.missions[m.id],open=Meta.unlocked(save,m.id);
   $('brief-act').textContent=m.act+' / CHAPTER '+m.n;$('brief-title').textContent=open?m.title:'CLASSIFIED';$('brief-sector').textContent=m.sector;$('brief-copy').textContent=open?m.brief:'Finish the previous operation to declassify this file.';
@@ -423,7 +425,7 @@
     b.addEventListener('click',()=>{if(settings.difficulty===d)return;settings.difficulty=lobby.difficulty=d;persist();feed('ENEMY PRESSURE SET TO '+DL[d].label.toUpperCase());lobbyChanged();dp.querySelector('.active')?.focus({preventScroll:true});});dp.append(b);}}
   const box=$('lobby-loadout'),lsig=JSON.stringify([mine.loadout,lead||tdm,save.upgrades.bandolier||0,save.preset,Meta.perkSlots(save)]);if(box.dataset.sig!==lsig){box.dataset.sig=lsig;loadoutSlots(box,lead||tdm?{}:{lethal:'HOST ONLY IN CO-OP',tactical:'HOST ONLY IN CO-OP',extras:'FIELD SUPPORT AND PERKS ARE THE HOST\'S ONLY IN CO-OP'});}
   // In team deathmatch every player brings a whole loadout, and "enemy pressure" is how good the AI operators are.
-  $('lobby-loadout-note').textContent=lead||tdm?'TWO GUNS / ONE LETHAL / ONE TACTICAL':'TWO GUNS';$('lobby-diff-label').textContent=tdm?'AI SKILL':'ENEMY PRESSURE';
+  $('lobby-loadout-note').textContent=lead||tdm?'2 GUNS · LETHAL · TACTICAL':'2 GUNS';$('lobby-diff-label').textContent=tdm?'AI SKILL':'ENEMY PRESSURE';
   const go=$('lobby-go'),label=go.querySelector('span'),waiting=l.peers.find(q=>!q.ready);go.hidden=!lead&&!linked;go.classList.toggle('counting',counting);
   if(solo){go.disabled=tdm&&!teamsOk(l);label.textContent=!tdm?'DEPLOY':teamsOk(l)?'START MATCH':'EACH TEAM NEEDS SOMEONE';}
   else if(host&&tdm){go.disabled=!!waiting||!teamsOk(l);label.textContent=counting?'STARTING IN '+left+' · CANCEL':!teamsOk(l)?'EACH TEAM NEEDS SOMEONE':waiting?'WAITING FOR '+waiting.name:'START MATCH';}
@@ -635,7 +637,7 @@
  // Both teams' tables on a team deathmatch debrief, your own first: every operator's kills and deaths, best first.
  function scoreboard(s){const T=s.tdm,self=myId(),my=me(s).team,rows=t=>s.roster.filter(o=>o.team===t).map(o=>({o,b:T.board[o.id]||{k:0,d:0}})).sort((a,b)=>b.b.k-a.b.k||a.b.d-b.b.d)
    .map(({o,b})=>`<div class="${o.id===self?'self':''}"><span><b>${esc(scene.names?.[o.id]||'OPERATOR')}</b>${o.bot?'<em>AI</em>':''}</span><span><b>${b.k}</b></span><span><b>${b.d}</b></span></div>`).join('');
-  $('scoreboard').hidden=false;$('scoreboard').className='scoreboard teams2';$('scoreboard').innerHTML=[my,1-my].map(t=>`<div class="head ${t===my?'us':'them'}"><span>TEAM ${t?'DELTA':'ALPHA'} · ${T.score[t]}</span><span>KILLS</span><span>DEATHS</span></div>`+rows(t)).join('');}
+  $('scoreboard').hidden=false;$('scoreboard').className='scoreboard teams2';$('scoreboard').innerHTML=[my,1-my].map(t=>`<div class="head ${t===my?'us':'them'}"><span>TEAM ${t?'DELTA':'ALPHA'} · ${T.score[t]}</span><span title="Kills">K</span><span title="Deaths">D</span></div>`+rows(t)).join('');}
  // The kill feed: who got whom, and with what, for the last few kills. Your own name is amber, your team's blue, theirs red.
  let feedRows=[];const FEED_SOURCE={melee:'KNIFE',tknife:'KNIFE',grenade:'FRAG',cluster:'CLUSTER',c4:'C4',mine:'MINE',seeker:'SEEKER',incendiary:'FIRE',sentry:'SENTRY',k9:'K9',strike:'AIRSTRIKE',gunship:'GUNSHIP',blackout:'BLACKOUT'};
  function killFeed(e){const s=scene.sim,n=scene.names||{},my=me(s).team,cls=id=>id===myId()?'me':s.roster.find(o=>o.id===id)?.team===my?'us':'them';
@@ -716,7 +718,7 @@
   // Squad play: one operator down is a setback, not the end. In holdout everyone is told who fell and what happens
   // next (tags, then the revive station); in team deathmatch only the operator it happened to hears about it.
   case 'down':case 'tags':case 'revive':case 'respawn':{const self=myId(),mine=e.who===self,other=BPCore.ops(s).find(o=>o.id!==self&&!o.vanished),mate=scene.names?.[mine?e.by||other?.id:e.who]||'YOUR SQUADMATE';
-   if(e.tdm||e.type==='respawn'){if(mine&&e.type==='down')banner('OPERATOR DOWN',e.by&&e.by!==self?'KILLED BY '+(scene.names?.[e.by]||'THE ENEMY'):'YOU ARE DOWN','REDEPLOYING IN '+BPCore.TDM.respawn+' SECONDS',2.4,'danger');else if(mine)toast('BACK IN THE FIGHT',1.4);break;}
+   if(e.tdm||e.type==='respawn'){if(mine&&e.type==='down')banner('OPERATOR DOWN',e.by&&e.by!==self?'KILLED BY '+(scene.names?.[e.by]||'THE ENEMY'):'YOU ARE DOWN','REDEPLOYING IN '+BPCore.TDM.respawn+' SECONDS',2.4,'danger');break;}
    if(e.type==='down')banner(mine?'OPERATOR DOWN':'SQUADMATE DOWN',mine?'YOU ARE DOWN':mate+' IS DOWN',mine?mate+' HAS TO CARRY YOUR DOG TAGS TO THE REVIVE STATION':'GRAB THEIR DOG TAGS / TAKE THEM TO THE REVIVE STATION',4.5,'danger');
    else if(e.type==='tags')toast(mine?mate+' HAS YOUR TAGS / HANG ON':'DOG TAGS RECOVERED / HOLD '+keyLabel('interact')+' AT THE REVIVE STATION',3);
    else{banner('REVIVED',mine?'BACK IN THE FIGHT':mate+' IS BACK IN THE FIGHT','',2.8,'gold');scene.audio.say('vo-on-your-feet',{rest:10});}
@@ -760,14 +762,14 @@
  const offerName=o=>o.item==='weapon'?W[o.weapon].short+' FOR THIS RUN':{ammo:'FULL AMMUNITION',armor:'+50 ARMOUR',health:'FULL HEALTH',stim:'ONE STIM',gadgets:'GADGET REFILL'}[o.item]||'SUPPLIES';
  // Drawn over the battlefield every frame: an arrow at the screen edge for each hostile winding up an attack from
  // outside the view, and HUD panels that turn see-through while a hostile or the aim point is underneath them.
- const threatMarks=[],hudPanels={at:0,list:[]};
+ const threatMarks=[],hudPanels={at:0,list:[]};let hintFor='',hintUntil=0;
  function overlay(){const s=scene.sim,cam=scene.cameras.main,v=cam.worldView,z=cam.zoom,cw=cam.width,ch=cam.height,own=watch(s),box=$('threats'),on=(x,y)=>({x:(x-v.x)*z,y:(y-v.y)*z}),c=on(own.x,own.y);let n=0;
-  for(const e of s.enemies){if(n>=6)break;if(e.dead||!e.active||!(e.attack>0)||e.gone>0)continue;const q=on(e.x,e.y);if(q.x>=0&&q.x<=cw&&q.y>=62*hudScale&&q.y<=ch)continue;
+  for(const e of s.enemies){if(n>=6)break;if(e.dead||!e.active||!(e.attack>0)||e.gone>0)continue;const q=on(e.x,e.y);if(q.x>=0&&q.x<=cw&&q.y>=0&&q.y<=ch)continue;
    let el=threatMarks[n];if(!el){el=threatMarks[n]=document.createElement('i');box.append(el);}n++;
-   el.hidden=false;el.style.transform=`translate(${Math.max(34,Math.min(cw-34,q.x)).toFixed(0)}px,${Math.max(96*hudScale,Math.min(ch-34,q.y)).toFixed(0)}px) rotate(${Math.atan2(q.y-c.y,q.x-c.x).toFixed(2)}rad)`;el.style.opacity=(.45+.55*Math.min(1,(e.attackAge||0)/e.attack)).toFixed(2);}
+   el.hidden=false;el.style.transform=`translate(${Math.max(34,Math.min(cw-34,q.x)).toFixed(0)}px,${Math.max(34,Math.min(ch-34,q.y)).toFixed(0)}px) rotate(${Math.atan2(q.y-c.y,q.x-c.x).toFixed(2)}rad)`;el.style.opacity=(.45+.55*Math.min(1,(e.attackAge||0)/e.attack)).toFixed(2);}
   for(let i=n;i<threatMarks.length;i++)threatMarks[i].hidden=true;
   const now=performance.now();if(now-hudPanels.at>500){hudPanels.at=now;hudPanels.list=[...document.querySelectorAll('#hud .hud-panel')].map(el=>({el,r:el.getBoundingClientRect()}));}
-  const ptr=padActive?padPointer:scene.input.activePointer,pts=[{x:ptr.x,y:ptr.y}];for(const e of s.enemies)if(!e.dead&&e.active&&!(e.gone>0))pts.push(on(e.x,e.y));
+  const ptr=padActive?padPointer:scene.input.activePointer,pts=[{x:ptr.x,y:ptr.y},c];for(const e of s.enemies)if(!e.dead&&e.active&&!(e.gone>0))pts.push(on(e.x,e.y));
   for(const {el,r} of hudPanels.list)el.classList.toggle('seethrough',pts.some(q=>q.x>r.left-12&&q.x<r.right+12&&q.y>r.top-12&&q.y<r.bottom+12));}
  // Bootcamp: an optional walk through the basics - movement, shooting and gadgets - offered (never forced) from the
  // operations board the first time a save has no mission done and hasn't finished it yet (see renderOps). It launches
@@ -816,7 +818,7 @@
   const prog=st.kind==='destroy'||st.kind==='survive'||st.kind==='endless';$('objective-progress').hidden=!prog;if(prog)$('objective-fill').style.width=(st.kind==='endless'?(s.director.phase==='rest'?100:0):s.progress*100)+'%';if(st.kind==='survive')$('objective-hint').textContent=`${Math.max(0,Math.ceil(st.time-s.director.clock))}s remaining · ${st.hint}`;if(st.kind==='endless'){const d=s.director,resting=d.phase==='rest'&&d.wave>0;$('objective').textContent=resting?`Wave ${d.wave} cleared · next wave in ${Math.max(1,Math.ceil(d.timer||0))}s`:d.wave?`Wave ${d.wave}${d.modifier?' · '+BPCore.MODIFIERS[d.modifier]:''} · ${s.enemies.filter(e=>!e.dead).length+s.spawnWarnings.length+(d.queue?.length||0)} hostiles`:'Get ready';
    if(resting)$('objective-hint').textContent='Supply drop: '+keyLabel('interact')+' at a crate to spend this run\'s credits.';}
   // Team deathmatch: the score rides over the battlefield, and the objective line says how the match stands.
-  const T=s.tdm;$('score').hidden=!T;$('killfeed').hidden=!T;if(T){const secs=Math.max(0,Math.ceil(T.left??T.time)),t=p.team?1:0,us=T.score[t],them=T.score[1-t],lead=us-them;$('score-us').textContent=us;$('score-them').textContent=them;$('score-us-name').textContent=t?'DELTA':'ALPHA';$('score-them-name').textContent=t?'ALPHA':'DELTA';
+  const T=s.tdm;$('score').hidden=!T;$('killfeed').hidden=!T;$('hud').classList.toggle('versus',!!T);$('hud').classList.toggle('learning',!!s.training);if(T){const secs=Math.max(0,Math.ceil(T.left??T.time)),t=p.team?1:0,us=T.score[t],them=T.score[1-t],lead=us-them;$('score-us').textContent=us;$('score-them').textContent=them;$('score-us-name').textContent=t?'DELTA':'ALPHA';$('score-them-name').textContent=t?'ALPHA':'DELTA';
    feedRows=feedRows.filter(r=>r.until>now);setHtml($('killfeed'),feedRows.map(r=>'<p>'+r.html+'</p>').join(''));$('score-time').textContent=formatTime(secs);$('score-limit').textContent='FIRST TO '+T.limit;$('score').classList.toggle('late',secs<=30);
    tdmVoice(T,us,them);
    $('objective').textContent=p.dead?'You are down':!lead?'Level at '+us:lead>0?'Your team leads by '+lead:'Your team trails by '+(-lead);$('objective-hint').textContent=p.dead?'Redeploying in '+Math.max(1,Math.ceil(p.respawn||0))+'s.':'First team to '+T.limit+' kills wins. Everyone redeploys after going down.';}
@@ -827,6 +829,9 @@
    else{$('objective').textContent=held?'Carry the tags to the revive station':'Recover '+mate+"'s dog tags";$('objective-hint').textContent=held?'Follow the green marker, then hold '+keyLabel('interact')+' on the pad for '+BPCore.REVIVE_TIME+' seconds.':'Follow the amber marker to where they fell.';}$('objective-progress').hidden=true;}
   // Commander call-outs for your own state, each on the moment it begins: health dropping into the red, and a gun running completely dry.
   const hurtNow=!p.dead&&p.health>0&&p.health<30,dryNow=!p.dead&&p.ammo[key]===0&&p.reserve[key]===0;if(hurtNow&&!voiceHurt)scene.audio.say('vo-low-health',{rest:45});if(dryNow&&!voiceDry)scene.audio.say('vo-dry',{rest:30});voiceHurt=hurtNow;voiceDry=dryNow;
+  // The hint under the objective is shown for a few seconds whenever the objective changes, and for as long as it is
+  // counting something down or the operator is down; otherwise the objective stands alone.
+  {const line=$('objective').textContent;if(line!==hintFor){hintFor=line;hintUntil=now+7000;}$('hud').querySelector('.mission-hud').classList.toggle('quiet',now>hintUntil&&!drill&&!p.dead&&!fallen&&st.kind!=='survive'&&!(st.kind==='endless'&&s.director.phase==='rest'));}
   $('health-number').textContent=Math.ceil(p.health);$('health-bar').style.width=p.health+'%';$('health-bar').style.background=p.health<30?'#d18b70':'#d3ddbb';$('armor-bar').style.width=Math.min(100,p.armor/p.maxArmor*100)+'%';$('stamina-bar').style.width=p.stamina+'%';$('stamina-bar').parentElement.classList.toggle('winded',!!p.winded);$('armor').textContent=Math.ceil(p.armor);
   // Field support: its meter under the vitals, and the key that calls it in once it is full. Only the lobby leader carries one.
   const mind=mineOf(s),q=mind.support,sr=$('support-row');sr.hidden=!q||!T&&p!==s.player;if(!sr.hidden){$('support-name').textContent=SUP[q.key].short;$('support-bar').style.width=(q.ready?100:q.charge/q.cost*100).toFixed(1)+'%';sr.classList.toggle('ready',q.ready);$('support-key').textContent=q.ready?keyLabel('support'):Math.floor(q.charge/q.cost*100)+'%';}
@@ -845,7 +850,7 @@
  // pad of unknown make, and when there is none). The list is how a binding is changed with a keyboard or a controller;
  // the picture shows where everything is, and with a mouse a key or button on it can be clicked instead. KEY_TAGS are
  // the short names that fit on a key cap.
- const KEY_TAGS={up:'UP',down:'DOWN',left:'LEFT',right:'RIGHT',sprint:'SPRINT',roll:'ROLL',slide:'SLIDE',interact:'USE',reload:'RELOAD',swap:'SWAP',gadget:'STIM',melee:'MELEE',grenade:'LETHAL',tactical:'TACTICAL',support:'SUPPORT',slot1:'PRIMARY',slot2:'SECOND'};
+ const KEY_TAGS={up:'UP',down:'DOWN',left:'LEFT',right:'RIGHT',sprint:'SPRINT',roll:'ROLL',slide:'SLIDE',interact:'USE',reload:'RELOAD',swap:'SWAP',gadget:'STIM',melee:'MELEE',grenade:'LETHAL',tactical:'TAC',support:'SUPPORT',slot1:'PRIMARY',slot2:'SECOND'};
  const padArt=()=>pad.brand==='xbox'?'xbox':'ps',actionOn=(table,value)=>Object.keys(table).find(k=>table[k]===value);
  let controlsTab='keys';
  function bindings(){const list=$('bindings'),padList=$('pad-bindings'),b=settings.bindings,pb=settings.padBindings,art=padArt(),glyph=BPGamepad.glyphs[art],held=document.activeElement?.dataset||{},keep=held.action?'#bindings [data-action="'+held.action+'"]':held.padAction?'#pad-bindings [data-pad-action="'+held.padAction+'"]':null;
@@ -970,7 +975,7 @@
   if(state.active&&!padActive)setPadActive(true);
   if($('settings').open){padSettings(state);return;}
   if(state.tap.has('start')&&mode==='playing'){pause();return;}if(state.tap.has('start')&&mode==='paused'){resume();return;}
-  if(mode!=='playing'){padMenu(state);return;}
+  if(mode!=='playing'){if(!window.BPIntro?.active)padMenu(state);return;}
   padState=state;const pb=settings.padBindings,p=me(scene.sim),aimHeld=state.down.has(pb.aim),stick=state.aim.len?Math.atan2(state.aim.y,state.aim.x):null;for(const [action,name] of Object.entries(pb))if(state.tap.has(name))padTaps.add(action);
   // Aim assist: pressing steady aim locks onto the best target the gun is roughly facing; pulling the stick away switches target or releases.
   if(!aimHeld||!settings.aimAssist)padLock=null;else if(state.tap.has(pb.aim))padLock=assistTarget(padAngle);
@@ -1000,8 +1005,10 @@
   toast(wasGuest?'THE HOST SENT DATA THIS COPY COULD NOT USE / RETURNED TO THE MAIN MENU':'SOMETHING WENT WRONG IN THAT RUN / RETURNED TO THE MAIN MENU',7);}
  class FieldScene extends Phaser.Scene {
   constructor(){super('field');}
-  preload(){this.load.on('progress',v=>{$('load-bar').style.width=Math.round(v*100)+'%';});this.load.on('loaderror',file=>{if(this.loadFailed)return;this.loadFailed=true;$('load-text').textContent=location.protocol==='file:'?'CANNOT RUN FROM A LOCAL FILE / RUN "NPM RUN SERVE" THEN OPEN HTTP://127.0.0.1:8127/BLACKOUT-PROTOCOL.HTML':'ASSET LOAD FAILED: '+file.key+' / REFRESH TO RETRY';});BPRender.preload(this);BPAudio.preload(this);}
-  create(){scene=this;this.settings=settings;this.renderer=new BPRender(this);this.audio=new BPAudio(this,settings);this.accumulator=0;this.cameras.main.setZoom(1.03);this.game.canvas.tabIndex=0;this.game.canvas.setAttribute('aria-label','Top-down battlefield. Use WASD to move, mouse to aim, and left click to fire, or a controller: left stick to move, right stick to aim, right trigger to fire, Y to swap weapons.');this.input.mouse.disableContextMenu();this.input.on('pointerdown',pointer=>{if(mode!=='playing')return;this.audio.unlock();if(pointer.button===0)mouseFire=true;if(pointer.button===2)mouseAim=true;});this.input.on('pointerup',pointer=>{if(pointer.button===0)mouseFire=false;if(pointer.button===2)mouseAim=false;});this.game.canvas.addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('pointerup',e=>{if(e.button===0)mouseFire=false;if(e.button===2)mouseAim=false;});if(!this.loadFailed)$('loading').hidden=true;updateContinue();document.body.dataset.phase='menu';this.audio.unlock();score();backdrop();greet();
+  preload(){this.load.on('progress',v=>{$('load-bar').style.width=Math.round(v*100)+'%';window.BPIntro?.progress(v);});this.load.on('loaderror',file=>{if(this.loadFailed)return;this.loadFailed=true;window.BPIntro?.abort();$('load-text').textContent=location.protocol==='file:'?'CANNOT RUN FROM A LOCAL FILE / RUN "NPM RUN SERVE" THEN OPEN HTTP://127.0.0.1:8127/BLACKOUT-PROTOCOL.HTML':'ASSET LOAD FAILED: '+file.key+' / REFRESH TO RETRY';});BPRender.preload(this);BPAudio.preload(this);}
+  create(){scene=this;this.settings=settings;this.renderer=new BPRender(this);this.renderer.textScale(hudScale);this.audio=new BPAudio(this,settings);this.accumulator=0;this.cameras.main.setZoom(1.03);this.game.canvas.tabIndex=0;this.game.canvas.setAttribute('aria-label','Top-down battlefield. Use WASD to move, mouse to aim, and left click to fire, or a controller: left stick to move, right stick to aim, right trigger to fire, Y to swap weapons.');this.input.mouse.disableContextMenu();this.input.on('pointerdown',pointer=>{if(mode!=='playing')return;this.audio.unlock();if(pointer.button===0)mouseFire=true;if(pointer.button===2)mouseAim=true;});this.input.on('pointerup',pointer=>{if(pointer.button===0)mouseFire=false;if(pointer.button===2)mouseAim=false;});this.game.canvas.addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('pointerup',e=>{if(e.button===0)mouseFire=false;if(e.button===2)mouseAim=false;});if(!this.loadFailed)$('loading').hidden=true;updateContinue();document.body.dataset.phase='menu';
+   // Behind the opening nothing is drawn: the game sleeps and the menu's backdrop stays still until the hand-over.
+   const covered=!!window.BPIntro?.active;if(covered)this.game.loop.sleep();else backdrop();window.BPIntro?.loaded();(window.BPIntro||{then:fn=>fn()}).then(()=>{if(covered){this.game.loop.wake();backdrop();}this.audio.unlock();score();greet();});
    const inspect=()=>({mode,camera:{scrollX:this.cameras.main.scrollX,scrollY:this.cameras.main.scrollY,zoom:this.cameras.main.zoom,width:this.cameras.main.width,height:this.cameras.main.height,originX:this.cameras.main.originX,originY:this.cameras.main.originY},world:JSON.parse(JSON.stringify({map:this.sim.map,walls:this.sim.walls,player:this.sim.player,guest:this.sim.guest,mates:this.sim.mates,tdm:this.sim.tdm,allies:this.sim.allies,support:this.sim.support,perks:this.sim.perks,recon:this.sim.recon,tags:this.sim.tags,station:this.sim.station,enemies:this.sim.enemies,stage:this.sim.stage,goal:this.sim.goal,time:this.sim.time,completed:this.sim.completed,dead:this.sim.dead,stats:this.sim.stats,hazards:this.sim.hazards,grenades:this.sim.grenades,pickups:this.sim.pickups,difficulty:this.sim.difficulty,spawnWarnings:this.sim.spawnWarnings,zones:this.sim.zones,director:this.sim.director,progress:this.sim.progress,mission:this.sim.mission,training:this.sim.training}))});
    if(new URLSearchParams(location.search).has('qa'))window.BPQA={sim:()=>this.sim,camera:()=>this.cameras.main,end:e=>end(e),settle:()=>Meta,save};
    const lobbyInfo=()=>lobby&&{mode:lobby.mode,fill:lobby.fill,seat:lobby.seat,players:lobby.role==='host'?lobby.peers.length+1:lobby.role==='guest'?lobby.squad.filter(q=>!q.bot).length+1:1,squad:lobby.mode==='tdm'?seatsView(lobby):lobby.role==='guest'?lobby.squad:lobbySquad(lobby),limit:lobby.limit,support:lobby.support,mySeat:lobby.role==='guest'?lobby.mySeat:lobby.seats?.indexOf('host'),link:lobby.link,code:lobby.code,ping:lobby.ping,role:lobby.role,phase:lobby.phase,map:lobby.map,difficulty:lobby.difficulty,ready:lobby.ready,peer:lobby.peer,counting:lobby.countdown>0,inRun:lobby.inRun};
@@ -1027,5 +1034,7 @@
  }
  function renderType(){const choice=new URLSearchParams(location.search).get('renderer');if(choice==='canvas')return Phaser.CANVAS;if(choice==='webgl')return Phaser.WEBGL;
   try{const testCanvas=document.createElement('canvas'),gl=testCanvas.getContext('webgl',{failIfMajorPerformanceCaveat:true});if(!gl)return Phaser.CANVAS;const ext=gl.getExtension('WEBGL_debug_renderer_info'),name=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'';const software=/swiftshader|llvmpipe|software/i.test(name);gl.getExtension('WEBGL_lose_context')?.loseContext();return software?Phaser.CANVAS:Phaser.AUTO;}catch{return Phaser.CANVAS;}}
- try{new Phaser.Game({type:renderType(),parent:'game',backgroundColor:'#252d24',scene:FieldScene,scale:{mode:Phaser.Scale.RESIZE,width:window.innerWidth,height:window.innerHeight},render:{antialias:true,pixelArt:false,roundPixels:false,powerPreference:'high-performance'},fps:{target:60,forceSetTimeOut:false},audio:{disableWebAudio:false},input:{keyboard:false}});}catch(err){$('load-text').textContent='COULD NOT INITIALIZE THE GAME. PLEASE REFRESH.';console.error(err);}
+ // The opening (intro.js) says when loading may begin, so that it never competes with the film's busiest shots.
+ const startGame=()=>{try{new Phaser.Game({type:renderType(),parent:'game',backgroundColor:'#252d24',scene:FieldScene,scale:{mode:Phaser.Scale.RESIZE,width:window.innerWidth,height:window.innerHeight},render:{antialias:true,pixelArt:false,roundPixels:false,powerPreference:'high-performance'},fps:{target:60,forceSetTimeOut:false},audio:{disableWebAudio:false},input:{keyboard:false}});}catch(err){window.BPIntro?.abort();$('load-text').textContent='COULD NOT INITIALIZE THE GAME. PLEASE REFRESH.';console.error(err);}};
+ (window.BPIntro||{boot:fn=>fn()}).boot(startGame);
 })();

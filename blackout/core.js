@@ -214,11 +214,30 @@
       event(s,'kill',{x:e.x,y:e.y,enemy:e.type,id:e.id,credits,combo:bot?0:s.combo,boss:!!t.boss,source,by,bot});drops(s,e,t);
       if(t.kamikaze&&!e.detonated)explode(s,e.x,e.y,70,30,false,source);}
   }
-  function drops(s,e,t){const p=s.player,D=diff(s),drop=(type,dx=0,dy=0,extra={})=>s.pickups.push({id:'drop'+s.tick+e.id+type,x:e.x+dx,y:e.y+dy,type,taken:false,...extra});
-    if(!s.training&&e.gun&&W[e.gun]&&!s.owned.includes(e.gun)&&!s.pickups.some(q=>!q.taken&&q.type==='weapon'&&q.weapon===e.gun)){drop('weapon',0,0,{weapon:e.gun,ttl:0});event(s,'gundrop',{weapon:e.gun,x:e.x,y:e.y});}
-    if(rand(s)<.55*D.drops||p.health<40&&(D.med||rand(s)<.35))drop(p.health<50?'health':'ammo',8,6);
-    if(t.drop&&rand(s)<.45)drop(t.drop,-14,-10);
-    if(t.boss&&!s.training){drop('cache',-20,18);drop('health',22,-14);}
+  // What a dead hostile leaves behind. Supplies are scarce on purpose: most kills leave nothing, so rounds and
+  // gadgets have to be spent with care.
+  //  - Ammunition is likelier the emptier the squad's guns are (DROPS.ammo: the chance with reserves gone, and with a
+  //    full standard reserve), so a careful shot keeps what he has and a wasteful one runs low before the field helps.
+  //  - Nothing is dropped while enough of the same kind already lies unclaimed (DROPS.field), and the second of a
+  //    kind is half as likely as the first.
+  //  - A gadget or armour plate is only dropped for an operator who can use it and is short of it.
+  //  - Whatever is dropped is gone after DROPS.life seconds, so a long run does not litter the field. A hostile's
+  //    own gun and a commander's cache and medkit are prizes, not supplies, and keep their own rules.
+  // The director's emergency ammunition (stepDirector) is still there for an operator who has run completely dry.
+  const DROPS={ammo:[.34,.05],health:.45,gadget:.3,field:{ammo:2,health:2,armor:1,lethal:1,tactical:1},life:25};
+  const loose=(s,type)=>s.pickups.reduce((n,q)=>n+(!q.taken&&q.until&&q.type===type?1:0),0);
+  // How full the emptiest gun of the emptiest operator is, against its standard reserve (0 to 1). AI operators do not count.
+  const stocked=s=>Math.min(1,...[s.player,...s.mates.filter(o=>!o.bot)].filter(o=>!o.dead&&o.slots).flatMap(o=>o.slots.map(k=>{const full=reserveOf(s,k);return full>0&&Number.isFinite(full)?Math.min(1,(o.reserve[k]||0)/full):1;})));
+  function drops(s,e,t){const p=s.player,D=diff(s),drop=(type,dx=0,dy=0,extra={})=>s.pickups.push({id:'drop'+s.tick+e.id+type,x:e.x+dx,y:e.y+dy,type,taken:false,until:s.time+DROPS.life,...extra});
+    const room=type=>{const n=loose(s,type),max=DROPS.field[type]||1;return n>=max?0:n?.5:1;};
+    if(!s.training&&e.gun&&W[e.gun]&&!s.owned.includes(e.gun)&&!s.pickups.some(q=>!q.taken&&q.type==='weapon'&&q.weapon===e.gun)){drop('weapon',0,0,{weapon:e.gun,ttl:0,until:0});event(s,'gundrop',{weapon:e.gun,x:e.x,y:e.y});}
+    // One roll for the supply and one for the gadget, whatever is decided, so the run's other dice fall as they did.
+    const roll=rand(s),second=t.drop?rand(s):1;
+    if(p.health<50){if(room('health')&&(p.health<40&&D.med||roll<DROPS.health*D.drops*room('health')))drop('health',8,6);}
+    else{const [empty,full]=DROPS.ammo,k=stocked(s);if(roll<(empty+(full-empty)*k)*D.drops*room('ammo'))drop('ammo',8,6);}
+    const wanted=t.drop==='lethal'?p.lethal&&p.grenades<G[p.lethal].count+s.mods.charges:t.drop==='tactical'?p.tactical&&p.tacticals<G[p.tactical].count+s.mods.charges:t.drop==='armor'?p.armor<p.maxArmor:!!t.drop;
+    if(wanted&&second<DROPS.gadget*room(t.drop))drop(t.drop,-14,-10);
+    if(t.boss&&!s.training){drop('cache',-20,18,{until:0});drop('health',22,-14,{until:0});}
   }
   function damageProp(s,b,damage){if(b.dead||!Number.isFinite(b.hp))return;b.hp-=damage;event(s,'impact',{x:b.x+b.w/2,y:b.y+b.h/2,kind:b.kind});if(b.hp<=0){b.dead=true;const cx=b.x+b.w/2,cy=b.y+b.h/2;event(s,'destroy',{x:cx,y:cy,kind:b.kind,w:b.w,h:b.h,id:b.id});
     if(b.kind==='barrel'||b.kind==='vehicle'||b.kind==='fuel')explode(s,cx,cy,b.kind==='fuel'?230:b.kind==='vehicle'?190:140,b.kind==='fuel'?160:b.kind==='vehicle'?130:105);
@@ -692,7 +711,7 @@
     for(const h of s.hazards){if(!only||only==='player')h.off=Math.max(0,h.off-dt);h.on=h.off<=0&&((s.time+h.phase)%h.period)<h.period*h.duty;
       if(h.on&&!p.zap&&circleBox(p.x,p.y,p.radius-3,h)&&damagePlayer(s,22,h.x+h.w/2,h.y+h.h/2,'laser')){p.zap=.7;event(s,'zap',{x:p.x,y:p.y});}
       for(const gp of up)if(h.on&&!gp.zap&&circleBox(gp.x,gp.y,gp.radius-3,h)&&damageMate(s,gp,22,h.x+h.w/2,h.y+h.h/2,'laser')){gp.zap=.7;event(s,'zap',{x:gp.x,y:gp.y});}}}
-  function stepPickups(s,dt){const p=s.player.dead?{x:-1e9,y:-1e9}:s.player,up=s.mates.filter(o=>!o.dead);for(const pick of s.pickups){if(pick.taken||pick.type==='supply'||pick.type==='offer')continue;
+  function stepPickups(s,dt){const p=s.player.dead?{x:-1e9,y:-1e9}:s.player,up=s.mates.filter(o=>!o.dead);for(const pick of s.pickups){if(pick.taken||pick.type==='supply'||pick.type==='offer')continue;if(pick.until&&s.time>pick.until){pick.taken=true;continue;}
       if(pick.type==='weapon'){if(!pick.owned&&s.owned.includes(pick.weapon))pick.owned=true;if(distance(pick,p)<=35&&!pick.owned){s.owned.push(pick.weapon);pick.owned=true;event(s,'weaponfound',{weapon:pick.weapon,x:pick.x,y:pick.y});}if(pick.owned){pick.ttl+=dt;if(pick.ttl>45)pick.taken=true;}continue;}
       // Lethal/tactical gadgets stay player-only: a squadmate's leaner v1 kit has no gadget slots to fill.
       if(pick.type==='lethal'){if(distance(pick,p)>35||!p.lethal)continue;p.grenades=Math.min(G[p.lethal].count+s.mods.charges+2,p.grenades+1);pick.taken=true;event(s,'pickup',{kind:pick.type,x:pick.x,y:pick.y});continue;}
@@ -701,7 +720,7 @@
       let target=p;for(const gp of up)if(distance(pick,gp)<distance(pick,target))target=gp;if(distance(pick,target)>35)continue;
       if(pick.type==='health'){if(target.health>=100)continue;target.health=Math.min(100,target.health+30);}
       else if(pick.type==='armor')target.armor=Math.min(target.maxArmor,target.armor+30);
-      else if(pick.type==='ammo')for(const k of target.slots)target.reserve[k]=Math.min(reserveOf(s,k)*2,target.reserve[k]+Math.ceil(W[k].reserve/3));
+      else if(pick.type==='ammo'){if(target.slots.every(k=>target.reserve[k]>=reserveOf(s,k)*2))continue;for(const k of target.slots)target.reserve[k]=Math.min(reserveOf(s,k)*2,target.reserve[k]+Math.ceil(W[k].reserve/3));}
       else if(pick.type==='intel'){s.stats.intel++;event(s,'intel',{x:pick.x,y:pick.y});}
       else if(pick.type==='cache'){s.stats.credits+=120;event(s,'cache',{x:pick.x,y:pick.y,credits:120});}
       pick.taken=true;event(s,'pickup',{kind:pick.type,x:pick.x,y:pick.y,guest:target!==p,who:target!==p?target.id:s.player.id});}
@@ -732,7 +751,7 @@
     fallen(s,e,me.id);s.stats.kills++;s.mastery[source]=(s.mastery[source]||0)+1;s.combo=s.time-s.comboAt<3.5?s.combo+1:1;s.comboAt=s.time;s.stats.bestCombo=Math.max(s.stats.bestCombo,s.combo);
     const t=A.operator,credits=me.bot?0:Math.round(t.bounty*(1+.1*Math.min(s.combo-1,8))*(source==='melee'?1.5:1)*TDM.bounty),row=T.board[me.id];s.stats.credits+=credits;row.k++;row.cr+=credits;
     event(s,'kill',{x:e.x,y:e.y,enemy:'operator',id:e.id,victim:e.id,credits,combo:s.combo,boss:false,source,by:me.id,bot:me.bot});credit(s,source,t);
-    s.pickups.push({id:'fall'+s.tick+e.id,x:e.x,y:e.y,type:'ammo',taken:false});}
+    if(loose(s,'ammo')<3)s.pickups.push({id:'fall'+s.tick+e.id,x:e.x,y:e.y,type:'ammo',taken:false,until:s.time+DROPS.life});}
   function stepVersus(s,input,dt){s.tick++;s.time+=dt;
     s.roster.forEach((op,i)=>act(s,op,()=>{s.flowTime=Math.max(0,s.flowTime-dt);op.stagger=Math.min(TDM.stun,Math.max(0,(op.stagger||0)-dt));
       const raw=i?input.mates&&input.mates[i-1]||{}:input;stepPlayer(s,op.dead||op.vanished?{}:op.bot?botInput(s,op,i,dt):raw,dt);claim(s,op);

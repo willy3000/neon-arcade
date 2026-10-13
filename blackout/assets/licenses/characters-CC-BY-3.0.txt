@@ -1,0 +1,15 @@
+Character animations
+
+"Animated Top Down Survivor Player" by Riley Gombart
+https://opengameart.org/content/animated-top-down-survivor-player
+
+Licensed under the Creative Commons Attribution 3.0 Unported licence (CC BY 3.0).
+Licence: https://creativecommons.org/licenses/by/3.0/
+Legal code: https://creativecommons.org/licenses/by/3.0/legalcode
+
+Changes made for this game: the frames were resized, desaturated, re-centred and packed into one atlas
+(characters.png, characters.json); the game tints them to tell operators and hostiles apart. The pictures of the game
+on its menus (menu/*.jpg) show these characters.
+
+The work is offered by its author as-is, without warranties. This credit also appears in the game (Settings) and in
+THIRD-PARTY-NOTICES.txt.

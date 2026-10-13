@@ -1,0 +1,14 @@
+Weapon, pickup and ambience sounds from OpenGameArt.org
+
+Both packs were published by their authors under Creative Commons Zero (CC0 1.0 Universal),
+http://creativecommons.org/publicdomain/zero/1.0/ - no rights reserved, credit not required. The licence was read
+on each page on 13 October 2026.
+
+"Residue-sfx" by FacadeGaikan
+  https://opengameart.org/content/residue-sfx
+  rifle.ogg, shotgun.ogg, smg.ogg, empty.ogg, pickup.ogg, heal.ogg, points.ogg, healthpack.ogg, boom.ogg, wind.ogg,
+  ambience.ogg, flow.ogg (converted to Ogg Vorbis; some are played faster or slower by the game)
+
+"Gun reload sounds" by SpringySpringo
+  https://opengameart.org/content/gun-reload-sounds
+  reload-pistol.wav, reload-rifle.wav, reload-shotgun.wav (unchanged, renamed)

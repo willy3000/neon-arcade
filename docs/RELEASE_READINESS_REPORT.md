@@ -11,7 +11,7 @@ It is **not ready to submit** yet, for reasons that are not about the build:
    *Section 13*). Clear the name before spending on store art.
 2. **The commander voice.** Nobody has recorded where the original voice recording came from, and 51 of the 56 voice
    lines are AI clones of it. That is a rights problem and a Steam disclosure item.
-3. **The menu music licence** was inferred from a file name and never checked on the track's page.
+3. **The menu music licence** is confirmed (Pixabay Content License, read on the track's page on 14 October 2026). What is left is that the MP3 also sits by itself in the public repository, which that licence does not allow; the owner chose to leave it there (`ASSET_LICENSE_REGISTER.md`, item 3).
 4. **Small text.** At 1366×768 and on a Steam Deck's 1280×800 screen, most interface labels are 6–8 px tall.
 5. **The online relay** runs on a hosting tier that sleeps and is far from where this was tested (about 800 ms between
    two players here). It works; it will not feel good, and the address is one you do not control.
@@ -295,7 +295,7 @@ actually sustains.
 
 1. Read the diff and commit it (nothing was committed).
 2. Decide the name (`STORE_PAGE_CHECKLIST.md`, section 1).
-3. Clear or replace the commander voice and confirm the music (`ASSET_LICENSE_REGISTER.md`).
+3. Clear or replace the commander voice: it was downloaded, and its source and licence are still not recorded (`ASSET_LICENSE_REGISTER.md`). The music is confirmed.
 4. Move the relay to an address you own, on a tier that stays awake, near your players; set `RELAY_TRUST_PROXY=1`;
    put the new address in `blackout/online-config.js`; rebuild.
 5. Decide on the Electron upgrade and on the text-size pass; rebuild; `npm run test:release` and
@@ -326,7 +326,8 @@ actually sustains.
 | Account, legal, store and release — all yours | State |
 |---|---|
 | Name cleared | **Open** |
-| Voice and music rights | **Open** |
+| Voice rights | **Open** (source of the downloaded recording not recorded) |
+| Music rights | Confirmed 14 October 2026; the MP3 in the public repository is an accepted risk |
 | Steamworks account, app, fee, tax and bank | Not started |
 | Store page text, capsules, screenshots, trailer | Not started |
 | Content survey, including AI disclosure | Not started |

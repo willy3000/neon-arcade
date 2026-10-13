@@ -10,18 +10,25 @@ Character animations
   https://opengameart.org/content/animated-top-down-survivor-player
   Creative Commons Attribution 3.0 Unported - https://creativecommons.org/licenses/by/3.0/
   Changes: resized, desaturated, re-centred and packed into one atlas; tinted in the game.
+  licenses/characters-CC-BY-3.0.txt
 
 Props and sound effects
   Top-down Shooter, Impact Sounds and Sci-fi Sounds by Kenney (kenney.nl) - Creative Commons Zero (CC0 1.0)
   Residue-sfx by FacadeGaikan (opengameart.org) - CC0 1.0
   Gun reload sounds by SpringySpringo (opengameart.org) - CC0 1.0
+  Helicopter Sounds by aquinn, Rain (loopable) by Ylmir, 100 CC0 SFX #2 by rubberduck and
+  Dark Cavern Ambient by Paul Wortmann (opengameart.org) - CC0 1.0
+  licenses/kenney-*.txt, licenses/opengameart-sfx.txt, licenses/opengameart-storm.txt
 
 Music
-  Tactical Action Hums by Restum-Anoush, via Pixabay
+  Tactical Action Hums by Restum-Anoush
+  https://pixabay.com/music/electronic-tactical-action-hums-free-to-use-421970/
+  Pixabay Content License - https://pixabay.com/service/license-summary/ - licenses/music-pixabay.txt
+  Used as the score of the game's menus. It may not be distributed on its own.
 
 Voice
-  Commander voice supplied by the developer. Further lines in the same voice were generated with
-  Chatterbox by Resemble AI (MIT License).
+  Commander voice from a recording supplied to the project. Further lines in the same voice were
+  generated with Chatterbox by Resemble AI (MIT License).
 
 Typefaces
   Barlow Condensed (c) The Barlow Project Authors
