@@ -32,29 +32,52 @@ points the Electron window at it — the same fix as `npm run serve`, just autom
 bundled. See `WINDOWS_PACKAGING.md` for why this approach was chosen, how to build a
 distributable `.exe`, and what's left before a Steam upload.
 
-## Co-op (Holdout, two players)
+## The lobby: Holdout and Team Deathmatch
 
-One player hosts and runs the game; the other joins. There are two ways to connect, both
-offered from the Holdout lobby:
+The COMBAT MODES card on the main menu opens the lobby, where the mode, map, enemy pressure
+and loadout are chosen. **Holdout** (endless waves) is played alone, with a friend, or with
+an AI teammate in the open slot. **Team Deathmatch** is
+two teams, Alpha and Delta, of up to four each: players or AI in any mix, up to eight players
+on a LAN, with the kill limit set by the host.
 
-- **LAN** — desktop app only. The host shares the address shown in their lobby; the guest
-  types it in. Both machines must be on the same network.
+One player hosts and runs the game; the others join. There are two ways to connect, both
+offered from the lobby:
+
+- **LAN** — desktop app only. The host shares the address shown in their lobby; guests
+  type it in. All machines must be on the same network. One guest in Holdout, up to seven
+  in Team Deathmatch.
 - **Online** — desktop app or web page. Both players connect out to a small relay service
   and pair up with a five-character room code, so no router setup is needed. This option
   only appears once a relay address is set in `blackout/online-config.js`; `server/README.md`
-  covers running the relay locally and putting it on a public host.
+  covers running the relay locally and putting it on a public host. Online is two-player
+  Holdout only for now.
 
 ## Verify
 
 - `npm test` — deterministic campaign/combat/systems replay (`blackout/tests/core.cjs`,
-  `blackout/tests/walkthrough.cjs`), the co-op rules (`blackout/tests/coop.cjs`) and the LAN
-  socket framing. No browser required.
+  `blackout/tests/walkthrough.cjs`), the co-op rules (`blackout/tests/coop.cjs`), squads, AI
+  teammates and team deathmatch (`blackout/tests/squad.cjs`), field support, perks and career
+  challenges (`blackout/tests/support.cjs`), the second wave of guns, gadgets and support
+  (`blackout/tests/arsenal.cjs`) and the LAN socket framing. No
+  browser required.
 - `npm run test:relay` — the online relay, over real local WebSockets (Node 22+).
 - `npm run test:e2e` / `npm run test:e2e:online` — two real desktop app instances playing a
-  LAN session, and an online session through a locally started relay.
+  LAN session, and an online session through a locally started relay. Each instance runs on
+  a scratch profile of its own, never on the save of a game installed on this machine.
+- `npm run test:e2e:squad` — three real desktop app instances (a host and two guests) pick
+  teams in the lobby and play a LAN team deathmatch against each other, each paid on their own machine.
+- `npm run test:resilience` — messages shown outside a run, recovery from a fault inside a
+  frame, and what a controller alone can reach.
+- `npm run verify:package` / `npm run test:packaged` — inspect and then drive the game as
+  built in `release/win-unpacked` (`npm run dist:win` first).
+- `npm run test:release` — all of the above in order. Run it before uploading a build.
 - `npm run test:tactical` — additional tactical-systems checks.
 - `npm run test:browser` — real Chromium input/graphics/audio checks via Playwright
   (`npx playwright install chromium` once if not already installed).
+
+Release documents are in `docs/`: `RELEASE_READINESS_REPORT.md` (audit, changes, test
+results, open risks), `STEAM_RELEASE.md` (what Steam launches and how to upload),
+`ASSET_LICENSE_REGISTER.md` and `STORE_PAGE_CHECKLIST.md`.
 
 Game design, asset licensing, animation scope, campaign plan, and prior test reports are
 in `blackout/GAME_DESIGN.md`, `blackout/ASSET_MANIFEST.md`, `blackout/ANIMATION_SPEC.md`,

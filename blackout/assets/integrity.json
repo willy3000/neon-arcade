@@ -181,6 +181,11 @@
       "sha256": "16c93976cc773fd4224250c7eb749b6024778699c7d0feaa3b6251807f93f9aa"
     },
     {
+      "file": "audio/vo-boss-down.ogg",
+      "bytes": 26005,
+      "sha256": "6f3ef816ba9c500fbd44f53078beb50c1429ceb51ca6b814131a659448f2a0d2"
+    },
+    {
       "file": "audio/vo-boss.ogg",
       "bytes": 26664,
       "sha256": "cf7c82572a65c12802b7e86c3c2c0fa89c876df6a913861d2e9f2853de866795"
@@ -204,6 +209,26 @@
       "file": "audio/vo-failed.ogg",
       "bytes": 23371,
       "sha256": "568c7c318c9a7cc81f54667865b586588b1801330aa926ac52313aeb25b340b8"
+    },
+    {
+      "file": "audio/vo-flow.ogg",
+      "bytes": 31181,
+      "sha256": "6be3928600fa42f33dec95cdc987f069adfb89400169c39b484235c1ba6f43e3"
+    },
+    {
+      "file": "audio/vo-g-ammobox.ogg",
+      "bytes": 48964,
+      "sha256": "84f86b03e1a1fbb50ab1c5552e64e04f933e12bf6fd7e9564503acc47ad72be8"
+    },
+    {
+      "file": "audio/vo-g-c4.ogg",
+      "bytes": 49344,
+      "sha256": "03b33fe9cbca6fc1a18bc06a61a8f0e942dc98757bcde608272df5cb997f962c"
+    },
+    {
+      "file": "audio/vo-g-cluster.ogg",
+      "bytes": 47040,
+      "sha256": "e06547ce11a8d84a6b683f3ee707037539cb591ea8fae4bf49411487570722ea"
     },
     {
       "file": "audio/vo-g-cover.ogg",
@@ -231,9 +256,24 @@
       "sha256": "896f67ab425b30e7879e238b9a90595dede5c7b1e2fa9663f9d705da5653c7c4"
     },
     {
+      "file": "audio/vo-g-gas.ogg",
+      "bytes": 54209,
+      "sha256": "96aae10f20b78fe8d28d1a05cc4d822c3ea2cc9ac9701e9704bc4a1e632bc9e5"
+    },
+    {
+      "file": "audio/vo-g-grapple.ogg",
+      "bytes": 52976,
+      "sha256": "37b9fe1f18f2e13a5e0b9b32bba02ae6ee22de75ff34ecb9946b35b2cb268931"
+    },
+    {
       "file": "audio/vo-g-incendiary.ogg",
       "bytes": 54840,
       "sha256": "5a3b2f4b00e49a3aea6bb483eb978bc819818f675ae557d301fc4479c4cdb1ea"
+    },
+    {
+      "file": "audio/vo-g-knife.ogg",
+      "bytes": 56800,
+      "sha256": "6bd145ad2ffefbd419706eaeb37f6728d1060eccc5647c60b73d6716ecd521b4"
     },
     {
       "file": "audio/vo-g-mine.ogg",
@@ -241,9 +281,24 @@
       "sha256": "e81afe4157280440151d474c6f69bb43d54954c69cce2cff6d3da2bcdddb72aa"
     },
     {
+      "file": "audio/vo-g-seeker.ogg",
+      "bytes": 32577,
+      "sha256": "90948d6e3ea4235b1eb124782afe4526451d9c2a4e4b0770b702c553de076d64"
+    },
+    {
+      "file": "audio/vo-g-sensor.ogg",
+      "bytes": 48832,
+      "sha256": "3622d0cc601ce98872a36c432b3997dc8c4686d2b6afb9aade7b8fa2833d6c50"
+    },
+    {
       "file": "audio/vo-g-smoke.ogg",
       "bytes": 57642,
       "sha256": "371c371fe6f2e1cde5f54396dfbd48690c1b2a2e9a4d42f64fc970d9863d5c86"
+    },
+    {
+      "file": "audio/vo-g-trophy.ogg",
+      "bytes": 65340,
+      "sha256": "f7dbd8c7e7993e8728ad028c6b7eb2ab93c3ba5d73b8535295ceba1805253a2b"
     },
     {
       "file": "audio/vo-hold.ogg",
@@ -256,9 +311,49 @@
       "sha256": "d6eef6a7d935fa45679e353595d42ce4e7a5d81ec8348b693b99614b8a5c60a1"
     },
     {
+      "file": "audio/vo-knife.ogg",
+      "bytes": 28038,
+      "sha256": "ae2566bf7c6a74f3dcdc303ee46b62d927acbb757f08fbc6cff7f35c5d994bef"
+    },
+    {
       "file": "audio/vo-low-health.ogg",
       "bytes": 19877,
       "sha256": "ae5cb8f934c151a143019b8c84fee5e2d0b5985effa8d06703cccccbc41084a3"
+    },
+    {
+      "file": "audio/vo-map-convoy.ogg",
+      "bytes": 62240,
+      "sha256": "6ffbedc447358364032b40843ec2f064b313e55a8110525a2ac51155348ffe80"
+    },
+    {
+      "file": "audio/vo-map-crash.ogg",
+      "bytes": 64092,
+      "sha256": "ab0d7ae9be0925ca64b882894403acb0fae6faca94065e82f55e6923d5c97da4"
+    },
+    {
+      "file": "audio/vo-map-kestrel.ogg",
+      "bytes": 65664,
+      "sha256": "7dbfb41feda32015eacce380eecc932fb70e25c16667fcb28f558ed3b24987b3"
+    },
+    {
+      "file": "audio/vo-map-killhouse.ogg",
+      "bytes": 62366,
+      "sha256": "87d84fc8e7c8188ff557e7357d6b4f415a11d60801eadcc645d66da0cc4f48f1"
+    },
+    {
+      "file": "audio/vo-map-meridian.ogg",
+      "bytes": 63794,
+      "sha256": "9cc64cec29f591cd5428bae39af2258f9722dccdce995c08e6a9a3bd3c9227f5"
+    },
+    {
+      "file": "audio/vo-map-ruins.ogg",
+      "bytes": 69385,
+      "sha256": "b976a5ec669a089a38b726eb6ba8f873190edd78df84abc6384dc9906e761f2c"
+    },
+    {
+      "file": "audio/vo-map-underground.ogg",
+      "bytes": 53952,
+      "sha256": "d6d8b9228eb14366c9306e528fb972466d7a089615de1f35a90204cb6c16e005"
     },
     {
       "file": "audio/vo-mate-down.ogg",
@@ -311,6 +406,16 @@
       "sha256": "f199fbd24a554b422c033d0760f10e57e914b2319263940314b9a81b9ab4f04f"
     },
     {
+      "file": "audio/vo-mode-tdm-2.ogg",
+      "bytes": 57399,
+      "sha256": "e14c8154a96afabb90237eb4f5b0dd666c42b17310e599f675199e46f5bcb0a2"
+    },
+    {
+      "file": "audio/vo-mode-tdm.ogg",
+      "bytes": 43408,
+      "sha256": "df7bda4bc92fd5bcefd05da146cc9bbe8aa8ff373285ccd76a22d1d566c8c36e"
+    },
+    {
       "file": "audio/vo-move-out.ogg",
       "bytes": 8937,
       "sha256": "5f82679cc6cf65a6373840c9fcae9016ae295d9c84d4c328809694719f99529e"
@@ -324,6 +429,51 @@
       "file": "audio/vo-on-your-feet.ogg",
       "bytes": 16802,
       "sha256": "e3b5d77fd90efbcb1626280cf46decd70aca7b2c234f469d48b0a539af3a3871"
+    },
+    {
+      "file": "audio/vo-p-ambusher.ogg",
+      "bytes": 41903,
+      "sha256": "b8f9204e02992784a7ee35057b6e86a9740da8816ee5c2051416eb4c5cae732b"
+    },
+    {
+      "file": "audio/vo-p-executioner.ogg",
+      "bytes": 43291,
+      "sha256": "f1f567503ffe730f0190580ea51901c9a6951f6b3acdf21a2dbc68da726734bb"
+    },
+    {
+      "file": "audio/vo-p-flak.ogg",
+      "bytes": 59934,
+      "sha256": "7226eaa0ef7f3881df37ff9b8c4a78d6b31170bb1bef8eba14ff2640f21fdddf"
+    },
+    {
+      "file": "audio/vo-p-flowstate.ogg",
+      "bytes": 57184,
+      "sha256": "a5390caf1b669905b12f7fe1dbccff6e9de92aba66ab423d2bd2e71f47428e54"
+    },
+    {
+      "file": "audio/vo-p-hardline.ogg",
+      "bytes": 46151,
+      "sha256": "d6be8749c52b5126f4590b72b1cd959090fa3375ff0cbba01fc5dad43b0071d7"
+    },
+    {
+      "file": "audio/vo-p-lowprofile.ogg",
+      "bytes": 49672,
+      "sha256": "1b57ca9bbad9fb1e18f69d253992dd6651d9a4859aff51f222e0afd3ce937e3e"
+    },
+    {
+      "file": "audio/vo-p-regen.ogg",
+      "bytes": 53145,
+      "sha256": "703c1d127f21eeb6d2453c8b9bcb34908b02f42c9a958fbfcd5d463352f9a1da"
+    },
+    {
+      "file": "audio/vo-p-scrounger.ogg",
+      "bytes": 49535,
+      "sha256": "0b5e33d5e8afcbd0dec38c2f1445beca15187a62ac03176023bd487e58a7a31b"
+    },
+    {
+      "file": "audio/vo-p-secondwind.ogg",
+      "bytes": 43723,
+      "sha256": "47711a8f6e21d03b6e72c536d946cf91f858ff18d3bb8863fab5443ace70c73d"
     },
     {
       "file": "audio/vo-quiet.ogg",
@@ -346,6 +496,46 @@
       "sha256": "c6db9c8c0cf9c3182d4ca4aeb7ee89d8aebdaa4e6021cc9cc4234a0ee251a88c"
     },
     {
+      "file": "audio/vo-s-airstrike.ogg",
+      "bytes": 54367,
+      "sha256": "a8eaa67a26b6de720c32753f8a557d25e7c7dddf7f671cd898b0109ce51ecfd3"
+    },
+    {
+      "file": "audio/vo-s-blackout.ogg",
+      "bytes": 62137,
+      "sha256": "83ebbc35ee6bbe457443c56adb7adb670ae05531175b668bf7f8e1ed20a8d311"
+    },
+    {
+      "file": "audio/vo-s-dog.ogg",
+      "bytes": 48952,
+      "sha256": "c59d41e0373709641a7a847d42ff9910f852dfb5d26ca164193ba4641a3a13e8"
+    },
+    {
+      "file": "audio/vo-s-gunship.ogg",
+      "bytes": 40887,
+      "sha256": "b71e0c968e749d9a2c3267264245d21e894c929f1d8a53ce42537d121d73d0aa"
+    },
+    {
+      "file": "audio/vo-s-recon.ogg",
+      "bytes": 60726,
+      "sha256": "d61bc422c61ae2df2536d736799e95a2be3eb390b3e21c24d5bbb018d17349f2"
+    },
+    {
+      "file": "audio/vo-s-reinforce.ogg",
+      "bytes": 46532,
+      "sha256": "478115a89186a8d4164149be3aeb7cd38d4db793e90eb2f090e3c5b93f94ef72"
+    },
+    {
+      "file": "audio/vo-s-supply.ogg",
+      "bytes": 44131,
+      "sha256": "c31cd5f140ddd39721debac8e1557460a91c6b42e590ecf6f116b94885b25fa9"
+    },
+    {
+      "file": "audio/vo-s-turret.ogg",
+      "bytes": 41880,
+      "sha256": "f0dd83661639c3c4dad530f53702d1697fe05bdc165812336649eade0c6ff9df"
+    },
+    {
       "file": "audio/vo-squad.ogg",
       "bytes": 24700,
       "sha256": "e96a10e0c04feec805f8b40ec7a4b100c9ed97c0bcdac1f72b7e13967fe323ee"
@@ -356,6 +546,61 @@
       "sha256": "88ea63bc66df3c1c590599ec5e4eb86de5518ee5111b8a207062c5826ec840ec"
     },
     {
+      "file": "audio/vo-streak-blackout.ogg",
+      "bytes": 34629,
+      "sha256": "6bf4ec6ebf78b82f1cb9ded8f01af0bcca522f768b7d32a3b43fe331e4a41ae7"
+    },
+    {
+      "file": "audio/vo-streak-double-2.ogg",
+      "bytes": 19641,
+      "sha256": "bf5b78a0d39dde51c08f4599f3ba1dba72ae85a37a62d77403658dd32c4e59b5"
+    },
+    {
+      "file": "audio/vo-streak-double.ogg",
+      "bytes": 27211,
+      "sha256": "4588adfa9446fe1996d7c0d121ae2643c4013b21b9faa8f25732871e80b32c25"
+    },
+    {
+      "file": "audio/vo-streak-heat.ogg",
+      "bytes": 25212,
+      "sha256": "7a370c00eb7777e82cfad3128f679cb3653532cd3333cd3f5c326ead0ee57f77"
+    },
+    {
+      "file": "audio/vo-streak-triple.ogg",
+      "bytes": 20979,
+      "sha256": "e0cec97a5e2a75871b0b2a1a679ab273d88432797e39f944b183d02e0a315617"
+    },
+    {
+      "file": "audio/vo-streak-unstoppable.ogg",
+      "bytes": 34019,
+      "sha256": "2b4eb6b6d0ea5a0b958658848a39e34de4003f270c8fcd4380ad38483baebb34"
+    },
+    {
+      "file": "audio/vo-support-ready.ogg",
+      "bytes": 16516,
+      "sha256": "17163018710b10fd76082e1eeced3a3452c49cca0294883f8f52455e51db737e"
+    },
+    {
+      "file": "audio/vo-tdm-behind.ogg",
+      "bytes": 24186,
+      "sha256": "8fc4d4ab2031dab25a8a5941be73b5de871d52b88cc9db72be3253217f8ffb48"
+    },
+    {
+      "file": "audio/vo-tdm-close.ogg",
+      "bytes": 27583,
+      "sha256": "af9a4b4417f23a8589f4bd515d78aa747a58b0684fbd0355d02e82ce2ec3b9aa"
+    },
+    {
+      "file": "audio/vo-tdm-lead.ogg",
+      "bytes": 18892,
+      "sha256": "5fc4943cfd8fcde81584db3c6c2e98da6c983a57332ddb469bf79eaf90ab8f02"
+    },
+    {
+      "file": "audio/vo-w-arc.ogg",
+      "bytes": 56204,
+      "sha256": "2f6b585140bacc5d16e61f2e13de0286473d7ac671751db8aae83071c2ba6aa7"
+    },
+    {
       "file": "audio/vo-w-autoshotgun.ogg",
       "bytes": 64146,
       "sha256": "b4ab9c3d2c5645ec9820d7c0b1ef3b996ea03c861b25fcd59894dc414e86c7e4"
@@ -364,6 +609,16 @@
       "file": "audio/vo-w-battle.ogg",
       "bytes": 55803,
       "sha256": "abc695b0628277fe77b43cba4bfbc8ae8e555645f43d9d5600acf9d0c80c062e"
+    },
+    {
+      "file": "audio/vo-w-burst.ogg",
+      "bytes": 46275,
+      "sha256": "d30214c015e90bda39a7ee0b84a73025dc274f4854bd787fbd14998940b108f9"
+    },
+    {
+      "file": "audio/vo-w-flamer.ogg",
+      "bytes": 53391,
+      "sha256": "b746edfa8dd99d3e8ff582d414262f79121d67d8d4f5f87ade8f53c01518c8a9"
     },
     {
       "file": "audio/vo-w-launcher.ogg",
@@ -391,6 +646,11 @@
       "sha256": "aff3f5d99d8465ba984f23b9a89f1d508c8e91fdde739992b30d550ee0ebb2f5"
     },
     {
+      "file": "audio/vo-w-minigun.ogg",
+      "bytes": 59230,
+      "sha256": "0ae5d5ca0e3d50248ea619d853552a21d366ee27b6c9c2f0cd87cbb4d3327170"
+    },
+    {
       "file": "audio/vo-w-pistol.ogg",
       "bytes": 56948,
       "sha256": "59db97baab301a639ef56d4c91ec22e4a15e1e5a0b9bdea7fbe51025f4e35e93"
@@ -409,6 +669,11 @@
       "file": "audio/vo-w-rail.ogg",
       "bytes": 61213,
       "sha256": "4e57e8e9a8873da709c4c51e0e69c8236b74051d39a99169ee170c7d69a3c008"
+    },
+    {
+      "file": "audio/vo-w-ricochet.ogg",
+      "bytes": 56582,
+      "sha256": "a3b6b11ed91e80fe727b699af5a955ae96440b1cd8e182236ff1b13923eb0bc3"
     },
     {
       "file": "audio/vo-w-rifle.ogg",
@@ -619,6 +884,16 @@
       "file": "menu/killhouse-holdout.jpg",
       "bytes": 7402,
       "sha256": "643dbf7440412f29aed9a07c876036df5d6b5207ec861d6b4648a22cf40a2fa2"
+    },
+    {
+      "file": "menu/mode-holdout.jpg",
+      "bytes": 7830,
+      "sha256": "cad72767609d870a84614b114d272ccee95f1905f04e68c09374613a62711eb8"
+    },
+    {
+      "file": "menu/mode-tdm.jpg",
+      "bytes": 8030,
+      "sha256": "da8c1ef69d1d585db29e80e6d371088a7bbb3350c89bcf7b5ab05e5462175166"
     },
     {
       "file": "menu/training.jpg",

@@ -65,3 +65,66 @@ vo-g-smoke|firm|Smoke. Ten seconds of cover, anywhere you need it. They can't sh
 vo-g-emp|firm|E-M-P charge. Kills drones, blinds sentries, and drops shields. Throw it before you push.
 vo-g-decoy|firm|Holo decoy. They will shoot at your ghost for seven seconds. Use that time to flank them.
 vo-g-cover|firm|Deployable cover. A ballistic barrier, wherever you aim. Caught in the open? Bring your own wall.
+
+# Team deathmatch on the lobby's mode switch, and the commander's word on each map as it is picked there
+vo-mode-tdm|command|Team deathmatch! Group up and rack up kills. First squad to the mark wins.
+vo-mode-tdm-2|command|Team deathmatch! Four against four. Stay with your squad, and be the first to thirty kills.
+vo-map-killhouse|firm|The Killhouse. Four blocks and two crossing lanes. Nowhere to hide for long, so keep moving.
+vo-map-crash|firm|The Crash. City streets, and fights at every range. Work corner to corner, and stay out of the open.
+vo-map-ruins|firm|No Safe Ground. Collapsed blocks and weak walls. They will come through the rubble, so pack something for close range.
+vo-map-kestrel|firm|Dead Frequency. Open snow and long sightlines. Bring a rifle with reach, and use smoke to cross.
+vo-map-underground|firm|Underground. The dark keeps most fights close quarters. Keep that shotgun handy.
+vo-map-convoy|firm|Iron Convoy. Open desert and very little cover. Use the wrecks, and keep your distance.
+vo-map-meridian|firm|Ghost Signal. Lab corridors and laser grids. Watch the beams, and check every corner.
+
+# Field support: the call that the meter is full, and the commander's word on each ability as it is bought or equipped
+vo-support-ready|command|Field support ready!
+vo-s-recon|firm|Recon sweep. Twenty seconds with every hostile marked. Use them to pick your ground.
+vo-s-turret|firm|Sentry turret. Set it where they have to come through, and let it hold the lane.
+vo-s-dog|firm|The K-nine unit. It finds them, and it does not let go. Follow it in.
+vo-s-airstrike|firm|Airstrike. Six shells along your line of aim. Mark the target, then get clear.
+# ...and on each perk
+vo-p-regen|firm|Field dressing. Stay out of the fire for six seconds, and you will patch yourself up.
+vo-p-flak|firm|Flak vest. Blasts and fire lose their bite. Push through what stops other men.
+vo-p-secondwind|firm|Second wind. The shot that should have killed you, won't. You get that once.
+vo-p-scrounger|firm|Scrounger. Every kill puts rounds back in your reserve. Keep shooting.
+vo-p-ambusher|firm|Ambusher. Hit them before they know you are there, and you hit much harder.
+vo-p-executioner|firm|Executioner. Every knife kill gives you health back. Get close.
+vo-p-lowprofile|firm|Low profile. They have to be much closer to spot you. Pick your moment.
+vo-p-flowstate|firm|Flow state. Chain a perfect flow, and for three seconds your rounds hit harder.
+vo-p-hardline|firm|Hardline. Your field support comes around faster. Use it often.
+
+# Call-outs for what the player has just done: kill streaks, a knife kill, a perfect flow, a boss going down
+vo-streak-double|command|That's a double kill, soldier. Keep at it!
+vo-streak-double-2|command|Two down! Keep them coming!
+vo-streak-triple|command|Triple kill! Don't let up!
+vo-streak-heat|command|They're feeling the heat. Keep the pressure on!
+vo-streak-unstoppable|command|Eight in a row! You are unstoppable, soldier!
+vo-streak-blackout|command|Twelve down. That is a blackout! Outstanding!
+vo-knife|firm|Up close and personal. Good kill.
+vo-flow|firm|Smooth. That is how you move, soldier.
+vo-boss-down|command|Target down! Outstanding work!
+# ...and for how a team deathmatch stands
+vo-tdm-lead|command|We have the lead. Hold it!
+vo-tdm-behind|command|We are behind. Pick it up, squad!
+vo-tdm-close|command|Three more, and it is ours. Finish it!
+
+# The second wave of the armory: five guns, nine gadgets and four more field support calls
+vo-w-burst|firm|The burst rifle. Three rounds every pull. Make each burst count.
+vo-w-ricochet|firm|The ricochet carbine. Its rounds come off the walls. Use the corners to shoot around them.
+vo-w-flamer|firm|The flamethrower. Short range, and it leaves the ground burning. Mind where you stand.
+vo-w-minigun|firm|The minigun. It takes a moment to spin up. After that, nothing stands in front of it.
+vo-w-arc|firm|The arc caster. The bolt jumps from one hostile to the next. Catch them bunched up.
+vo-g-knife|firm|Throwing knives. Quiet, and one is enough for most men. Pick them up afterwards.
+vo-g-cluster|firm|Cluster grenade. One blast, then five more. Throw it into a crowd.
+vo-g-c4|firm|C-four. Plant it, walk away, and press again when they are standing on it.
+vo-g-seeker|firm|The seeker. Let it go, and it will find someone to ruin.
+vo-g-grapple|firm|Grapple hook. It pulls you across open ground in a blink. Use it to break contact.
+vo-g-sensor|firm|Sensor dart. Everything near it shows on your map. Know before you go in.
+vo-g-gas|firm|Tear gas. Anyone standing in it cannot fight. Then you move in.
+vo-g-trophy|firm|Trophy system. It knocks down grenades and rockets before they land. Set it, and hold.
+vo-g-ammobox|firm|Ammunition box. Resupply for you and your squad, wherever you drop it.
+vo-s-supply|firm|Supply drop. Health, armour and ammunition, right at your feet.
+vo-s-reinforce|firm|Reinforcement. One more rifle at your side for forty-five seconds.
+vo-s-gunship|firm|The gunship. It circles overhead, and cuts down whatever it can see.
+vo-s-blackout|firm|Blackout. Every circuit dead, every hostile blind. This is what the protocol was named for.

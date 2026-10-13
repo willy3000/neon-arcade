@@ -64,7 +64,10 @@ python voice_lines.py pick out vo-hostiles 2
    Two kinds of line need no code at all, only the right file name: another way of announcing a mode goes in that
    mode's list in `VOICE` (one is picked at random), and a gun or gadget is spoken about when it is bought or
    equipped if a file named `vo-w-<weapon id>.ogg` or `vo-g-<gadget id>.ogg` exists (the ids are the keys in
-   `blackout/world.js`).
+   `blackout/world.js`). A map is spoken about in the same way when the lobby leader picks it, from
+   `vo-map-<map>.ogg`: the map is the killhouse id without its `holdout-` prefix (`vo-map-underground.ogg`), and
+   `killhouse` for the default one. Field support and perks work the same way from `vo-s-<id>.ogg` and
+   `vo-p-<id>.ogg`. A file still has to be in the `files` list (step 2) to be loaded.
 4. Add the file to `blackout/assets/integrity.json` and note it in `blackout/ASSET_MANIFEST.md`.
 
 ## Before release

@@ -1,0 +1,37 @@
+BLACKOUT PROTOCOL - THIRD-PARTY NOTICES
+=======================================
+
+Blackout Protocol includes the work of others, used under the licences below. The full licence texts are in the
+"licenses" folder beside this file; Electron's and Chromium's own are in LICENSE.electron.txt and
+LICENSES.chromium.html in the game's folder.
+
+Character animations
+  Animated Top Down Survivor Player by Riley Gombart
+  https://opengameart.org/content/animated-top-down-survivor-player
+  Creative Commons Attribution 3.0 Unported - https://creativecommons.org/licenses/by/3.0/
+  Changes: resized, desaturated, re-centred and packed into one atlas; tinted in the game.
+
+Props and sound effects
+  Top-down Shooter, Impact Sounds and Sci-fi Sounds by Kenney (kenney.nl) - Creative Commons Zero (CC0 1.0)
+  Residue-sfx by FacadeGaikan (opengameart.org) - CC0 1.0
+  Gun reload sounds by SpringySpringo (opengameart.org) - CC0 1.0
+
+Music
+  Tactical Action Hums by Restum-Anoush, via Pixabay
+
+Voice
+  Commander voice supplied by the developer. Further lines in the same voice were generated with
+  Chatterbox by Resemble AI (MIT License).
+
+Typefaces
+  Barlow Condensed (c) The Barlow Project Authors
+  IBM Plex Mono (c) IBM Corp.
+  Inter (c) The Inter Project Authors
+  SIL Open Font License 1.1 - licenses/fonts-OFL.txt
+
+Game engine
+  Phaser 3.90.0 (c) Richard Davey, Phaser Studio Inc. and contributors - MIT License - licenses/phaser-LICENSE.md
+
+Application shell
+  Electron (c) Electron contributors, (c) GitHub Inc. - MIT License - LICENSE.electron.txt
+  Chromium and its components - LICENSES.chromium.html

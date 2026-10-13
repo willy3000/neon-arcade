@@ -2,6 +2,8 @@
 // Real end-to-end check of ONLINE co-op: starts the relay (server/relay.js) on a local port, launches two actual
 // app instances pointed at it, and drives a host+guest session through the real lobby UI by room code.
 // Set RELAY_TEST_LAG_MS to imitate a slow connection (it delays every forwarded message by that much, each way).
+const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { _electron: electron } = require('playwright');
@@ -10,24 +12,36 @@ const { createRelay } = require('../../server/relay.js');
 const ROOT = path.join(__dirname, '..', '..');
 const SAVE_KEY = 'blackout-protocol-progress';
 
+// Each instance gets a folder of its own for its save, cache and one-copy-at-a-time lock (--user-data-dir, see
+// electron/main.js), so two can run side by side and neither touches the save of a game installed on this machine.
+// The save is written there before launch: the desktop app keeps it in a file, not in the page's localStorage.
+const dirs = [];
 async function bootWindow(save, relayUrl) {
-  const app = await electron.launch({ args: [path.join(ROOT, 'electron', 'main.js'), '--windowed'], cwd: ROOT });
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'blackout-e2e-'));
+  dirs.push(dir);
+  fs.writeFileSync(path.join(dir, 'save-store.json'), JSON.stringify({ [SAVE_KEY]: JSON.stringify(save) }));
+  // A shell that sets ELECTRON_RUN_AS_NODE (VS Code's terminal does) would start Electron as plain Node.
+  const env = { ...process.env };
+  delete env.ELECTRON_RUN_AS_NODE;
+  const app = await electron.launch({ args: [path.join(ROOT, 'electron', 'main.js'), '--windowed', '--user-data-dir=' + dir], cwd: ROOT, env });
   const win = await app.firstWindow();
   const loaded = () => win.waitForFunction(() => document.getElementById('loading')?.hidden && window.BPApp, null, { timeout: 30000 });
   await loaded();
-  await win.evaluate(([key, value]) => localStorage.setItem(key, JSON.stringify(value)), [SAVE_KEY, save]);
   await win.goto(win.url().split('?')[0] + '?relay=' + encodeURIComponent(relayUrl));
   await loaded();
   return { app, win };
 }
+const cleanUp = () => { for (const dir of dirs) try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* still held by a closing process */ } };
 const lobbyOf = (w) => w.win.evaluate(() => window.BPApp.snapshot().lobby);
 const modeIs = (w, mode) => w.win.waitForFunction((m) => window.BPApp.snapshot().mode === m, mode, { timeout: 12000 });
 
 (async () => {
   const relay = createRelay({ log: () => {} });
   const port = await relay.listen(0, '127.0.0.1'), url = `ws://127.0.0.1:${port}`;
-  const host = await bootWindow({ version: 2, settings: { volume: 0, callsign: 'ROOK' } }, url);
-  const guest = await bootWindow({ version: 2, owned: { weapons: ['rifle', 'pistol', 'shotgun'], gear: [] }, loadout: { primary: 'shotgun', secondary: 'pistol' }, settings: { volume: 0, callsign: 'VIPER' } }, url);
+  const host = await bootWindow({ version: 3, drill: true, settings: { volume: 0, callsign: 'ROOK' } }, url);
+  const guest = await bootWindow({ version: 3, drill: true, owned: { weapons: ['rifle', 'pistol', 'shotgun'], gear: [] }, loadout: { primary: 'shotgun', secondary: 'pistol' }, settings: { volume: 0, callsign: 'VIPER' } }, url);
+  const faults = [];
+  for (const w of [host, guest]) w.win.on('pageerror', (e) => faults.push(e.message));
   try {
     // Host: HOLDOUT -> ONLINE / HOST opens a lobby and is given a room code by the relay.
     await host.win.click('#holdout');
@@ -88,6 +102,15 @@ const modeIs = (w, mode) => w.win.waitForFunction((m) => window.BPApp.snapshot()
     assert(drift < 6, `once at rest, the guest's own position matches the host's (off by ${drift.toFixed(1)}px)`);
     console.log('PASS at rest the guest sees itself where the host has it (off by', drift.toFixed(1) + 'px)');
 
+    // The other machine is not trusted: a world update that is the wrong shape in every way is ignored piece by piece,
+    // and the guest carries on drawing the last good one.
+    await host.win.evaluate(() => window.BPOnline.hostSend({ type: 'snapshot', payload: { player: null, guest: { x: 'left', y: {} }, enemies: 5, projectiles: [null, 3], pickups: 'none', director: [], stats: null, time: 'soon', dead: 'yes', stage: 1.5, goal: {}, tags: {}, walls: [null, 7, { id: 'not-a-wall', deployed: true, x: 'x' }] } }));
+    await guest.win.waitForTimeout(400);
+    const kept = await guest.win.evaluate(() => { const w = window.BPApp.inspect().world; return { mode: window.BPApp.snapshot().mode, player: typeof w.player?.x, guest: typeof w.guest?.x, enemies: Array.isArray(w.enemies), time: typeof w.time, dead: w.dead, walls: w.walls.every((b) => b && Number.isFinite(b.x)) }; });
+    assert.deepEqual(kept, { mode: 'playing', player: 'number', guest: 'number', enemies: true, time: 'number', dead: false, walls: true });
+    assert.deepEqual(faults, [], 'no page error on either side');
+    console.log('PASS a malformed world update is refused and the guest plays on');
+
     // The guest dropping out tells the host, who carries on alone; the room stays usable.
     await guest.win.keyboard.press('Escape');
     await modeIs(guest, 'paused');
@@ -109,5 +132,6 @@ const modeIs = (w, mode) => w.win.waitForFunction((m) => window.BPApp.snapshot()
     await host.app.close();
     await guest.app.close();
     await relay.close();
+    cleanUp();
   }
 })().catch((e) => { console.error(e); process.exit(1); });

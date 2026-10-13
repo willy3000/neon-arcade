@@ -107,11 +107,24 @@ test('holdout pays inside the agreed band at waves 5, 10 and 15 on every difficu
   // Credits before the debrief's difficulty multiplier. "none" never chains kills, "full" always does.
   const BAND={5:[800,2100],10:[2400,5600],15:[4500,11000]};
   for(const d of World.order){const rows=payouts(d,15);for(const [wave,[lo,hi]] of Object.entries(BAND)){const r=rows[wave-1];assert(r.none>=lo&&r.full<=hi,`${d} wave ${wave}: ${r.none} to ${r.full} is outside ${lo} to ${hi}`);assert(r.full<r.none*1.6,'the combo is a bonus, not most of the pay');}}});
-test('the whole armory takes on the order of twelve to fifteen hours by the pacing estimate',()=>{
-  const e=estimate();assert(e.firstPurchaseMinutes<=20,'first purchase after '+e.firstPurchaseMinutes+' minutes');assert(e.hours>=10&&e.hours<=16,'estimated '+e.hours.toFixed(1)+' hours');
+test('by the pacing estimate everything but the legendary pair takes about thirteen hours, and the pair several more',()=>{
+  const e=estimate();assert(e.firstPurchaseMinutes<=20,'first purchase after '+e.firstPurchaseMinutes+' minutes');assert(e.hours>=18&&e.hours<=25,'estimated '+e.hours.toFixed(1)+' hours for the whole armory');
+  // The log is every purchase in order, as "<hours>h <name>": the two legendary guns come last, well after the rest.
+  const bought=e.log.map(l=>({at:parseFloat(l),name:l.slice(l.indexOf(' ')+1)})),rest=bought.slice(0,-2);assert.deepEqual(bought.slice(-2).map(b=>b.name),['XR-9','ARC-7']);
+  assert(rest.at(-1).at>=10&&rest.at(-1).at<=15,'everything else is owned after '+rest.at(-1).at+' hours');assert(e.hours-rest.at(-1).at>=4,'the legendary pair adds '+(e.hours-rest.at(-1).at).toFixed(1)+' hours');
   assert.deepEqual(Object.keys(e.tiers),['2','3','4','5']);assert(e.tiers[5]>e.tiers[4]&&e.tiers[4]>e.tiers[3]&&e.tiers[3]>e.tiers[2]);});
+test('every item has a grade, and the legendary pair costs several times anything else',()=>{
+  const save=Save.defaults(),W=World.weapons;assert.equal(Meta.RARITY.length,5);
+  assert.equal(Meta.rarity(save,'weapon','rifle'),1);assert.equal(Meta.rarity(save,'weapon','smg'),2);assert.equal(Meta.rarity(save,'weapon','rail'),5);assert.equal(Meta.rarity(save,'gear','frag'),1);assert.equal(Meta.rarity(save,'gear','emp'),4);
+  assert.equal(Meta.rarity(save,'kit','pulse'),5,'a kit part is graded with its gun');
+  // An upgrade is graded by the level it would be bought at next.
+  assert.equal(Meta.rarity(save,'upgrade','plating'),1);save.upgrades.plating=1;assert.equal(Meta.rarity(save,'upgrade','plating'),2);save.upgrades.plating=3;assert.equal(Meta.rarity(save,'upgrade','plating'),4);
+  for(const k of Object.keys(W))assert(Meta.rarity(save,'weapon',k)>=1&&Meta.rarity(save,'weapon',k)<=5);
+  const legendary=Object.keys(W).filter(k=>W[k].tier===5),rest=Object.keys(W).filter(k=>W[k].tier<5),top=Math.max(...rest.map(k=>W[k].price||0));assert.deepEqual(legendary.sort(),['pulse','rail']);
+  for(const k of legendary)assert(W[k].price>=top*3.5,W[k].short+' costs '+W[k].price+', against '+top+' for the dearest other gun');
+  assert.equal(World.tiers[4],15,'and they open at the last rank title');assert.equal(Meta.rankOf(Meta.need(15)).title,'BLACKOUT');});
 test('the armory opens in five tiers by rank',()=>{
-  const save=Save.defaults();save.credits=1e6;assert.equal(Meta.locked(save,'weapon','shotgun'),0);assert.equal(Meta.locked(save,'weapon','rail'),13);assert.equal(Meta.locked(save,'gear','emp'),10);
+  const save=Save.defaults();save.credits=1e6;assert.equal(Meta.locked(save,'weapon','shotgun'),0);assert.equal(Meta.locked(save,'weapon','rail'),15);assert.equal(Meta.locked(save,'gear','emp'),10);
   const r=Meta.buy(save,'weapon','smg');assert.equal(r.ok,false);assert.match(r.reason,/RANK 4/);save.xp=Meta.need(4);assert.equal(Meta.buy(save,'weapon','smg').ok,true);
   // An upgrade's next level decides its tier: levels 1, 2 and 3 sit in tiers 1, 2 and 4.
   const fresh=Save.defaults();fresh.credits=1e6;assert.equal(Meta.buy(fresh,'upgrade','plating').ok,true);assert.match(Meta.buy(fresh,'upgrade','plating').reason,/RANK 4/);fresh.xp=Meta.need(4);assert.equal(Meta.buy(fresh,'upgrade','plating').ok,true);assert.match(Meta.buy(fresh,'upgrade','plating').reason,/RANK 10/);
@@ -142,8 +155,8 @@ test('the debrief names the next goal, and the armory marks the next buy for the
 test('a version 2 save starts the economy again but keeps campaign progress, records, mastery and settings',()=>{
   const old={version:2,credits:99999,xp:42000,owned:{weapons:['rifle','pistol','rail','smg'],gear:['emp']},upgrades:{plating:3},loadout:{primary:'rail',tactical:'emp'},seen:['rail'],
     missions:{crash:{done:true,medals:['complete'],diffs:['standard']},ruins:{done:true,medals:[],diffs:['standard']}},holdout:{standard:11},mastery:{rifle:70},stats:{kills:900,missions:5,deaths:9},settings:{volume:.3,callsign:'GHOST'}};
-  const s=Save.decode(JSON.stringify(old));assert.equal(s.version,3);assert.equal(s.credits,0);assert.equal(s.xp,0);assert.deepEqual(s.upgrades,{});assert.deepEqual(s.loadout,{primary:'rifle',secondary:'pistol',lethal:null,tactical:null});
-  assert.deepEqual(s.owned,{weapons:['rifle','pistol','shotgun'],gear:['frag']},'the opening operation\'s story cache is kept');
+  const s=Save.decode(JSON.stringify(old));assert.equal(s.version,3);assert.equal(s.credits,0);assert.equal(s.xp,0);assert.deepEqual(s.upgrades,{});assert.deepEqual(s.loadout,{primary:'rifle',secondary:'pistol',lethal:null,tactical:null,support:null,perks:[null,null,null]});
+  assert.deepEqual(s.owned,{weapons:['rifle','pistol','shotgun'],gear:['frag'],support:[],perks:[]},'the opening operation\'s story cache is kept');
   assert.equal(s.missions.ruins.done,true);assert.equal(s.holdout.standard,11);assert.equal(s.mastery.rifle,70);assert.equal(s.stats.kills,900);assert.equal(s.settings.callsign,'GHOST');assert.equal(s.drill,true);assert.equal(s.notice,'rebalance');
   const never=Save.decode(JSON.stringify({version:2,credits:500,settings:{}}));assert.deepEqual(never.owned.weapons,['rifle','pistol']);});
 test('version 3 saves keep finds, kit, killhouse records, presets and the drill flag, and reject bad values',()=>{

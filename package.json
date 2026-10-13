@@ -7,30 +7,48 @@
   "type": "commonjs",
   "main": "electron/main.js",
   "scripts": {
-    "test": "node blackout/tests/core.cjs && node blackout/tests/progression.cjs && node blackout/tests/walkthrough.cjs && node blackout/tests/coop.cjs && node electron/net/test.cjs",
+    "test": "node blackout/tests/core.cjs && node blackout/tests/progression.cjs && node blackout/tests/walkthrough.cjs && node blackout/tests/coop.cjs && node blackout/tests/squad.cjs && node blackout/tests/support.cjs && node blackout/tests/arsenal.cjs && node electron/net/test.cjs",
     "test:browser": "node blackout/tests/browser.cjs",
     "test:tactical": "node blackout/tests/tactical.cjs",
     "test:e2e": "node electron/net/e2e.cjs",
+    "test:e2e:squad": "node electron/net/e2e-squad.cjs",
+    "test:squad": "node blackout/tests/squad.cjs",
+    "profile:test": "node blackout/tools/test-profile.cjs apply",
+    "profile:restore": "node blackout/tools/test-profile.cjs restore",
+    "start:test": "node blackout/tools/test-profile.cjs apply && electron .",
     "serve": "python -m http.server 8127 --bind 127.0.0.1",
     "start": "electron .",
-    "dist:win": "node blackout/tools/verify-static.cjs && electron-builder --win",
+    "dist:win": "node blackout/tools/verify-static.cjs && electron-builder --win && node build/verify-package.cjs && node build/stage-steam.cjs",
     "test:relay": "node server/test.cjs",
     "test:e2e:online": "node electron/net/e2e-online.cjs",
     "relay": "node server/relay.js",
     "start:rich": "electron . --credits=99999",
     "start:windowed": "electron . --windowed",
     "verify": "node blackout/tools/verify-static.cjs",
-    "dist:art": "node build/make-installer-art.cjs"
+    "dist:art": "node build/make-installer-art.cjs",
+    "dist:steam": "node blackout/tools/verify-static.cjs && electron-builder --win dir && node build/verify-package.cjs && node build/stage-steam.cjs",
+    "verify:package": "node build/verify-package.cjs",
+    "test:packaged": "node electron/net/packaged-smoke.cjs",
+    "test:release": "npm test && npm run test:relay && npm run test:resilience && npm run test:e2e && npm run test:e2e:squad && npm run test:e2e:online && npm run verify:package && npm run test:packaged",
+    "test:resilience": "node blackout/tests/resilience.cjs"
   },
   "devDependencies": {
-    "playwright": "1.58.2",
+    "@electron/fuses": "^1.8.0",
     "electron": "^33.0.0",
-    "electron-builder": "^25.1.0"
+    "electron-builder": "^25.1.0",
+    "playwright": "1.58.2"
   },
   "build": {
     "appId": "com.neonarcade.blackoutprotocol",
     "productName": "Blackout Protocol",
     "copyright": "Copyright (c) Neon Arcade",
+    "asar": true,
+    "npmRebuild": false,
+    "publish": null,
+    "afterPack": "build/after-pack.cjs",
+    "electronLanguages": [
+      "en-US"
+    ],
     "directories": {
       "output": "release"
     },
@@ -43,10 +61,23 @@
       "!blackout/tools/**",
       "!blackout/*.md",
       "!blackout/assets/source/**",
-      "!electron/net/test.cjs",
-      "!electron/net/e2e.cjs",
-      "!electron/net/e2e-online.cjs",
+      "!electron/**/*.cjs",
+      "!**/*.map",
       "package.json"
+    ],
+    "extraFiles": [
+      {
+        "from": "build/THIRD-PARTY-NOTICES.txt",
+        "to": "THIRD-PARTY-NOTICES.txt"
+      },
+      {
+        "from": "blackout/assets/licenses",
+        "to": "licenses"
+      },
+      {
+        "from": "blackout/vendor/LICENSE.md",
+        "to": "licenses/phaser-LICENSE.md"
+      }
     ],
     "win": {
       "target": [
@@ -64,7 +95,8 @@
         }
       ],
       "icon": "build/icon.ico",
-      "legalTrademarks": "Blackout Protocol"
+      "legalTrademarks": "Blackout Protocol",
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,
@@ -81,7 +113,9 @@
       "shortcutName": "Blackout Protocol",
       "uninstallDisplayName": "Blackout Protocol",
       "runAfterFinish": true,
-      "deleteAppDataOnUninstall": false
+      "deleteAppDataOnUninstall": false,
+      "perMachine": false,
+      "packElevateHelper": false
     },
     "portable": {
       "artifactName": "Blackout-Protocol-${version}-Portable.${ext}",

@@ -31,7 +31,7 @@ function estimate(){const std=payouts('standard',MODEL.topWave),save=Save.defaul
     for(let r=before+1;r<=after;r++){save.credits+=150*r;const t=World.tiers.indexOf(r)+1;if(t)tiers[t]=seconds/3600;}
     for(;;){const open=Meta.catalogue(save).filter(i=>!i.rank).sort((a,b)=>a.cost-b.cost),item=open[0];if(!item)break;
       const cost=item.kind==='weapon'&&World.weapons[item.key].drop?Math.round(item.cost*(1-Meta.FOUND_DISCOUNT*MODEL.found)):item.cost;if(save.credits<cost)break;
-      save.credits-=cost;if(item.kind==='weapon')save.owned.weapons.push(item.key);else if(item.kind==='gear')save.owned.gear.push(item.key);else save.upgrades[item.key]=(save.upgrades[item.key]||0)+1;
+      save.credits-=cost;Meta.grant(save,item.kind,item.key);
       if(first===null)first=seconds/60;log.push((seconds/3600).toFixed(1)+'h '+item.name);}};
   // The campaign first: each operation once, on Standard.
   for(const m of World.missions)earn(m.reward*2.5+700,MODEL.missionSeconds);

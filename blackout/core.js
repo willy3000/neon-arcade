@@ -2,10 +2,12 @@
   'use strict';
   const DT=1/120,CELL=40,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
   const wrap=a=>Math.atan2(Math.sin(a),Math.cos(a)),W=World.weapons,A=World.archetypes,G=World.gear,ORDER=World.order;
-  const DIRS=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],FUSE={frag:1.15,incendiary:.62,flash:.9,smoke:.7,emp:.95,decoy:.6};
-  const diff=s=>World.difficulties[s.difficulty]||World.difficulties.standard,atLeast=(s,level)=>ORDER.indexOf(s.difficulty)>=ORDER.indexOf(level);
+  const DIRS=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]],FUSE={frag:1.15,incendiary:.62,flash:.9,smoke:.7,emp:.95,decoy:.6,cluster:1,sensor:.62,gas:.7};
+  // In team deathmatch "enemy pressure" is how good the AI operators are (TDM.skill), not a change to the rules.
+  const diff=s=>!s.tdm&&World.difficulties[s.difficulty]||World.difficulties.standard,atLeast=(s,level)=>ORDER.indexOf(s.difficulty)>=ORDER.indexOf(level);
   function rand(s){s.seed=(Math.imul(s.seed,1664525)+1013904223)>>>0;return s.seed/4294967296;}
-  function event(s,type,data={}){if(s.events.length<256)s.events.push({type,...data});}
+  // An event raised during an operator's turn in team deathmatch (see act) is theirs unless it says whose it is.
+  function event(s,type,data={}){if(s.events.length<256)s.events.push(s.acting&&data.who===undefined?{type,...data,who:s.acting}:{type,...data});}
   function circleBox(x,y,r,b){const nx=clamp(x,b.x,b.x+b.w),ny=clamp(y,b.y,b.y+b.h);return (x-nx)**2+(y-ny)**2<r*r;}
   function segmentBox(x1,y1,x2,y2,b,pad=0){let lo=0,hi=1;const dx=x2-x1,dy=y2-y1;for(const [p,q] of [[-dx,x1-b.x+pad],[dx,b.x+b.w+pad-x1],[-dy,y1-b.y+pad],[dy,b.y+b.h+pad-y1]]){if(Math.abs(p)<1e-9){if(q<0)return null;}else{const t=q/p;if(p<0)lo=Math.max(lo,t);else hi=Math.min(hi,t);if(lo>hi)return null;}}return lo;}
   function segmentCircle(x1,y1,x2,y2,c,r){const dx=x2-x1,dy=y2-y1,fx=x1-c.x,fy=y1-c.y,a=dx*dx+dy*dy,b=2*(fx*dx+fy*dy),cc=fx*fx+fy*fy-r*r,disc=b*b-4*a*cc;if(cc<=0)return 0;if(a<1e-9||disc<0)return null;const t=(-b-Math.sqrt(disc))/(2*a);return t>=0&&t<=1?t:null;}
@@ -14,46 +16,94 @@
   function sees(s,a,b){return lineOfSight(s,a,b)&&!s.zones.some(z=>z.kind==='smoke'&&segmentCircle(a.x,a.y,b.x,b.y,z,z.r)!==null);}
   function clearAt(s,x,y,r=16,ignore=null){return !s.walls.some(w=>!w.dead&&w.id!==ignore&&circleBox(x,y,r,w));}
   const reserveOf=(s,k)=>Math.round(W[k].reserve*s.mods.reserve*(s.mods.mastery[k]>=1?1.1:1)),reloadOf=(s,k)=>W[k].reload*s.mods.reload*(s.mods.mastery[k]>=2?.92:1)*(s.mods.kit[k]>=2?.9:1),damageOf=(s,k)=>W[k].damage*(s.mods.mastery[k]>=3?1.06:1)*(s.mods.kit[k]>=3?1.08:1);
-  function makeEnemy(s,e){const t=A[e.type]||A.infantry,gun=e.gun||s.map.guns?.[e.type]||t.gun||null;const hp=t.hp*(e.plated?1.5:1);return {...e,gun,hp,maxHp:hp,radius:t.radius||17,vx:0,vy:0,angle:e.angle||0,dead:false,active:false,stagger:0,cooldown:.6+rand(s),attack:0,attackAge:0,aim:0,seen:0,lastX:e.x,lastY:e.y,phase:1,clip:0,reload:0,moveTime:0,side:rand(s)>.5?1:-1,burst:0,burstT:0,shieldDown:0,disabled:0,gone:0,flashed:0,woke:false};}
+  function makeEnemy(s,e){const t=A[e.type]||A.infantry,gun=e.gun||s.map.guns?.[e.type]||t.gun||null;const hp=t.hp*(e.plated?1.5:1)*(e.tough||1);return {...e,gun,hp,maxHp:hp,radius:t.radius||17,vx:0,vy:0,angle:e.angle||0,dead:false,active:false,stagger:0,cooldown:.6+rand(s),attack:0,attackAge:0,aim:0,seen:0,lastX:e.x,lastY:e.y,phase:1,clip:0,reload:0,moveTime:0,side:rand(s)>.5?1:-1,burst:0,burstT:0,shieldDown:0,disabled:0,gone:0,flashed:0,woke:false};}
   const stageDef=s=>s.map.stages[Math.min(s.stage,s.map.stages.length-1)],liveZone=s=>stageDef(s).zone;
+  // The two lobby modes are fought over open ground with no objective marker: holdout's endless waves and team deathmatch.
+  const arena=s=>{const k=stageDef(s).kind;return k==='endless'||k==='tdm';};
   // Co-op: an operator at zero health goes down instead of ending the run, and drops dog tags. The squadmate brings
   // them back by carrying those tags to the revive station and holding interact there for REVIVE_TIME seconds; the
   // run only ends once both are down. "lead" is whoever the
   // hostiles should be hunting and pathing towards: Rook, or the squadmate while Rook is down.
-  const lead=s=>s.player.dead&&s.guest&&!s.guest.dead?s.guest:s.player,REVIVE_TIME=5;
+  const lead=s=>s.player.dead&&s.mates.find(o=>!o.dead)||s.player,REVIVE_TIME=5;
+  // The squad: Rook plus up to three more operators (s.mates). Each mate is driven by a LAN player's input or, when
+  // "bot" is set, by botInput below. s.guest stays as the name for the first of them, as two-player co-op knows it.
+  const ops=s=>s.mates.length?[s.player,...s.mates]:[s.player],MATE_IDS=['guest','m2','m3'];
+  function nearestOp(s,e){let best=null,bd=Infinity;for(const o of ops(s)){if(o.dead)continue;const d=distance(o,e);if(d<bd){bd=d;best=o;}}return best;}
   const eligible=(s,e)=>s.training||e.zone<=liveZone(s)||e.woke||e.spawned;
+  // Team deathmatch: two teams, Alpha and Delta, of up to four operators each - players or AI in any mix - on a
+  // killhouse map. Everyone has the whole kit and comes back a few seconds after going down. A kill is a point for the
+  // killer's team; first to the limit wins, or whoever is ahead when the clock runs out (see muster for its length).
+  // "dmg" scales a hit on an operator, "stun" caps how long one can be stunned, and "skill" is how good the AI is at
+  // each pressure: the share of a player's damage it does, and how much slower or quicker than a regular it reacts.
+  const TDM={limit:30,limits:[5,10,15,20,30,50,75],respawn:5,safe:520,bounty:.5,pay:{win:300,draw:150,loss:100},dmg:.85,stun:2.2,
+    skill:{story:{dmg:.4,react:1.6},standard:{dmg:.6,react:1.15},intense:{dmg:.8,react:.9},insane:{dmg:1,react:.7}}};
+  const MATE_ALL=['guest','m2','m3','m4','m5','m6','m7'],skill=s=>TDM.skill[s.difficulty]||TDM.skill.standard;
+  // What an operator's permanent upgrades, weapon mastery and kit parts are worth in a run. Team deathmatch passes
+  // none: every operator starts level, whatever they have bought.
+  function modsFor(profile){const up=profile?.upgrades||{},lvl=k=>clamp(Math.floor(up[k]||0),0,3),m={reserve:1+.2*lvl('pouch'),reload:1-.08*lvl('reflex'),regen:1+.15*lvl('conditioning'),drain:1-.1*lvl('conditioning'),delay:1-.1*lvl('conditioning'),kit:{},armor:25+20*lvl('plating'),maxArmor:80+15*lvl('plating'),stims:2+lvl('medic'),charges:lvl('bandolier'),mastery:{}};
+    for(const k of Object.keys(W)){m.mastery[k]=clamp(Math.floor(profile?.mastery?.[k]||0),0,3);m.kit[k]=clamp(Math.floor(profile?.kit?.[k]||0),0,3);}return m;}
+  // The roster. options.squad lists every operator, the host first: {team, loadout, bot}. Each is a whole operator
+  // with a context of its own (op.ctx: everything the simulation keeps per player, see act). With no squad given it
+  // is the host against one AI operator.
+  const CTX=['perks','support','flowBoost','flowTime','windUsed','mods','stats','mastery','combo','comboAt','camp','owned','decoy','recon'];
+  function muster(s,options){const T=s.tdm,host=s.player,squad=(Array.isArray(options.squad)&&options.squad.length?options.squad:[{team:0,loadout:options.loadout},{team:1,bot:true}]).slice(0,8);s.mates=[];s.roster=[];
+    squad.forEach((c,i)=>{const lo=c&&c.loadout||{},bot=!!(c&&c.bot);let op=host;
+      if(i){const slots=W[lo.primary]?.slot===0&&W[lo.secondary]?.slot===1?[lo.primary,lo.secondary]:['rifle','pistol'],lethal=G[lo.lethal]?.slot==='lethal'?lo.lethal:bot?'frag':null,tactical=G[lo.tactical]?.slot==='tactical'?lo.tactical:null;
+        op={...host,id:MATE_ALL[i-1],buffer:{slide:0,interact:0},slots,slot:0,lethal,tactical,grenades:lethal?G[lethal].count:0,tacticals:tactical?G[tactical].count:0,stims:s.mods.stims,ammo:{...host.ammo},reserve:{...host.reserve}};s.mates.push(op);}
+      const perks={};(Array.isArray(lo.perks)?lo.perks:[]).forEach((k,n)=>{if(World.perks[k]&&World.perks[k].slot===n)perks[k]=true;});
+      Object.assign(op,{team:c&&c.team===1?1:0,bot,type:'operator',hp:100,maxHp:100,stagger:0,respawn:0,dead:false,x:-9e4,y:-9e4});
+      op.ctx={perks,support:T.support&&World.support[lo.support]?{key:lo.support,cost:World.support[lo.support].cost,charge:0,ready:false,uses:0}:null,flowBoost:0,flowTime:0,windUsed:false,mods:s.mods,
+        stats:{kills:0,shots:0,hits:0,damage:0,flows:0,credits:0,intel:0,bestCombo:0,wave:0,spent:0},mastery:{},combo:0,comboAt:-10,camp:{x:0,y:0,t:0},owned:Object.keys(W),decoy:null,recon:0};
+      s.roster.push(op);T.board[op.id]={k:0,d:0,cr:0,team:op.team};});
+    if(s.mates.length)s.guest=s.mates[0];
+    // The clock allows longer per kill the fewer operators there are to find one another.
+    T.time=clamp(T.limit*(squad.length<=2?26:squad.length<=4?18:14),180,900);
+    for(const op of s.roster){const at=spawnSpot(s,op.team,op),to=T.bases[1-op.team];op.x=at.x;op.y=at.y;op.angle=Math.atan2(to.y-at.y,to.x-at.x);}}
   function create(options={}){
-    const training=options.training===true,id=training?'range':options.mission||'crash',map=World.mission(id),last=map.stages.length-1,cp=training?null:options.checkpoint||null;
+    // In team deathmatch the host is the first operator on the roster, and that entry carries their loadout.
+    if(options.mode==='tdm'&&!options.loadout&&Array.isArray(options.squad)&&options.squad[0]&&options.squad[0].loadout)options={...options,loadout:options.squad[0].loadout};
+    const training=options.training===true,id=training?'range':options.mission||'crash',tdm=!training&&options.mode==='tdm',last0=World.mission(id),cp=training||tdm?null:options.checkpoint||null;
+    // Team deathmatch borrows a killhouse's ground and swaps its waves for the match.
+    const limit=TDM.limits.includes(options.limit)?options.limit:TDM.limit;
+    const map=tdm?{...last0,enemies:[],intro:{speaker:'LARK',text:'Team deathmatch. Alpha against Delta, first to '+limit+'.',duration:5},
+      stages:[{kind:'tdm',zone:0,x:last0.start.x,y:last0.start.y,name:'Team deathmatch',hint:'First team to '+limit+' kills wins. Everyone redeploys a few seconds after going down.',spawn:{x:last0.start.x,y:last0.start.y}}]}:last0,last=map.stages.length-1;
+    if(tdm)map.objectives=map.stages;
     let stage=cp?clamp(Math.floor(cp.stage)||0,0,last):0;while(stage>0&&!map.stages[stage].spawn)stage--;
     const st=map.stages[stage],up=options.profile?.upgrades||{},lvl=k=>clamp(Math.floor(up[k]||0),0,3);
     const s={map,mission:id,training,stage,time:cp?.time||0,seed:options.seed||1701,tick:0,events:[],walls:map.walls.map(w=>({...w})),enemies:[],projectiles:Array.from({length:192},()=>({active:false})),grenades:[],zones:[],mines:[],decoy:null,hazards:map.hazards.map(h=>({...h})),pickups:map.pickups.map(p=>({...p,taken:false,base:true})),spawnWarnings:[],
       director:{clock:0,wave:0,rest:0,pressure:0,fired:{}},stats:{kills:cp?.kills||0,shots:0,hits:0,damage:cp?.damage||0,flows:cp?.flows||0,credits:cp?.credits||0,intel:cp?.intel||0,bestCombo:0,wave:0,spent:0},mastery:{},difficulty:options.difficulty||'standard',
       owned:[...(options.owned||(training?Object.keys(W):['rifle','pistol']))],completed:false,dead:false,cinematic:0,hitstop:0,lastFlow:-10,flowTime:0,checkpoint:null,endingStarted:false,combo:0,comboAt:-10,squad:{nade:3},camp:{x:0,y:0,t:0},killed:Array.isArray(cp?.killed)?[...cp.killed]:[],goal:{x:st.x,y:st.y},progress:0,dark:map.dark||0,boss:null};
-    s.mods={reserve:1+.2*lvl('pouch'),reload:1-.08*lvl('reflex'),regen:1+.15*lvl('conditioning'),drain:1-.1*lvl('conditioning'),delay:1-.1*lvl('conditioning'),kit:{},armor:25+20*lvl('plating'),maxArmor:80+15*lvl('plating'),stims:2+lvl('medic'),charges:lvl('bandolier'),mastery:{}};
-    for(const k of Object.keys(W)){s.mods.mastery[k]=clamp(Math.floor(options.profile?.mastery?.[k]||0),0,3);s.mods.kit[k]=clamp(Math.floor(options.profile?.kit?.[k]||0),0,3);}
+    s.mods=modsFor(tdm?null:options.profile);
     for(let j=0;j<=stage;j++){const q=map.stages[j];for(const wid of q.restoreDead||[]){const w=s.walls.find(b=>b.id===wid);if(w)w.dead=true;}for(const n of q.enter?.opens||[])for(const w of s.walls)if(w.gate===n)w.dead=true;if(q.dark!==undefined)s.dark=q.dark;}
     for(const wid of Array.isArray(cp?.dead)?cp.dead:[]){const w=s.walls.find(b=>b.id===wid);if(w)w.dead=true;}
     if(cp?.intel>0)for(const q of s.pickups)if(q.type==='intel')q.taken=true;
     const lo=training?{primary:'rifle',secondary:'pistol',lethal:'frag',tactical:'flash'}:{primary:'rifle',secondary:'pistol',lethal:null,tactical:null,...(options.loadout||{})};
+    // Rook's perks (one per slot) and the field support he carries: its meter, and whatever it has put in the field.
+    s.perks={};(Array.isArray(lo.perks)?lo.perks:[]).forEach((k,i)=>{if(World.perks[k]&&World.perks[k].slot===i)s.perks[k]=true;});
+    s.support=World.support[lo.support]?{key:lo.support,cost:World.support[lo.support].cost,charge:0,ready:false,uses:0}:null;s.allies=[];s.recon=0;s.flowBoost=0;s.windUsed=false;
     const okSlots=a=>Array.isArray(a)&&a.length===2&&W[a[0]]&&W[a[1]]&&W[a[0]].slot===0&&W[a[1]].slot===1,okGear=(k,slot)=>k&&G[k]&&G[k].slot===slot?k:null;
     const slots=okSlots(cp?.slots)?[...cp.slots]:okSlots([lo.primary,lo.secondary])?[lo.primary,lo.secondary]:['rifle','pistol'];
     let lethal=okGear(cp&&cp.lethal!==undefined?cp.lethal:lo.lethal,'lethal');const tactical=okGear(cp&&cp.tactical!==undefined?cp.tactical:lo.tactical,'tactical');
     for(let j=1;j<=stage;j++){const g=map.stages[j].enter?.grants;if(g?.lethal&&!lethal)lethal=g.lethal;}
-    const spawn=cp&&Number.isFinite(cp.x)&&Number.isFinite(cp.y)&&clearAt(s,cp.x,cp.y,17)?{x:cp.x,y:cp.y}:st.spawn||map.start;
-    s.player={x:spawn.x,y:spawn.y,vx:0,vy:0,angle:0,moveAngle:0,radius:16,health:100,armor:s.mods.armor,maxArmor:s.mods.maxArmor,stamina:100,staminaRegenAt:0,winded:false,chained:false,diveEnd:-10,buffer:{slide:0,interact:0},state:'idle',age:0,duration:0,actionDir:0,reload:0,cooldown:0,recoil:0,shotAge:10,meleeIndex:0,meleeAt:-10,meleeHit:false,meleeHold:0,heavyTriggered:false,heavy:false,heal:0,iframes:0,stepDistance:0,
+    s.mates=[];s.ai={};s.by='player';s.tdm=tdm?{limit,time:clamp(limit*14,180,900),score:[0,0],board:{},result:null,winner:null,support:options.support!==false,...bases(s)}:null;
+    const spawn=tdm?s.tdm.bases[0]:cp&&Number.isFinite(cp.x)&&Number.isFinite(cp.y)&&clearAt(s,cp.x,cp.y,17)?{x:cp.x,y:cp.y}:st.spawn||map.start;
+    s.player={id:'player',x:spawn.x,y:spawn.y,vx:0,vy:0,angle:0,moveAngle:0,radius:16,health:100,armor:s.mods.armor,maxArmor:s.mods.maxArmor,stamina:100,staminaRegenAt:0,winded:false,chained:false,diveEnd:-10,buffer:{slide:0,interact:0},state:'idle',age:0,duration:0,actionDir:0,reload:0,cooldown:0,recoil:0,shotAge:10,meleeIndex:0,meleeAt:-10,meleeHit:false,meleeHold:0,heavyTriggered:false,heavy:false,heal:0,iframes:0,stepDistance:0,
       slot:0,slots,lethal,tactical,grenades:training?9:lethal?G[lethal].count+s.mods.charges:0,tacticals:training?9:tactical?G[tactical].count+s.mods.charges:0,stims:training?5:s.mods.stims,ammo:{},reserve:{}};
     for(const [k,w] of Object.entries(W)){s.player.ammo[k]=w.capacity;s.player.reserve[k]=reserveOf(s,k);}
-    // A LAN co-op guest: a second, leaner character (no slide/roll/dive/vault/gadgets - see stepGuest) with a fixed
-    // or host-chosen weapon pair. Absent unless options.guest is passed, so solo/campaign play is untouched.
-    if(options.guest){
-      const glo=(options.guest&&options.guest.loadout)||{},gslots=okSlots([glo.primary,glo.secondary])?[glo.primary,glo.secondary]:['rifle','pistol'],
-        gx=clearAt(s,spawn.x+40,spawn.y,17)?spawn.x+40:clearAt(s,spawn.x-40,spawn.y,17)?spawn.x-40:spawn.x,
-        gy=gx!==spawn.x?spawn.y:clearAt(s,spawn.x,spawn.y+40,17)?spawn.y+40:spawn.y;
-      s.guest={x:gx,y:gy,vx:0,vy:0,angle:0,moveAngle:0,radius:16,health:100,armor:s.mods.armor,maxArmor:s.mods.maxArmor,stamina:100,staminaRegenAt:0,winded:false,chained:false,diveEnd:-10,buffer:{slide:0,interact:0},state:'idle',age:0,duration:0,actionDir:0,reload:0,cooldown:0,recoil:0,shotAge:10,meleeIndex:0,meleeAt:-10,meleeHit:false,meleeHold:0,heavyTriggered:false,heavy:false,heal:0,iframes:0,stepDistance:0,
+    // Squadmates: leaner characters (no slide/roll/dive/vault/gadgets - see stepMate) carrying a weapon pair of their
+    // own, each worked by a LAN player or by the AI. options.guest is the two-player way of asking for one; options.mates
+    // lists up to three. Absent unless one of those is passed, so solo/campaign play is untouched.
+    const crew=(Array.isArray(options.mates)?options.mates:options.guest?[options.guest]:[]).slice(0,MATE_IDS.length),taken=[];
+    crew.forEach((c,i)=>{
+      const glo=(c&&c.loadout)||{},gslots=okSlots([glo.primary,glo.secondary])?[glo.primary,glo.secondary]:['rifle','pistol'],
+        at=[[40,0],[-40,0],[0,40],[0,-40],[40,40],[-40,40],[40,-40],[-40,-40],[80,0],[-80,0]].map(([dx,dy])=>({x:spawn.x+dx,y:spawn.y+dy})).find(q=>clearAt(s,q.x,q.y,17)&&!taken.some(t=>t.x===q.x&&t.y===q.y))||{x:spawn.x,y:spawn.y};taken.push(at);
+      const m={id:MATE_IDS[i],bot:!!(c&&c.bot),x:at.x,y:at.y,vx:0,vy:0,angle:0,moveAngle:0,radius:16,health:100,armor:s.mods.armor,maxArmor:s.mods.maxArmor,stamina:100,staminaRegenAt:0,winded:false,chained:false,diveEnd:-10,buffer:{slide:0,interact:0},state:'idle',age:0,duration:0,actionDir:0,reload:0,cooldown:0,recoil:0,shotAge:10,meleeIndex:0,meleeAt:-10,meleeHit:false,meleeHold:0,heavyTriggered:false,heavy:false,heal:0,iframes:0,stepDistance:0,
         slot:0,slots:gslots,lethal:null,tactical:null,grenades:0,tacticals:0,stims:0,ammo:{},reserve:{},dead:false};
-      for(const [k,w] of Object.entries(W)){s.guest.ammo[k]=w.capacity;s.guest.reserve[k]=reserveOf(s,k);}
-    }
-    s.tags=[];s.station=s.guest?placeStation(s,spawn):null;
+      for(const [k,w] of Object.entries(W)){m.ammo[k]=w.capacity;m.reserve[k]=reserveOf(s,k);}
+      s.mates.push(m);});
+    if(s.mates.length)s.guest=s.mates[0];
+    if(tdm)muster(s,options);
+    s.tags=[];s.station=s.mates.length&&!tdm?placeStation(s,spawn):null;
     s.camp={x:spawn.x,y:spawn.y,t:0};
     const cleared=new Set();for(let j=0;j<stage;j++){const q=map.stages[j];if(['clear','hold','boss'].includes(q.kind))cleared.add(q.zone);}
     s.enemies=map.enemies.filter(e=>training||!cleared.has(e.zone)&&!s.killed.includes(e.id)).map(e=>makeEnemy(s,e));
@@ -79,10 +129,10 @@
   // it dry also leaves the operator winded - no sprinting until a quarter of the bar is back.
   const STAMINA_SHORT=1,STAMINA_LONG=3,WINDED_UNTIL=25,BUFFER=.12;
   function rest(s,p,seconds){p.staminaRegenAt=Math.max(p.staminaRegenAt||0,s.time+seconds*s.mods.delay);}
-  function drain(s,p,amount){p.stamina=Math.max(0,p.stamina-amount);if(p.stamina<=0&&!p.winded){p.winded=true;rest(s,p,STAMINA_LONG);event(s,'winded',{guest:p===s.guest});}else rest(s,p,STAMINA_SHORT);}
+  function drain(s,p,amount){p.stamina=Math.max(0,p.stamina-amount);if(p.stamina<=0&&!p.winded){p.winded=true;rest(s,p,STAMINA_LONG);event(s,'winded',{guest:p!==s.player,who:p.id});}else rest(s,p,STAMINA_SHORT);}
   function recover(s,p,amount){if(s.time<(p.staminaRegenAt||0))return;p.stamina=Math.min(100,p.stamina+amount);if(p.winded&&p.stamina>=WINDED_UNTIL)p.winded=false;}
   function begin(s,state,duration,angle,cost=0,owner){const p=owner||s.player;if(p.stamina<cost)return false;p.stamina-=cost;if(cost>=8)rest(s,p,STAMINA_SHORT);p.chained=false;p.state=state;p.age=0;p.duration=duration;p.actionDir=angle;p.heal=0;if(state!=='reload')p.reload=0;event(s,'action',{action:state,x:p.x,y:p.y});return true;}
-  function flow(s){s.stats.flows++;s.flowTime=1.3;s.lastFlow=s.time;s.player.stamina=Math.min(100,s.player.stamina+12);if(s.player.stamina>=WINDED_UNTIL)s.player.winded=false;event(s,'flow',{x:s.player.x,y:s.player.y});}
+  function flow(s){s.stats.flows++;s.flowTime=1.3;s.lastFlow=s.time;s.player.stamina=Math.min(100,s.player.stamina+12);if(s.player.stamina>=WINDED_UNTIL)s.player.winded=false;if(s.perks.flowstate)s.flowBoost=s.time+3;charge(s,25);event(s,'flow',{x:s.player.x,y:s.player.y});}
   function vault(s,input){const p=s.player,dx=input.mx||Math.cos(p.angle),dy=input.my||Math.sin(p.angle),len=Math.hypot(dx,dy),nx=dx/len,ny=dy/len;
     const candidates=s.walls.filter(b=>!b.dead&&b.low&&b.kind!=='underpass'&&circleBox(p.x+nx*52,p.y+ny*52,40,b)).sort((a,b)=>distance(p,{x:a.x+a.w/2,y:a.y+a.h/2})-distance(p,{x:b.x+b.w/2,y:b.y+b.h/2}));
     for(const b of candidates){let tx=p.x,ty=p.y;if(b.w>b.h){ty=ny>=0?b.y+b.h+23:b.y-23;tx=clamp(p.x,b.x-16,b.x+b.w+16);}else{tx=nx>=0?b.x+b.w+23:b.x-23;ty=clamp(p.y,b.y-16,b.y+b.h+16);}
@@ -94,54 +144,74 @@
   function muzzle(s,actor,angle,sprite){const full=sprite==='handgun'?41:sprite==='shotgun'?57:54;let reach=full;const endX=actor.x+Math.cos(angle)*reach,endY=actor.y+Math.sin(angle)*reach;
     for(const wall of s.walls){if(wall.dead||wall.pass)continue;const t=segmentBox(actor.x,actor.y,endX,endY,wall);if(t!==null)reach=Math.min(reach,Math.max(0,t*full-.1));}
     return {x:actor.x+Math.cos(angle)*reach,y:actor.y+Math.sin(angle)*reach};}
-  function shoot(s,actor,weapon,angle,enemy=false,owner){if(enemy)return enemyFire(s,actor,angle);const w=W[weapon],p=owner||s.player,base=angle+p.recoil*Math.sin(p.ammo[weapon]*2.1),m=muzzle(s,actor,angle,w.sprite);
+  // (In team deathmatch, opening fire gives up whatever protection a redeploy left.)
+  function shoot(s,actor,weapon,angle,enemy=false,owner){if(enemy)return enemyFire(s,actor,angle);if(s.tdm)(owner||s.player).iframes=0;const w=W[weapon],p=owner||s.player,base=angle+p.recoil*Math.sin(p.ammo[weapon]*2.1),m=muzzle(s,actor,angle,w.sprite);
     for(let i=0;i<w.pellets;i++){const bullet=s.projectiles.find(b=>!b.active);if(!bullet)break;const spread=w.spread*(s.mods.kit[weapon]>=1?.8:1)*(p.aiming?.45:1)*(Math.hypot(p.vx,p.vy)>210?1.5:1);const a=base+(rand(s)-.5)*2*spread;
-      Object.assign(bullet,{active:true,x:m.x,y:m.y,px:m.x,py:m.y,vx:Math.cos(a)*w.speed,vy:Math.sin(a)*w.speed,remaining:w.range,damage:damageOf(s,weapon),enemy:false,weapon,pierce:w.pierce||0,explosive:w.explosive||0,stagger:w.stagger,breach:!!w.breach,hitIds:[],whiz:false});}
+      Object.assign(bullet,{active:true,x:m.x,y:m.y,px:m.x,py:m.y,vx:Math.cos(a)*w.speed,vy:Math.sin(a)*w.speed,remaining:w.range,damage:damageOf(s,weapon)*(p.bot?botDmg(s):1)*(p===s.player&&s.time<s.flowBoost?1.3:1),enemy:false,owner:p.id,weapon,pierce:w.pierce||0,explosive:w.explosive||0,stagger:w.stagger,breach:!!w.breach,hitIds:[],whiz:false,bounce:w.bounce||0,chain:w.chain||0,flame:!!w.flame,knife:false});}
     actor.shotAge=0;event(s,'shot',{x:m.x,y:m.y,angle,weapon,enemy:false});p.ammo[weapon]--;p.cooldown=w.rate;p.recoil=Math.min(.19,p.recoil+w.recoil);s.stats.shots++;move(s,p,-Math.cos(angle)*(w.cls==='shotgun'?5:1.3),-Math.sin(angle)*(w.cls==='shotgun'?5:1.3));
   }
   function enemyFire(s,e,angle,opts={}){const t=A[e.type]||A.infantry,D=diff(s),gun=W[e.gun]||W.rifle,m=muzzle(s,e,angle,gun.sprite),rocket=opts.rocket||t.rocket||0;
     for(let i=0;i<(t.pellets||1);i++){const bullet=s.projectiles.find(b=>!b.active);if(!bullet)break;const a=angle+(rand(s)-.5)*2*(t.spread??.035)*D.spread,speed=(opts.speed||t.bullet||620)*D.bullet;
-      Object.assign(bullet,{active:true,x:m.x,y:m.y,px:m.x,py:m.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,remaining:t.reach||1100,damage:(opts.damage||t.damage)*(s.map.threat||1),enemy:true,weapon:e.gun||'rifle',pierce:0,explosive:rocket,stagger:0,breach:false,hitIds:[],whiz:false});}
+      Object.assign(bullet,{active:true,x:m.x,y:m.y,px:m.x,py:m.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,remaining:t.reach||1100,damage:(opts.damage||t.damage)*(s.map.threat||1),enemy:true,weapon:e.gun||'rifle',pierce:0,explosive:rocket,stagger:0,breach:false,hitIds:[],whiz:false,bounce:0,chain:0,flame:false,knife:false});}
     e.shotAge=0;event(s,'shot',{x:m.x,y:m.y,angle,weapon:rocket?'rocket':e.gun||'rifle',enemy:true});}
   function damagePlayer(s,amount,x,y,src=''){const p=s.player;if(s.dead||p.dead||s.cinematic>0||p.iframes>0||p.state==='vault'&&p.age<.24)return false;
     // A roll or dive that carries the operator through an attack is a flow chain, once per dodge.
     if(p.state==='roll'&&p.age>=.055&&p.age<=.25||p.state==='dive'&&p.age>=.07&&p.age<=.28){if(!p.chained&&amount>0&&!['','fire','laser'].includes(src)){p.chained=true;flow(s);event(s,'dodge',{x:p.x,y:p.y});}return false;}
-    const D=diff(s);amount*=D.dmg;const hadArmor=p.armor>0,armor=Math.min(p.armor,amount*.65);p.armor-=armor;p.health=Math.max(0,p.health-amount+armor);s.stats.damage+=amount-armor;p.iframes=D.iframes;p.heal=0;s.director.rest=1.3;event(s,'damage',{x:p.x,y:p.y,amount,fromX:x,fromY:y,src});
-    if(hadArmor&&p.armor<.5){p.armor=0;event(s,'armorbreak');}if(p.health<=0){if(s.guest&&!s.guest.dead)down(s,p);else{s.dead=true;p.state='death';p.age=0;event(s,'death');}}return true;
+    const D=diff(s);amount*=D.dmg*(s.perks.flak&&(src==='blast'||src==='fire')?.6:1);p.hurtAt=s.time;const hadArmor=p.armor>0,armor=Math.min(p.armor,amount*.65);p.armor-=armor;p.health=Math.max(0,p.health-amount+armor);s.stats.damage+=amount-armor;p.iframes=D.iframes;p.heal=0;s.director.rest=1.3;event(s,'damage',{x:p.x,y:p.y,amount,fromX:x,fromY:y,src,who:p.id});
+    if(hadArmor&&p.armor<.5){p.armor=0;event(s,'armorbreak');}if(p.health<=0&&s.perks.secondwind&&!s.windUsed){s.windUsed=true;p.health=30;p.iframes=1.5;event(s,'secondwind',{x:p.x,y:p.y});}
+    if(p.health<=0){if(s.tdm)fallen(s,p);else if(s.mates.some(o=>!o.dead))down(s,p);else{s.dead=true;p.state='death';p.age=0;event(s,'death');}}return true;
   }
-  function down(s,op){const who=op===s.guest?'guest':'player';Object.assign(op,{dead:true,state:'death',age:0,health:0,vx:0,vy:0,reload:0,heal:0});s.tags.push({owner:who,x:op.x,y:op.y,carrier:null,progress:0});event(s,'down',{who,x:op.x,y:op.y});}
+  function down(s,op){const who=op.id;Object.assign(op,{dead:true,state:'death',age:0,health:0,vx:0,vy:0,reload:0,heal:0});s.tags.push({owner:who,x:op.x,y:op.y,carrier:null,progress:0});event(s,'down',{who,x:op.x,y:op.y});}
+  // Team deathmatch has no tags and no station: a fallen operator costs the squad a point and is back in a few seconds.
+  function fallen(s,op,by){const T=s.tdm;Object.assign(op,{dead:true,state:'death',age:0,health:0,hp:0,vx:0,vy:0,reload:0,heal:0,burst:0,zip:0,stagger:0,respawn:TDM.respawn});T.score[1-op.team]++;if(T.board[op.id])T.board[op.id].d++;event(s,'down',{who:op.id,by,x:op.x,y:op.y,tdm:true});}
+  // Back at their own team's base, whole, with full magazines and gadgets and a moment of protection. It runs in that
+  // operator's own turn (see act), so the counts are theirs.
+  function redeploy(s,op){const at=spawnSpot(s,op.team,op);Object.assign(op,{dead:false,x:at.x,y:at.y,vx:0,vy:0,health:100,hp:100,armor:s.mods.armor,stamina:100,winded:false,state:'idle',age:0,iframes:2.5,reload:0,heal:0,cooldown:.3,recoil:0,respawn:0,radius:16});
+    for(const k of op.slots){op.ammo[k]=W[k].capacity;op.reserve[k]=reserveOf(s,k);}
+    s.windUsed=false;op.stims=s.mods.stims;if(op.lethal)op.grenades=Math.max(op.grenades,G[op.lethal].count);if(op.tactical)op.tacticals=Math.max(op.tacticals,G[op.tactical].count);
+    event(s,'respawn',{who:op.id,x:at.x,y:at.y});}
   // Tags are picked up by walking over them. Reviving means standing on the station with them and holding interact:
   // progress builds over REVIVE_TIME, and drains twice as fast whenever the carrier lets go or steps off the pad. The
   // revived operator stands up beside the station with part of their health and a moment of protection.
-  function stepRevive(s,input,dt){if(!s.guest||!s.tags.length)return;const ops={player:s.player,guest:s.guest};
-    for(const t of s.tags){const by=t.owner==='player'?'guest':'player',mate=ops[by],op=ops[t.owner];if(mate.dead)continue;
-      if(!t.carrier){if(distance(mate,t)<38){t.carrier=by;event(s,'tags',{who:t.owner,by,x:t.x,y:t.y});}continue;}
-      t.x=mate.x;t.y=mate.y;const held=by==='player'?input.interactDown:input.guest&&input.guest.interactDown;
+  // "inputs" holds this step's controls for every operator, by id. Tags whose carrier goes down are left where they fell.
+  function stepRevive(s,inputs,dt){if(!s.mates.length||!s.tags.length)return;const all=ops(s),find=id=>all.find(o=>o.id===id);
+    for(const t of s.tags){const op=find(t.owner);
+      if(!t.carrier){const mate=all.find(o=>o!==op&&!o.dead&&distance(o,t)<38);if(mate){t.carrier=mate.id;event(s,'tags',{who:t.owner,by:mate.id,x:t.x,y:t.y});}continue;}
+      const mate=find(t.carrier),by=t.carrier;if(!mate||mate.dead){t.carrier=null;t.progress=0;continue;}
+      t.x=mate.x;t.y=mate.y;const held=!!(inputs[by]&&inputs[by].interactDown);
       if(!held||distance(mate,s.station)>64){t.progress=Math.max(0,t.progress-dt/REVIVE_TIME*2);continue;}
       if(t.progress<=0)event(s,'reviving',{who:t.owner,by,x:s.station.x,y:s.station.y});t.progress+=dt/REVIVE_TIME;if(t.progress<1)continue;
       const spot=[[0,0],[44,0],[-44,0],[0,44],[0,-44]].map(([dx,dy])=>({x:s.station.x+dx,y:s.station.y+dy})).find(q=>clearAt(s,q.x,q.y,17)&&distance(q,mate)>30)||s.station;
       Object.assign(op,{dead:false,x:spot.x,y:spot.y,vx:0,vy:0,health:60,stamina:100,state:'idle',age:0,iframes:2,reload:0,heal:0});t.done=true;event(s,'revive',{who:t.owner,by,x:spot.x,y:spot.y});}
     s.tags=s.tags.filter(t=>!t.done);}
-  // Mirrors damagePlayer for the co-op guest. A downed guest never ends the run by itself; losing both operators does.
-  function damageGuest(s,amount,x,y,src=''){const p=s.guest;if(!p||p.dead||s.cinematic>0||p.iframes>0)return false;
-    const D=diff(s);amount*=D.dmg;const hadArmor=p.armor>0,armor=Math.min(p.armor,amount*.65);p.armor-=armor;p.health=Math.max(0,p.health-amount+armor);p.iframes=D.iframes;event(s,'damage',{x:p.x,y:p.y,amount,fromX:x,fromY:y,src,guest:true});
-    if(hadArmor&&p.armor<.5)p.armor=0;if(p.health<=0){down(s,p);if(s.player.dead){s.dead=true;event(s,'death');}}return true;
+  // Mirrors damagePlayer for a squadmate. A downed mate never ends the run by itself; losing every operator does.
+  function damageMate(s,p,amount,x,y,src=''){if(!p||p.dead||s.cinematic>0||p.iframes>0)return false;
+    const D=diff(s);amount*=D.dmg;const hadArmor=p.armor>0,armor=Math.min(p.armor,amount*.65);p.armor-=armor;p.health=Math.max(0,p.health-amount+armor);p.iframes=D.iframes;event(s,'damage',{x:p.x,y:p.y,amount,fromX:x,fromY:y,src,guest:true,who:p.id});
+    if(hadArmor&&p.armor<.5)p.armor=0;if(p.health<=0){if(s.tdm)fallen(s,p);else{down(s,p);if(!ops(s).some(o=>!o.dead)){s.dead=true;event(s,'death');}}}return true;
   }
-  function damageEnemy(s,e,amount,angle=0,stagger=.15,source='rifle',bypass=false,blast=false){if(e.dead||e.gone>0)return;const t=A[e.type]||A.infantry;
+  const hurt=(s,op,amount,x,y,src)=>op===s.player?damagePlayer(s,amount,x,y,src):damageMate(s,op,amount,x,y,src);
+  function damageEnemy(s,e,amount,angle=0,stagger=.15,source='rifle',bypass=false,blast=false){if(e.dead||e.gone>0)return;if(e.ctx)return strike(s,e,amount,angle,source,blast);const t=A[e.type]||A.infantry;
     if(t.front&&!bypass&&!(e.shieldDown>0)&&!(e.disabled>0)&&Math.abs(wrap(angle+Math.PI-e.angle))<.85){amount*=t.front;event(s,'armorhit',{x:e.x,y:e.y});}
     if(t.armor&&!blast&&!bypass&&!(e.disabled>0)){amount*=t.armor;event(s,'armorhit',{x:e.x,y:e.y});}
     if(t.barrier&&!(e.shieldDown>0)&&!e.barrierOff){amount*=t.barrier;event(s,'shieldhit',{x:e.x,y:e.y});}
+    if(s.perks.ambusher&&source!=='enemy'&&s.by==='player'&&!e.active)amount*=1.35;
     e.hp-=amount;const resistant=t.boss&&source!=='melee'&&!blast;e.stagger=t.static?0:Math.max(e.stagger,resistant?Math.min(.025,stagger):stagger);if(!resistant){e.attack=0;e.attackAge=0;e.burst=0;}
     if(!t.static)move(s,e,Math.cos(angle)*Math.min(t.boss?3:14,amount*.18),Math.sin(angle)*Math.min(t.boss?3:14,amount*.18));
     if(source!=='enemy'&&!e.active){e.active=true;e.woke=true;e.seen=Math.max(e.seen,2.5);e.lastX=lead(s).x;e.lastY=lead(s).y;}else if(source!=='enemy')e.woke=true;
-    event(s,'hit',{id:e.id,x:e.x,y:e.y,angle,amount,player:source!=='enemy'});s.stats.hits++;if(source==='melee')s.hitstop=Math.max(s.hitstop,.025);
-    if(e.hp<=0){e.dead=true;e.deathAge=0;s.stats.kills++;let credits=0;
-      if(source!=='enemy'){s.mastery[source]=(s.mastery[source]||0)+1;s.combo=s.time-s.comboAt<3.5?s.combo+1:1;s.comboAt=s.time;s.stats.bestCombo=Math.max(s.stats.bestCombo,s.combo);const pl=s.player,sliding=pl.state==='slide'&&!pl.dead;
+    const ours=source!=='enemy',by=ours?s.by:undefined;
+    event(s,'hit',{id:e.id,x:e.x,y:e.y,angle,amount,player:ours,by});s.stats.hits++;if(source==='melee'&&by==='player')s.hitstop=Math.max(s.hitstop,.025);
+    if(e.hp<=0){const bot=ours&&by!=='player'&&!!s.mates.find(o=>o.id===by)?.bot,endless=stageDef(s).kind==='endless';e.dead=true;e.deathAge=0;if(!bot)s.stats.kills++;let credits=0;
+      if(ours&&!bot){s.mastery[source]=(s.mastery[source]||0)+1;s.combo=s.time-s.comboAt<3.5?s.combo+1:1;s.comboAt=s.time;s.stats.bestCombo=Math.max(s.stats.bestCombo,s.combo);const pl=s.player,sliding=pl.state==='slide'&&!pl.dead&&by==='player';
         // Holdout pays less per hostile than the campaign: there are far more of them and the chain rarely breaks.
-        credits=Math.round((t.bounty||15)*(1+.1*Math.min(s.combo-1,8))*(source==='melee'?1.5:1)*(sliding?1.25:1)*(stageDef(s).kind==='endless'?.6:1));s.stats.credits+=credits;
+        credits=Math.round((t.bounty||15)*(1+.1*Math.min(s.combo-1,8))*(source==='melee'?1.5:1)*(sliding?1.25:1)*(endless?.6:s.tdm?TDM.bounty:1));s.stats.credits+=credits;
         // Two more flow chains: a kill made mid-slide, and a knife kill straight out of a dive.
-        if(!pl.chained&&(sliding||source==='melee'&&s.time-pl.diveEnd<.7)){pl.chained=true;flow(s);}}
-      event(s,'kill',{x:e.x,y:e.y,enemy:e.type,id:e.id,credits,combo:s.combo,boss:!!t.boss,source});drops(s,e,t);
+        if(by==='player'&&!pl.chained&&(sliding||source==='melee'&&s.time-pl.diveEnd<.7)){pl.chained=true;flow(s);}
+        if(by==='player')credit(s,source,t);}
+      // An AI teammate's kill is not yours: it never touches your combo, mastery or kill count. In holdout it pays half
+      // a bounty towards the run; in team deathmatch it is a point for the squad and nothing more.
+      else if(bot&&!s.tdm){credits=Math.round((t.bounty||15)*.5*(endless?.6:1));s.stats.credits+=credits;}
+      if(s.tdm&&ours){s.tdm.score[0]++;const row=s.tdm.board[by];if(row){row.k++;row.cr+=credits;}}
+      event(s,'kill',{x:e.x,y:e.y,enemy:e.type,id:e.id,credits,combo:bot?0:s.combo,boss:!!t.boss,source,by,bot});drops(s,e,t);
       if(t.kamikaze&&!e.detonated)explode(s,e.x,e.y,70,30,false,source);}
   }
   function drops(s,e,t){const p=s.player,D=diff(s),drop=(type,dx=0,dy=0,extra={})=>s.pickups.push({id:'drop'+s.tick+e.id+type,x:e.x+dx,y:e.y+dy,type,taken:false,...extra});
@@ -157,30 +227,39 @@
   function explode(s,x,y,radius=150,damage=110,enemy=false,source='grenade'){event(s,'explosion',{x,y,radius});for(const b of s.walls){if(b.dead||!Number.isFinite(b.hp))continue;const d=Math.hypot(clamp(x,b.x,b.x+b.w)-x,clamp(y,b.y,b.y+b.h)-y);if(d<radius)damageProp(s,b,damage*(1-d/radius));}
     for(const e of s.enemies){const d=distance(e,{x,y});if(!e.dead&&!(e.gone>0)&&d<radius)damageEnemy(s,e,damage*(1-.55*d/radius)*(enemy?.5:1),Math.atan2(e.y-y,e.x-x),.65,enemy?'enemy':source,true,true);}
     const d=distance(s.player,{x,y});if(d<radius)damagePlayer(s,damage*(enemy?.6:.45)*(1-d/radius),x,y,'blast');
-    if(s.guest&&!s.guest.dead){const dg=distance(s.guest,{x,y});if(dg<radius)damageGuest(s,damage*(enemy?.6:.45)*(1-dg/radius),x,y,'blast');}
+    for(const m of s.mates){if(m.dead)continue;const dg=distance(m,{x,y});if(dg<radius)damageMate(s,m,damage*(enemy?.6:.45)*(1-dg/radius),x,y,'blast');}
   }
-  function stepProjectiles(s,dt){const p=s.player;for(const b of s.projectiles){if(!b.active)continue;const nx=b.x+b.vx*dt,ny=b.y+b.vy*dt;b.px=b.x;b.py=b.y;let target=null,t=2;
+  // An arc caster's bolt jumps from the hostile it hit to the nearest others in view, for 60% each, and stalls machines.
+  function arc(s,from,b){let at=from;const hit=[from.id];
+    for(let i=0;i<b.chain;i++){let next=null,bd=210;for(const e of s.enemies){if(e.dead||e.gone>0||hit.includes(e.id))continue;const d=distance(at,e);if(d<bd&&lineOfSight(s,at,e)){bd=d;next=e;}}
+      if(!next)break;event(s,'arc',{x:at.x,y:at.y,x2:next.x,y2:next.y});damageEnemy(s,next,b.damage*.6,Math.atan2(next.y-at.y,next.x-at.x),.4,b.weapon);if(A[next.type].machine&&!next.dead)next.disabled=Math.max(next.disabled||0,1.2);hit.push(next.id);at=next;}}
+  // s.by names the operator whose bullet or blade is landing, so a kill can be credited to them.
+  function stepProjectiles(s,dt,only){const p=s.player;for(const b of s.projectiles){if(!b.active||only&&b.owner!==only)continue;const nx=b.x+b.vx*dt,ny=b.y+b.vy*dt;b.px=b.x;b.py=b.y;let target=null,t=2;
       for(const w of s.walls){if(w.dead||w.pass||b.hitIds.includes(w.id))continue;const u=segmentBox(b.x,b.y,nx,ny,w);if(u!==null&&u<t){t=u;target={kind:'wall',a:w};}}
-      const list=b.enemy?(s.guest&&!s.guest.dead?[p,s.guest]:[p]):s.enemies;
-      for(const e of list){if(e.dead||e.gone>0||b.hitIds.includes(e.id))continue;const u=segmentCircle(b.x,b.y,nx,ny,e,e.radius+(b.explosive?4:2));if(u!==null&&u<t){t=u;target={kind:b.enemy?(e===s.guest?'guest':'player'):'enemy',a:e};}}
-      if(target){b.x+=(nx-b.x)*t;b.y+=(ny-b.y)*t;const angle=Math.atan2(b.vy,b.vx);let through=false;
+      const list=b.enemy?ops(s):s.enemies;
+      for(const e of list){if(e.dead||e.gone>0||!b.enemy&&b.hitIds.includes(e.id))continue;const u=segmentCircle(b.x,b.y,nx,ny,e,e.radius+(b.explosive?4:2));if(u!==null&&u<t){t=u;target={kind:b.enemy?'op':'enemy',a:e};}}
+      if(target){b.x+=(nx-b.x)*t;b.y+=(ny-b.y)*t;const angle=Math.atan2(b.vy,b.vx);let through=false,bounced=false;if(!b.enemy)s.by=b.owner||'player';
         if(b.explosive)explode(s,b.x,b.y,b.explosive,b.damage,b.enemy,b.weapon);
-        else if(target.kind==='wall'){damageProp(s,target.a,b.damage);if(b.breach&&Number.isFinite(target.a.hp)){b.hitIds.push(target.a.id);through=true;}}
-        else if(target.kind==='enemy')damageEnemy(s,target.a,b.damage,angle,b.stagger,b.weapon,b.breach);
-        else if(target.kind==='guest')damageGuest(s,b.damage,b.px,b.py,b.weapon);
-        else damagePlayer(s,b.damage,b.px,b.py,b.weapon);
-        event(s,'bulletimpact',{x:b.x,y:b.y,enemy:b.enemy});
-        if(target.kind==='enemy'&&b.pierce>0&&!b.explosive){b.pierce--;b.hitIds.push(target.a.id);b.x=nx;b.y=ny;}else if(through){b.x=nx;b.y=ny;}else b.active=false;
+        else if(target.kind==='wall'){damageProp(s,target.a,b.damage);if(b.breach&&Number.isFinite(target.a.hp)){b.hitIds.push(target.a.id);through=true;}
+          // A ricochet round comes back off the face it struck: a floor or ceiling of the box turns it over, a side turns it round.
+          else if(b.bounce>0&&!b.enemy&&!target.a.dead){b.bounce--;bounced=true;const w=target.a;if(b.x>w.x+.5&&b.x<w.x+w.w-.5)b.vy=-b.vy;else b.vx=-b.vx;event(s,'ricochet',{x:b.x,y:b.y});}}
+        else if(target.kind==='enemy'){damageEnemy(s,target.a,b.damage,angle,b.stagger,b.weapon,b.breach);if(b.chain&&!b.enemy)arc(s,target.a,b);}
+        else hurt(s,target.a,b.damage,b.px,b.py,b.weapon);
+        s.by='player';event(s,'bulletimpact',{x:b.x,y:b.y,enemy:b.enemy});
+        if(target.kind==='enemy'&&b.pierce>0&&!b.explosive){b.pierce--;b.hitIds.push(target.a.id);b.x=nx;b.y=ny;}else if(through){b.x=nx;b.y=ny;}else if(bounced){b.x+=b.vx*.0008;b.y+=b.vy*.0008;}else b.active=false;
       }else{b.x=nx;b.y=ny;}
       if(b.enemy&&b.active&&!b.whiz){const sx=b.x-b.px,sy=b.y-b.py,l2=sx*sx+sy*sy||1,u=clamp(((p.x-b.px)*sx+(p.y-b.py)*sy)/l2,0,1);if(Math.hypot(b.px+sx*u-p.x,b.py+sy*u-p.y)<44){b.whiz=true;event(s,'whiz',{x:b.x,y:b.y});}}
-      b.remaining-=Math.hypot(b.vx,b.vy)*dt;if(b.remaining<=0&&b.active){b.active=false;if(b.explosive)explode(s,b.x,b.y,b.explosive,b.damage,b.enemy,b.weapon);}
+      b.remaining-=Math.hypot(b.vx,b.vy)*dt;if(b.remaining<=0&&b.active){b.active=false;if(b.explosive){if(!b.enemy)s.by=b.owner||'player';explode(s,b.x,b.y,b.explosive,b.damage,b.enemy,b.weapon);s.by='player';}}
+      // Where it ends up: a thrown knife lies there to be picked up again, and every fourth round of a flamethrower leaves the ground burning.
+      if(!b.active&&!b.enemy&&(b.knife||b.flame)){if(b.knife)s.pickups.push({id:'knife'+s.tick+'_'+s.pickups.length,x:clamp(b.x,60,s.map.width-60),y:clamp(b.y,60,s.map.height-60),type:'lethal',taken:false});
+        else if((s.flameN=(s.flameN||0)+1)%4===0&&s.zones.length<14)s.zones.push({kind:'fire',x:b.x,y:b.y,r:46,life:2.2,tick:0});b.knife=b.flame=false;}
     }
   }
   function melee(s,heavy=false,owner){const p=owner||s.player;if(['roll','dive','vault','melee'].includes(p.state)||p.heal>0)return false;const wasSlide=p.state==='slide',index=s.time-p.meleeAt<.95?(p.meleeIndex+1)%3:0;p.meleeIndex=index;p.meleeAt=s.time;p.meleeHit=false;p.heavy=heavy;
     if(!begin(s,'melee',heavy?.62:.34,p.angle,heavy?12:3,owner))return false;if(wasSlide){flow(s);move(s,p,Math.cos(p.angle)*15,Math.sin(p.angle)*15);}event(s,'meleeswing',{x:p.x,y:p.y,heavy});return true;
   }
   // Shared by the player's and guest's melee swings: who it hits, how hard, and what it breaks.
-  function meleeHitSweep(s,p){const reach=p.heavy?90:73,damage=p.heavy?95:[45,55,80][p.meleeIndex];for(const e of s.enemies){if(e.dead||e.gone>0||distance(p,e)>reach+(e.radius-17)||Math.abs(wrap(Math.atan2(e.y-p.y,e.x-p.x)-p.angle))>1.25||!lineOfSight(s,p,e))continue;const finish=e.hp<35;damageEnemy(s,e,finish?200:damage,p.angle,p.heavy?.9:.45,'melee',p.heavy||finish);event(s,'meleeimpact',{x:e.x,y:e.y,finish});}for(const b of s.walls)if(!b.dead&&Number.isFinite(b.hp)&&circleBox(p.x+Math.cos(p.angle)*45,p.y+Math.sin(p.angle)*45,32,b))damageProp(s,b,damage);}
+  function meleeHitSweep(s,p){const reach=p.heavy?90:73,damage=(p.heavy?95:[45,55,80][p.meleeIndex])*(p.bot?botDmg(s):1)*(p===s.player&&s.time<s.flowBoost?1.3:1);s.by=p.id;for(const e of s.enemies){if(e.dead||e.gone>0||distance(p,e)>reach+(e.radius-17)||Math.abs(wrap(Math.atan2(e.y-p.y,e.x-p.x)-p.angle))>1.25||!lineOfSight(s,p,e))continue;const finish=e.hp<35;damageEnemy(s,e,finish?200:damage,p.angle,p.heavy?.9:.45,'melee',p.heavy||finish);event(s,'meleeimpact',{x:e.x,y:e.y,finish});}for(const b of s.walls)if(!b.dead&&Number.isFinite(b.hp)&&circleBox(p.x+Math.cos(p.angle)*45,p.y+Math.sin(p.angle)*45,32,b))damageProp(s,b,damage);s.by='player';}
   const zoneAlive=(s,z)=>s.enemies.some(e=>!e.dead&&e.zone===z)||s.spawnWarnings.some(w=>w.zone===z);
   const nearbyWeapon=s=>s.pickups.find(q=>!q.taken&&q.type==='weapon'&&s.owned.includes(q.weapon)&&!s.player.slots.includes(q.weapon)&&distance(q,s.player)<70);
   function equip(s,q){const p=s.player,k=q.weapon,slot=W[k].slot;p.slots[slot]=k;p.slot=slot;p.ammo[k]=W[k].capacity;p.reload=0;p.cooldown=.2;q.taken=true;event(s,'equip',{weapon:k});event(s,'toast',{text:W[k].name+' EQUIPPED'});}
@@ -204,7 +283,7 @@
     for(const n of en.opens||[])for(const w of s.walls)if(w.gate===n&&!w.dead){w.dead=true;event(s,'gate',{x:w.x+w.w/2,y:w.y+w.h/2});}
     if(en.grants)grant(s,en.grants);if(en.checkpoint)checkpoint(s);if(en.unlock)event(s,'unlock',{items:[...en.unlock]});if(en.radio)event(s,'radio',{...en.radio});if(en.toast)event(s,'toast',{text:en.toast});
     event(s,'stage',{stage:index,name:st.name});}
-  function advance(s){const st=stageDef(s);if(st.leave?.radio)event(s,'radio',{...st.leave.radio});if(st.leave?.toast)event(s,'toast',{text:st.leave.toast});event(s,'objective',{name:st.name});enterStage(s,Math.min(s.stage+1,s.map.stages.length-1));}
+  function advance(s){const st=stageDef(s);charge(s,150);if(st.leave?.radio)event(s,'radio',{...st.leave.radio});if(st.leave?.toast)event(s,'toast',{text:st.leave.toast});event(s,'objective',{name:st.name});enterStage(s,Math.min(s.stage+1,s.map.stages.length-1));}
   function checkpoint(s,pos=null){const p=s.player;if(s.training)return;let stage=s.stage;while(stage>0&&!s.map.stages[stage].spawn)stage--;
     s.checkpoint={stage,time:s.time,kills:s.stats.kills,damage:s.stats.damage,flows:s.stats.flows,credits:s.stats.credits,intel:s.stats.intel,killed:s.enemies.filter(e=>e.dead&&!e.spawned).map(e=>e.id).slice(0,160),dead:s.walls.filter(w=>w.dead&&['jammer','fuel','generator'].includes(w.kind)).map(w=>w.id),slots:[...p.slots],lethal:p.lethal,tactical:p.tactical};
     if(pos&&stage===s.stage&&clearAt(s,pos.x,pos.y,17)){s.checkpoint.x=pos.x;s.checkpoint.y=pos.y;}
@@ -217,15 +296,40 @@
     if(cx<60||cy<60||cx>s.map.width-60||cy>s.map.height-60||s.walls.some(o=>!o.dead&&overlap(o))||s.enemies.some(e=>!e.dead&&circleBox(e.x,e.y,e.radius,b))||circleBox(p.x,p.y,p.radius,b)){event(s,'toast',{text:'NO ROOM TO DEPLOY COVER'});return false;}
     const old=s.walls.filter(o=>o.deployed&&!o.dead);if(old.length>=4)old[0].dead=true;s.walls.push(b);event(s,'deploy',{x:cx,y:cy});return true;}
   function detonate(s,g){const kind=g.kind||'frag';
-    if(kind==='frag')explode(s,g.x,g.y,g.radius||155,g.damage||(g.enemy?85:135),g.enemy);
+    if(kind==='frag')explode(s,g.x,g.y,g.radius||155,g.damage||(g.enemy?85:135),g.enemy,g.strike?'strike':g.cluster?'cluster':'grenade');
+    else if(kind==='cluster'){explode(s,g.x,g.y,110,90,false,'cluster');for(let i=0;i<5;i++){const a=i/5*Math.PI*2+rand(s),d=70+rand(s)*45;
+      s.grenades.push({kind:'frag',x:g.x,y:g.y,sx:g.x,sy:g.y,tx:g.x+Math.cos(a)*d,ty:g.y+Math.sin(a)*d,age:0,duration:.3,fuse:.5+i*.07,enemy:false,radius:95,damage:75,cluster:true});}}
+    else if(kind==='sensor'){s.zones.push({kind:'sensor',x:g.x,y:g.y,r:420,life:12});event(s,'sensor',{x:g.x,y:g.y});}
+    else if(kind==='gas'){s.zones.push({kind:'gas',x:g.x,y:g.y,r:150,life:9,tick:0});event(s,'smoke',{x:g.x,y:g.y});}
     else if(kind==='incendiary'){explode(s,g.x,g.y,70,35);s.zones.push({kind:'fire',x:g.x,y:g.y,r:95,life:6,tick:0});}
     else if(kind==='smoke'){s.zones.push({kind:'smoke',x:g.x,y:g.y,r:170,life:10.5});event(s,'smoke',{x:g.x,y:g.y});}
     else if(kind==='decoy'){s.decoy={id:'decoy',x:g.x,y:g.y,radius:16,life:7.5,vx:0,vy:0};event(s,'decoy',{x:g.x,y:g.y});}
-    else if(kind==='flash'){const self=distance(s.player,g)<260&&lineOfSight(s,s.player,g);event(s,'flash',{x:g.x,y:g.y,self});
+    // In team deathmatch the event names everyone on the other team who saw it, and the thrower is not spared their own.
+    else if(kind==='flash'){const self=distance(s.player,g)<260&&lineOfSight(s,s.player,g);event(s,'flash',{x:g.x,y:g.y,self,blind:s.tdm?s.enemies.filter(e=>!e.dead&&distance(e,g)<=300&&lineOfSight(s,e,g)).map(e=>e.id):undefined});
+      if(s.tdm&&self&&!s.player.dead)s.player.stagger=Math.max(s.player.stagger||0,1.2);
       for(const e of s.enemies){const t=A[e.type];if(e.dead||t.machine||distance(e,g)>300||!lineOfSight(s,e,g))continue;const time=t.boss?.7:3.2;e.stagger=Math.max(e.stagger,time);e.flashed=time;e.attack=0;e.burst=0;e.active=true;}}
-    else if(kind==='emp'){event(s,'emp',{x:g.x,y:g.y});for(const h of s.hazards)if(distance(g,{x:h.x+h.w/2,y:h.y+h.h/2})<380)h.off=9;
+    else if(kind==='emp'){event(s,'emp',{x:g.x,y:g.y});if(s.tdm)for(const a of s.allies)if(distance(a,g)<340&&s.enemies.some(o=>o.id===a.owner))a.life=0;for(const h of s.hazards)if(distance(g,{x:h.x+h.w/2,y:h.y+h.h/2})<380)h.off=9;
       for(const e of s.enemies){const t=A[e.type];if(e.dead||distance(e,g)>320)continue;if(t.flying&&t.machine){e.detonated=true;damageEnemy(s,e,999,0,.1,'emp',true,true);}
         else if(t.machine){e.disabled=e.type==='mech'?3.5:e.type==='apc'?5:9;e.shieldDown=Math.max(e.shieldDown,8);e.attack=0;e.burst=0;}else if(t.front){e.shieldDown=9;e.stagger=Math.max(e.stagger,1.2);}else e.stagger=Math.max(e.stagger,.5);}}}
+  // The lethal slot. Most are thrown; a mine or C4 is planted at Rook's feet (C4 goes off when the key is pressed
+  // again, so one charge is down at a time); a knife is a single heavy round that lies where it lands; the seeker is let go and hunts by itself.
+  function useLethal(s,input){const p=s.player,k=p.lethal;
+    if(k==='c4'&&s.mines.some(m=>m.remote)){for(const m of s.mines.filter(q=>q.remote)){m.done=true;explode(s,m.x,m.y,185,175,false,'c4');}s.mines=s.mines.filter(m=>!m.done);return;}
+    if(p.grenades<=0)return;p.grenades--;
+    if(k==='mine'||k==='c4'){s.mines.push({id:'mine'+s.tick,x:p.x,y:p.y,arm:.8,remote:k==='c4'});if(s.mines.length>6)s.mines.shift();event(s,'plant',{x:p.x,y:p.y});}
+    else if(k==='knife'){const b=s.projectiles.find(q=>!q.active);if(!b){p.grenades++;return;}const x=p.x+Math.cos(p.angle)*24,y=p.y+Math.sin(p.angle)*24;
+      Object.assign(b,{active:true,x,y,px:x,py:y,vx:Math.cos(p.angle)*1250,vy:Math.sin(p.angle)*1250,remaining:540,damage:150,enemy:false,owner:p.id,weapon:'tknife',pierce:0,explosive:0,stagger:.6,breach:false,hitIds:[],whiz:false,bounce:0,chain:0,flame:false,knife:true});event(s,'throw',{x:p.x,y:p.y,kind:'knife'});}
+    else if(k==='seeker'){s.allies.push({id:'ally'+s.tick,kind:'seeker',x:p.x,y:p.y,angle:p.angle,life:8,total:8,cooldown:0,vx:0,vy:0,radius:9,moveTime:0});event(s,'throw',{x:p.x,y:p.y,kind:'seeker'});}
+    else throwItem(s,k,input);}
+  // The tactical slot. The grapple is a dive at speed along the line of aim (so it has a dive's moment of protection)
+  // and counts as a flow; the trophy system and the ammo box are set down where Rook stands; the rest are thrown.
+  function useTactical(s,input){const p=s.player,k=p.tactical;
+    if(k==='cover'){if(deployCover(s))p.tacticals--;return;}
+    if(k==='grapple'){const d=clamp(Math.hypot((input.aimX??p.x+300)-p.x,(input.aimY??p.y)-p.y),160,430);if(!begin(s,'dive',d/1150,p.angle,0))return;p.zip=1150;p.tacticals--;flow(s);event(s,'grapple',{x:p.x,y:p.y,angle:p.angle,d});return;}
+    p.tacticals--;
+    if(k==='trophy'){s.allies.push({id:'ally'+s.tick,kind:'trophy',x:p.x,y:p.y,angle:0,life:20,total:20,cooldown:0,vx:0,vy:0});event(s,'deploy',{x:p.x,y:p.y});}
+    else if(k==='ammobox'){[[-40,24],[40,24],[0,-44]].forEach(([dx,dy],i)=>s.pickups.push({id:'box'+s.tick+'_'+i,x:p.x+dx,y:p.y+dy,type:'ammo',taken:false}));event(s,'deploy',{x:p.x,y:p.y});}
+    else throwItem(s,k,input);}
   function stepPlayer(s,input,dt){if(s.player.dead)return;const p=s.player,w=W[p.slots[p.slot]],busy=['slide','roll','dive','vault','melee'].includes(p.state);p.age+=dt;p.shotAge+=dt;p.cooldown=Math.max(0,p.cooldown-dt);p.iframes=Math.max(0,p.iframes-dt);p.recoil=Math.max(0,p.recoil-dt*.18);p.aiming=!!input.aiming;
     const mx=input.mx||0,my=input.my||0,len=Math.hypot(mx,my),nx=len?mx/len:0,ny=len?my/len:0;
     if(Number.isFinite(input.aimX)&&Number.isFinite(input.aimY))p.angle=Math.atan2(input.aimY-p.y,input.aimX-p.x);
@@ -237,39 +341,46 @@
     {const blocked=['vault','roll','dive'].includes(p.state);if(input.interact&&blocked)p.buffer.interact=BUFFER;else if(input.interact||p.buffer.interact>0&&!blocked){p.buffer.interact=0;interact(s,{...input,mx:nx,my:ny});}else p.buffer.interact=Math.max(0,p.buffer.interact-dt);}
     if(input.melee){p.meleeHold=0;p.heavyTriggered=false;melee(s,false);}if(input.meleeDown){p.meleeHold+=dt;if(p.meleeHold>.43&&!p.heavyTriggered&&p.state!=='melee'){p.heavyTriggered=true;melee(s,true);}}
     if(input.gadget&&p.stims>0&&p.health<100&&!['roll','dive','vault'].includes(p.state)){p.heal=.85;p.healTotal=.85;event(s,'healstart');}
+    if(input.support)callSupport(s,input);
+    if(s.perks.regen&&p.health<60&&p.heal<=0&&s.time-(p.hurtAt??-99)>6)p.health=Math.min(60,p.health+dt*7);
     // Timers settle at exactly zero: a negative remainder used to read as "still reloading/healing" and blocked sprint until an action reset it.
     if(p.heal>0){p.heal-=dt;if(p.heal<=0){p.heal=0;p.stims--;p.health=Math.min(100,p.health+50);p.iframes=.25;event(s,'pickup',{kind:'health',x:p.x,y:p.y});}}
     const free=!['vault','roll','dive'].includes(p.state);
-    if(input.grenade&&p.grenades>0&&p.lethal&&free){p.grenades--;if(p.lethal==='mine'){s.mines.push({id:'mine'+s.tick,x:p.x,y:p.y,arm:.8});if(s.mines.length>6)s.mines.shift();event(s,'plant',{x:p.x,y:p.y});}else throwItem(s,p.lethal,input);}
-    if(input.tactical&&p.tacticals>0&&p.tactical&&free){if(p.tactical==='cover'){if(deployCover(s))p.tacticals--;}else{p.tacticals--;throwItem(s,p.tactical,input);}}
+    if(input.grenade&&p.lethal&&free)useLethal(s,input);
+    if(input.tactical&&p.tacticals>0&&p.tactical&&free)useTactical(s,input);
     const key=p.slots[p.slot];
     if(input.reload&&!p.reload&&p.ammo[key]<w.capacity&&p.reserve[key]>0&&!busy){p.reload=reloadOf(s,key);p.reloadTotal=p.reload;event(s,'reload',{weapon:key});}
     if(p.reload>0){p.reload-=dt;if(p.reload<=0){p.reload=0;const k=p.slots[p.slot],def=W[k],amount=Math.min(def.capacity-p.ammo[k],p.reserve[k]);p.ammo[k]+=amount;p.reserve[k]-=amount;event(s,'reloadend');}}
-    if(input.fire&&p.cooldown<=0&&p.reload<=0&&p.heal<=0&&!['roll','dive','vault','melee'].includes(p.state)){if(p.ammo[key]>0)shoot(s,p,key,p.angle);else if(p.reserve[key]>0&&!busy){p.cooldown=.2;event(s,'empty');p.reload=reloadOf(s,key);p.reloadTotal=p.reload;event(s,'reload',{weapon:key});}else{p.cooldown=.35;event(s,'empty');event(s,'toast',{text:'OUT OF AMMUNITION / SWAP WEAPONS'});}}
+    // A minigun has to be spun up before it fires and winds down twice as fast; a burst weapon finishes the burst it started.
+    p.spin=w.spin&&input.fire&&!p.reload&&!busy?Math.min(w.spin,(p.spin||0)+dt):Math.max(0,(p.spin||0)-dt*2);
+    if(p.burst>0){if(p.burstGun!==key||p.reload>0||p.ammo[key]<=0||busy)p.burst=0;else if((p.burstT-=dt)<=0){p.burst--;p.burstT=w.gap;shoot(s,p,key,p.angle);p.cooldown=w.rate;}}
+    if(input.fire&&p.cooldown<=0&&p.reload<=0&&p.heal<=0&&!(p.stagger>0)&&!(w.spin&&p.spin<w.spin)&&!['roll','dive','vault','melee'].includes(p.state)){if(p.ammo[key]>0){shoot(s,p,key,p.angle);if(w.burst){p.burst=w.burst-1;p.burstT=w.gap;p.burstGun=key;}}else if(p.reserve[key]>0&&!busy){p.cooldown=.2;event(s,'empty');p.reload=reloadOf(s,key);p.reloadTotal=p.reload;event(s,'reload',{weapon:key});}else{p.cooldown=.35;event(s,'empty');event(s,'toast',{text:'OUT OF AMMUNITION / SWAP WEAPONS'});}}
     const oldX=p.x,oldY=p.y;
     if(p.state==='vault'){const v=p.vault,t=clamp(p.age/p.duration,0,1),ease=t*t*(3-2*t);const tx=v.sx+(v.tx-v.sx)*ease,ty=v.sy+(v.ty-v.sy)*ease;move(s,p,tx-p.x,ty-p.y,v.ignore);p.vx=Math.cos(p.actionDir)*320;p.vy=Math.sin(p.actionDir)*320;}
-    else if(['slide','roll','dive'].includes(p.state)){let speed=p.state==='slide'?p.slideSpeed*Math.exp(-2.6*p.age):p.state==='roll'?550*(1-.55*clamp(p.age/p.duration,0,1)):690*(1-.7*clamp(p.age/p.duration,0,1));p.radius=p.state==='slide'?10:16;p.vx=Math.cos(p.actionDir)*speed;p.vy=Math.sin(p.actionDir)*speed;move(s,p,p.vx*dt,p.vy*dt);}
-    else{p.radius=16;const push=input.sprint&&len>0&&!p.winded&&!input.fire&&!input.aiming&&!p.heal,sprint=push&&p.stamina>0&&!p.reload,jog=push&&p.reload>0;const speed=(sprint?360:input.aiming?175:jog?300:250)*W[p.slots[p.slot]].mobility*(p.state==='melee'?.45:jog?1:p.reload?.7:p.heal?.45:1);const response=Math.min(1,dt*(len?25:31));p.vx+=(nx*speed-p.vx)*response;p.vy+=(ny*speed-p.vy)*response;move(s,p,p.vx*dt,p.vy*dt);
+    else if(['slide','roll','dive'].includes(p.state)){let speed=p.state==='slide'?p.slideSpeed*Math.exp(-2.6*p.age):p.state==='roll'?550*(1-.55*clamp(p.age/p.duration,0,1)):p.zip||690*(1-.7*clamp(p.age/p.duration,0,1));p.radius=p.state==='slide'?10:16;p.vx=Math.cos(p.actionDir)*speed;p.vy=Math.sin(p.actionDir)*speed;move(s,p,p.vx*dt,p.vy*dt);}
+    else{p.radius=16;const push=input.sprint&&len>0&&!p.winded&&!input.fire&&!input.aiming&&!p.heal,sprint=push&&p.stamina>0&&!p.reload,jog=push&&p.reload>0;const speed=(sprint?360:input.aiming?175:jog?300:250)*(p.stagger>0?.5:1)*W[p.slots[p.slot]].mobility*(p.state==='melee'?.45:jog?1:p.reload?.7:p.heal?.45:1);const response=Math.min(1,dt*(len?25:31));p.vx+=(nx*speed-p.vx)*response;p.vy+=(ny*speed-p.vy)*response;move(s,p,p.vx*dt,p.vy*dt);
       if(p.state!=='melee'){p.state=sprint?'sprint':len?'run':'idle';}if(sprint)drain(s,p,dt*13*s.mods.drain);}
     if(p.state==='melee'&&!p.meleeHit&&p.age>=(p.heavy?.24:.12)){p.meleeHit=true;meleeHitSweep(s,p);}
-    if(['vault','roll','dive','slide','melee'].includes(p.state)&&p.age>=p.duration){if(p.state==='dive')p.diveEnd=s.time;p.state=len?'run':'idle';p.age=0;p.radius=16;}
+    if(['vault','roll','dive','slide','melee'].includes(p.state)&&p.age>=p.duration){if(p.state==='dive'){p.diveEnd=s.time;p.zip=0;}p.state=len?'run':'idle';p.age=0;p.radius=16;}
     if(!['sprint','roll','dive','slide','vault','melee'].includes(p.state))recover(s,p,dt*26*s.mods.regen);
     const travel=Math.hypot(p.x-oldX,p.y-oldY);if(travel>.05)p.moveAngle=Math.atan2(p.y-oldY,p.x-oldX);p.stepDistance+=travel;if(p.stepDistance>=(p.state==='sprint'?62:51)&&!['slide','roll','dive','vault'].includes(p.state)){p.stepDistance=0;event(s,'footstep',{x:p.x,y:p.y,surface:s.training?'metal':s.map.theme==='snow'?'snow':'concrete'});}
     if(distance(p,s.camp)>110){s.camp.x=p.x;s.camp.y=p.y;s.camp.t=0;}else s.camp.t+=dt;
   }
-  // The co-op guest's leaner v1 kit: move, aim, sprint, fire, reload, melee. No slide/roll/dive/vault/gadgets -
+  // A squadmate's leaner v1 kit: move, aim, sprint, fire, reload, melee. No slide/roll/dive/vault/gadgets -
   // those are the most stateful parts of stepPlayer, and skipping them keeps this additive rather than a refactor.
-  function stepGuest(s,input,dt){const p=s.guest;if(!p||p.dead)return;const w=W[p.slots[p.slot]];
+  // Every event it raises says whose it is ("who"), so each player's screen and speakers only answer to their own.
+  function stepMate(s,p,input,dt){if(!p||p.dead)return;const w=W[p.slots[p.slot]],mine={guest:true,who:p.id};
     p.age+=dt;p.shotAge+=dt;p.cooldown=Math.max(0,p.cooldown-dt);p.iframes=Math.max(0,p.iframes-dt);p.recoil=Math.max(0,p.recoil-dt*.18);p.aiming=!!input.aiming;
     const mx=input.mx||0,my=input.my||0,len=Math.hypot(mx,my),nx=len?mx/len:0,ny=len?my/len:0;
     if(Number.isFinite(input.aimX)&&Number.isFinite(input.aimY))p.angle=Math.atan2(input.aimY-p.y,input.aimX-p.x);
-    const want=input.swap?1-p.slot:input.slot;if(want!==undefined&&want!==p.slot&&p.slots[want]){p.slot=want;p.reload=0;p.cooldown=.15;event(s,'swap',{weapon:p.slots[want],guest:true});}
+    const want=input.swap?1-p.slot:input.slot;if(want!==undefined&&want!==p.slot&&p.slots[want]){p.slot=want;p.reload=0;p.cooldown=.15;event(s,'swap',{weapon:p.slots[want],...mine});}
     if(input.melee){p.meleeHold=0;p.heavyTriggered=false;melee(s,false,p);}
     if(input.meleeDown){p.meleeHold+=dt;if(p.meleeHold>.43&&!p.heavyTriggered&&p.state!=='melee'){p.heavyTriggered=true;melee(s,true,p);}}
     const key=p.slots[p.slot];
-    if(input.reload&&!p.reload&&p.ammo[key]<w.capacity&&p.reserve[key]>0&&p.state!=='melee'){p.reload=reloadOf(s,key);p.reloadTotal=p.reload;event(s,'reload',{weapon:key,guest:true});}
-    if(p.reload>0){p.reload-=dt;if(p.reload<=0){p.reload=0;const k=p.slots[p.slot],def=W[k],amount=Math.min(def.capacity-p.ammo[k],p.reserve[k]);p.ammo[k]+=amount;p.reserve[k]-=amount;event(s,'reloadend',{guest:true});}}
-    if(input.fire&&p.cooldown<=0&&p.reload<=0&&p.state!=='melee'){if(p.ammo[key]>0)shoot(s,p,key,p.angle,false,p);else if(p.reserve[key]>0){p.cooldown=.2;event(s,'empty',{guest:true});p.reload=reloadOf(s,key);p.reloadTotal=p.reload;event(s,'reload',{weapon:key,guest:true});}else{p.cooldown=.35;event(s,'empty',{guest:true});}}
+    if(input.reload&&!p.reload&&p.ammo[key]<w.capacity&&p.reserve[key]>0&&p.state!=='melee'){p.reload=reloadOf(s,key);p.reloadTotal=p.reload;event(s,'reload',{weapon:key,...mine});}
+    // An AI teammate never runs dry: its reserve is topped back up as each magazine goes in.
+    if(p.reload>0){p.reload-=dt;if(p.reload<=0){p.reload=0;const k=p.slots[p.slot],def=W[k],amount=Math.min(def.capacity-p.ammo[k],p.reserve[k]);p.ammo[k]+=amount;p.reserve[k]-=amount;if(p.bot)p.reserve[k]=reserveOf(s,k);event(s,'reloadend',{...mine});}}
+    if(input.fire&&p.cooldown<=0&&p.reload<=0&&p.state!=='melee'){if(p.ammo[key]>0)shoot(s,p,key,p.angle,false,p);else if(p.reserve[key]>0){p.cooldown=.2;event(s,'empty',{...mine});p.reload=reloadOf(s,key);p.reloadTotal=p.reload;event(s,'reload',{weapon:key,...mine});}else{p.cooldown=.35;event(s,'empty',{...mine});}}
     const oldX=p.x,oldY=p.y;
     p.radius=16;const sprint=input.sprint&&len>0&&p.stamina>0&&!p.winded&&!input.fire&&!input.aiming&&!p.reload;const speed=(sprint?360:input.aiming?175:250)*w.mobility*(p.state==='melee'?.45:p.reload?.7:1);const response=Math.min(1,dt*(len?25:31));p.vx+=(nx*speed-p.vx)*response;p.vy+=(ny*speed-p.vy)*response;move(s,p,p.vx*dt,p.vy*dt);
     if(p.state!=='melee')p.state=sprint?'sprint':len?'run':'idle';if(sprint)drain(s,p,dt*13);
@@ -289,26 +400,46 @@
   // Can a body walk the straight line from a to b? Sight is not enough: water, fences, cars and crates can be seen
   // over or past but not walked through.
   const walkClear=(s,a,b)=>!s.walls.some(w=>!w.dead&&segmentBox(a.x,a.y,b.x,b.y,w,(a.radius||BODY)-5)!==null);
-  // Breadth-first distance field to the player on the 40px grid. Hunters follow it around buildings instead of stalling at a last-seen corner.
-  function navField(s){const w=Math.ceil(s.map.width/CELL),h=Math.ceil(s.map.height/CELL),sig=s.walls.length*1000+s.walls.filter(b=>b.dead).length;let n=s.nav;
+  // The 40px walkability grid, rebuilt whenever a wall is added or destroyed.
+  function grid(s){const w=Math.ceil(s.map.width/CELL),h=Math.ceil(s.map.height/CELL),sig=s.walls.length*1000+s.walls.filter(b=>b.dead).length;let n=s.nav;
     if(!n||n.sig!==sig){const blocked=new Uint8Array(w*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++)blocked[y*w+x]=clearAt(s,x*CELL+20,y*CELL+20,BODY)?0:1;n=s.nav={sig,w,h,blocked,dist:new Int16Array(w*h),cell:-1,at:-9};}
-    const pc=clamp(Math.floor(lead(s).y/CELL),0,h-1)*w+clamp(Math.floor(lead(s).x/CELL),0,w-1);
-    if(n.cell!==pc||s.time-n.at>1.5){n.cell=pc;n.at=s.time;n.dist.fill(-1);const queue=new Int32Array(w*h);let head=0,tail=0;n.dist[pc]=0;queue[tail++]=pc;
-      while(head<tail){const id=queue[head++],cx=id%w,cy=(id-cx)/w;for(const [dx,dy] of DIRS){const x=cx+dx,y=cy+dy;if(x<0||y<0||x>=w||y>=h)continue;const nid=y*w+x;if(n.dist[nid]>=0||n.blocked[nid]||dx&&dy&&(n.blocked[cy*w+x]||n.blocked[y*w+cx]))continue;n.dist[nid]=n.dist[id]+1;queue[tail++]=nid;}}}
     return n;}
+  const cellOf=(n,p)=>clamp(Math.floor(p.y/CELL),0,n.h-1)*n.w+clamp(Math.floor(p.x/CELL),0,n.w-1);
+  // Breadth-first walking distance from the seed cells to everywhere else, in grid steps (-1 where there is no way).
+  function flood(n,dist,seeds){const w=n.w,h=n.h,queue=new Int32Array(w*h);let head=0,tail=0;dist.fill(-1);for(const c of seeds)if(dist[c]<0){dist[c]=0;queue[tail++]=c;}
+    while(head<tail){const id=queue[head++],cx=id%w,cy=(id-cx)/w;for(const [dx,dy] of DIRS){const x=cx+dx,y=cy+dy;if(x<0||y<0||x>=w||y>=h)continue;const nid=y*w+x;if(dist[nid]>=0||n.blocked[nid]||dx&&dy&&(n.blocked[cy*w+x]||n.blocked[y*w+cx]))continue;dist[nid]=dist[id]+1;queue[tail++]=nid;}}
+    return dist;}
+  // Distance field to the player. Hunters follow it around buildings instead of stalling at a last-seen corner. With a
+  // squad in the field it leads to whichever operator is the shortest walk away.
+  function navField(s){const n=grid(s),up=s.mates.length?ops(s).filter(o=>!o.dead):[],seeds=up.length?up.map(o=>cellOf(n,o)):[cellOf(n,lead(s))],key=seeds.length>1?seeds.join():seeds[0];
+    if(n.cell!==key||s.time-n.at>1.5){n.cell=key;n.at=s.time;flood(n,n.dist,seeds);}
+    return n;}
+  // Team deathmatch ground: the hostile base is the spawn point furthest on foot from where the map starts, the
+  // squad's is the one furthest from that. "points" is everywhere either side may come back when its base is overrun.
+  function bases(s){const n=grid(s),d=new Int16Array(n.w*n.h),start={x:s.map.start.x,y:s.map.start.y},all=[start,...(s.map.spawnPoints||[]).map(q=>({x:q.x,y:q.y}))].filter(q=>clearAt(s,q.x,q.y,17));
+    const far=from=>{flood(n,d,[cellOf(n,from)]);let best=from,bd=-1;for(const q of all){const v=d[cellOf(n,q)];if(v>bd){bd=v;best=q;}}return best;},b=far(start),a=far(b);
+    flood(n,d,[cellOf(n,a)]);return {bases:[a,b],points:all.filter(q=>d[cellOf(n,q)]>=0)};}
+  // Where an operator redeploys: their own team's base, or, while the other team is close to that or has eyes on it,
+  // whichever point is furthest from them (out of their sight if there is one), so nobody comes back into a waiting gun.
+  function spawnSpot(s,team,self){const T=s.tdm,foes=s.roster.filter(o=>o.team!==team&&!o.dead),mine=s.roster.filter(o=>o.team===team&&!o.dead&&o!==self),near=q=>foes.reduce((m,f)=>Math.min(m,distance(f,q)),9999),
+      watched=q=>foes.some(f=>distance(f,q)<900&&lineOfSight(s,f,q)),worth=q=>near(q)-(watched(q)?600:0);
+    let at=T.bases[team];if(near(at)<TDM.safe||watched(at))at=T.points.reduce((best,q)=>worth(q)>worth(best)?q:best,at);
+    for(const [dx,dy] of [[0,0],[46,0],[-46,0],[0,46],[0,-46],[46,46],[-46,-46],[46,-46],[-46,46],[92,0],[-92,0],[0,92],[0,-92]]){const q={x:at.x+dx,y:at.y+dy};
+      if(clearAt(s,q.x,q.y,19)&&!mine.some(o=>distance(o,q)<34))return q;}
+    return {x:at.x,y:at.y};}
   function chase(s,e,speed,dt){const n=navField(s),cx=Math.floor(e.x/CELL),cy=Math.floor(e.y/CELL),here=n.dist[cy*n.w+cx];let best=null,bd=here<0?32767:here;
-    if(here>=0&&here<=1){enemyMovement(s,e,lead(s).x,lead(s).y,speed,dt,true);return;}
+    if(here>=0&&here<=1){const to=nearestOp(s,e)||lead(s);enemyMovement(s,e,to.x,to.y,speed,dt,true);return;}
     for(const [dx,dy] of DIRS){const x=cx+dx,y=cy+dy;if(x<0||y<0||x>=n.w||y>=n.h)continue;const d=n.dist[y*n.w+x];if(d<0||d>=bd)continue;if(dx&&dy&&(n.blocked[cy*n.w+x]||n.blocked[y*n.w+cx]))continue;bd=d;best={x:x*CELL+20,y:y*CELL+20};}
     enemyMovement(s,e,best?best.x:e.lastX,best?best.y:e.lastY,speed,dt,true);}
-  function leadAim(s,e,t,tgt){const D=diff(s),speed=(t.bullet||620)*D.bullet,tt=distance(e,tgt)/speed;return Math.atan2(e.lastY+(tgt.vy||0)*tt*D.lead-e.y,e.lastX+(tgt.vx||0)*tt*D.lead-e.x);}
+  function leadAim(s,e,t,tgt){const D=diff(s),speed=(t.bullet||620)*D.bullet,tt=distance(e,tgt)/speed,lead=Math.max(D.lead,t.lead||0);return Math.atan2(e.lastY+(tgt.vy||0)*tt*lead-e.y,e.lastX+(tgt.vx||0)*tt*lead-e.x);}
   function finishAttack(s,e,t){const D=diff(s);e.cooldown=t.rate*D.rate*(t.boss&&e.phase===3&&e.type!=='commander'?.7:1);e.clip++;if(e.clip>=(t.clip||5)){e.clip=0;e.reload=1.65;event(s,'enemyreload',{x:e.x,y:e.y});}}
   function release(s,e,t,tgt,dist,canSee,aim){const p=s.player,mode=e.mode;e.mode=null;
-    if(t.melee){if(dist<t.range+24&&canSee){if(tgt===p)damagePlayer(s,t.damage*(s.map.threat||1),e.x,e.y,'melee');else if(tgt===s.guest)damageGuest(s,t.damage*(s.map.threat||1),e.x,e.y,'melee');}event(s,'strike',{x:e.x,y:e.y});}
+    if(t.melee){if(dist<t.range+24&&canSee&&tgt!==s.decoy)hurt(s,tgt,t.damage*(s.map.threat||1),e.x,e.y,'melee');event(s,'strike',{x:e.x,y:e.y});}
     else if(t.kamikaze){if(dist<95){e.detonated=true;explode(s,e.x,e.y,95,t.damage,true);e.hp=0;e.dead=true;e.deathAge=0;}}
     else if(e.type==='commander'&&e.phase>=2&&e.clip%3===2)lob(s,e,e.targetX,e.targetY);
     else if(t.lob)lob(s,e,e.targetX,e.targetY,{duration:.9,fuse:1.25,radius:130,damage:t.damage});
     else if(mode==='mortar'){for(const [dx,dy] of [[0,0],[110,-60],[-100,70]])lob(s,e,e.targetX+dx,e.targetY+dy,{duration:1,fuse:1.55,radius:120,damage:42});}
-    else if(mode==='stomp'){event(s,'explosion',{x:e.x,y:e.y,radius:130});event(s,'stomp',{x:e.x,y:e.y});if(distance(e,p)<135&&damagePlayer(s,38*(s.map.threat||1),e.x,e.y,'stomp'))move(s,p,Math.cos(aim)*40,Math.sin(aim)*40);if(s.guest&&!s.guest.dead&&distance(e,s.guest)<135&&damageGuest(s,38*(s.map.threat||1),e.x,e.y,'stomp'))move(s,s.guest,Math.cos(aim)*40,Math.sin(aim)*40);}
+    else if(mode==='stomp'){event(s,'explosion',{x:e.x,y:e.y,radius:130});event(s,'stomp',{x:e.x,y:e.y});for(const o of ops(s))if(!o.dead&&distance(e,o)<135&&hurt(s,o,38*(s.map.threat||1),e.x,e.y,'stomp'))move(s,o,Math.cos(aim)*40,Math.sin(aim)*40);}
     else{const a=t.static?e.angle:t.locked?e.aim:leadAim(s,e,t,tgt);enemyFire(s,e,a);if(e.type==='commander'&&e.phase===3){enemyFire(s,e,a+.14);enemyFire(s,e,a-.14);}
       if(e.type==='mech'&&e.phase>=2&&e.clip%3===2){enemyFire(s,e,a+.25,{rocket:110,speed:560,damage:50});enemyFire(s,e,a-.25,{rocket:110,speed:560,damage:50});}
       const burst=(t.burst||1)+((t.burst||1)===1&&!t.locked&&!t.rocket&&!t.boss?diff(s).burst||0:0);if(burst>1){e.burst=burst-1;e.burstT=t.gap||.1;e.burstAim=a;}
@@ -320,9 +451,10 @@
       if(e.gone>0){e.gone-=dt;if(e.gone<=0)blink(s,e);continue;}
       if(e.blinkAt>0){e.blinkAt-=dt;if(e.blinkAt<=0){e.gone=.9;e.burst=0;e.attack=0;event(s,'blink',{x:e.x,y:e.y});continue;}}
       if(e.stagger>0||e.reload>0||e.disabled>0){if(e.stagger>0||e.disabled>0)e.burst=0;continue;}
-      const decoy=s.decoy&&distance(e,s.decoy)<720&&lineOfSight(s,e,s.decoy)&&distance(e,p)>150?s.decoy:null,
-        nearGuest=s.guest&&!s.guest.dead&&distance(e,s.guest)<distance(e,p)?s.guest:null,tgt=decoy||nearGuest||p;
-      const dist=distance(tgt,e),canSee=dist<(type.sight||740)&&sees(s,e,tgt),ok=eligible(s,e),hunter=e.hunt||D.hunt;
+      const decoy=s.decoy&&distance(e,s.decoy)<720&&lineOfSight(s,e,s.decoy)&&distance(e,p)>150?s.decoy:null,tgt=decoy||s.mates.length&&nearestOp(s,e)||p;
+      // Team deathmatch only: with the whole squad waiting to redeploy there is nobody to fight.
+      if(tgt.dead&&s.tdm)continue;
+      const dist=distance(tgt,e),canSee=dist<(type.sight||740)*(tgt===s.player&&s.perks.lowprofile?.75:1)&&sees(s,e,tgt),ok=eligible(s,e),hunter=e.hunt||D.hunt;
       if(canSee&&ok){e.active=true;e.seen=4;e.lastX=tgt.x;e.lastY=tgt.y;}else e.seen=Math.max(0,e.seen-dt);
       if(!e.active||!ok)continue;
       if(e.type==='commander'){const phase=e.hp<e.maxHp*.33?3:e.hp<e.maxHp*.66?2:1;if(phase>e.phase){e.phase=phase;e.stagger=.15;e.cooldown=0;if(phase===2)lob(s,e,e.lastX,e.lastY);event(s,'radio',{speaker:'HOSTILE COMMANDER',text:phase===2?'He’s alone. Flush him out.':'Cut off every exit. He does not leave this city.',duration:4});} }
@@ -342,20 +474,137 @@
         if(dist<type.range||mode){e.mode=mode;e.attack=(mode==='stomp'?.6:mode==='mortar'?1:type.windup)*D.windup;e.attackAge=0;e.aim=aim;e.targetX=tgt.x;e.targetY=tgt.y;event(s,'telegraph',{x:e.x,y:e.y,enemy:e.type,mode});continue;}}
       if(type.static)continue;
       // A rusher who can see the target but has something in the way goes round it instead of running into it.
-      if(type.melee){if(hunter&&!canSee||canSee&&tgt===p&&!walkClear(s,e,tgt))chase(s,e,type.speed,dt);else enemyMovement(s,e,e.lastX,e.lastY,type.speed,dt);}
+      if(type.melee){if(hunter&&!canSee||canSee&&tgt!==decoy&&(tgt===p||s.mates.length)&&!walkClear(s,e,tgt))chase(s,e,type.speed,dt);else enemyMovement(s,e,e.lastX,e.lastY,type.speed,dt);}
       else if(type.orbit){enemyMovement(s,e,tgt.x-Math.cos(aim)*300-Math.sin(aim)*e.side*140,tgt.y-Math.sin(aim)*300+Math.cos(aim)*e.side*140,type.speed,dt);}
       else if(e.type==='shield'||type.push){if(dist>(type.push?110:270))enemyMovement(s,e,e.lastX,e.lastY,type.speed,dt);}
-      else if(e.type==='sniper'||type.blink){if(dist<280)enemyMovement(s,e,e.x-Math.cos(aim)*150,e.y-Math.sin(aim)*150,type.speed,dt);else if(!canSee)enemyMovement(s,e,e.lastX,e.lastY,type.speed*.6,dt);}
+      else if(e.type==='sniper'||type.blink||type.standoff){if(dist<280)enemyMovement(s,e,e.x-Math.cos(aim)*150,e.y-Math.sin(aim)*150,type.speed,dt);else if(!canSee)enemyMovement(s,e,e.lastX,e.lastY,type.speed*.6,dt);}
       else if(type.minRange&&dist<type.minRange+40){enemyMovement(s,e,e.x-Math.cos(aim)*120,e.y-Math.sin(aim)*120,type.speed,dt);}
       else{const cover=s.walls.filter(b=>!b.dead&&b.low&&distance(e,{x:b.x+b.w/2,y:b.y+b.h/2})<250).sort((a,b)=>distance(e,{x:a.x,y:a.y})-distance(e,{x:b.x,y:b.y}))[0];
         if(e.hp<e.maxHp*.4&&cover&&!type.boss){const tx=cover.x+cover.w/2-Math.cos(aim)*65,ty=cover.y+cover.h/2-Math.sin(aim)*65;enemyMovement(s,e,tx,ty,type.speed,dt);}
         else if(!canSee||dist>type.range*.85){const tx=e.lastX-Math.cos(aim)*260-Math.sin(aim)*e.side*130,ty=e.lastY-Math.sin(aim)*260+Math.cos(aim)*e.side*130;
           // In holdout a rifleman whose way to a firing position is blocked paths round it too. The campaign keeps its
           // old behaviour here: its reinforcements getting stuck less often measurably raised the difficulty.
-          if(hunter&&(!canSee||tgt===p&&stageDef(s).kind==='endless'&&!walkClear(s,e,{x:tx,y:ty})))chase(s,e,type.speed,dt);else enemyMovement(s,e,tx,ty,type.speed,dt);}
+          if(hunter&&(!canSee||tgt!==decoy&&(tgt===p||s.mates.length)&&arena(s)&&!walkClear(s,e,{x:tx,y:ty})))chase(s,e,type.speed,dt);else enemyMovement(s,e,tx,ty,type.speed,dt);}
         else if(e.cooldown>.4)enemyMovement(s,e,e.x-Math.sin(aim)*e.side*45,e.y+Math.cos(aim)*e.side*45,type.speed*.6,dt);
       }
     }}
+  // ---------- field support ----------
+  // Score fills the meter: Rook's own bounties, flows, objectives and cleared waves. It fills fastest in team
+  // deathmatch, where a match is short, and slowest in the campaign, where a boss should stay a boss.
+  function charge(s,points){const q=s.support;if(!q||q.ready||s.training)return;const kind=stageDef(s).kind,rate=(kind==='tdm'?1.6:kind==='endless'?1:.6)*(s.perks.hardline?1.25:1);
+    q.charge=Math.min(q.cost,q.charge+points*rate);if(q.charge>=q.cost){q.ready=true;event(s,'supportready',{key:q.key});}}
+  // What a kill by Rook himself earns beyond its bounty: score towards the meter (but not for kills the support
+  // itself made, or it would pay for its own next call), and whatever his perks give.
+  const NO_SCORE=['sentry','k9','strike','gunship','blackout'];
+  function credit(s,source,t){const p=s.player;if(!NO_SCORE.includes(source))charge(s,t.bounty||15);
+    if(s.perks.scrounger&&W[source])p.reserve[source]=Math.min(reserveOf(s,source),p.reserve[source]+Math.ceil(W[source].capacity/4));
+    if(s.perks.executioner&&source==='melee'&&!p.dead)p.health=Math.min(100,p.health+20);}
+  // Calls in whatever Rook is carrying. The sentry and the hound are "allies": they act by themselves in stepAllies
+  // until their time runs out, and hostiles pay them no attention. The airstrike is six heavy shells already on the
+  // ground along the line of aim, starting at the aim point and walking away from Rook; their rings give a second's warning.
+  function callSupport(s,input={}){const q=s.support,p=s.player;if(!q||!q.ready||p.dead||['vault','roll','dive'].includes(p.state))return false;
+    if(q.key==='recon')s.recon=20;
+    else if(q.key==='turret'){const at=[72,46].map(d=>({x:p.x+Math.cos(p.angle)*d,y:p.y+Math.sin(p.angle)*d})).find(o=>clearAt(s,o.x,o.y,22))||{x:p.x,y:p.y};
+      s.allies.push({id:'ally'+s.tick,kind:'turret',x:at.x,y:at.y,angle:p.angle,life:30,total:30,cooldown:.5,vx:0,vy:0,shotAge:10});}
+    else if(q.key==='dog')s.allies.push({id:'ally'+s.tick,kind:'dog',x:p.x,y:p.y,angle:p.angle,life:25,total:25,cooldown:0,vx:0,vy:0,radius:12,moveTime:0,biteAge:10});
+    else if(q.key==='airstrike'){const d=clamp(Math.hypot((input.aimX??p.x+300)-p.x,(input.aimY??p.y)-p.y),210,560),a=p.angle;
+      for(let i=0;i<6;i++){const x=clamp(p.x+Math.cos(a)*(d+i*92),60,s.map.width-60),y=clamp(p.y+Math.sin(a)*(d+i*92),60,s.map.height-60);
+        s.grenades.push({kind:'frag',x,y,sx:x,sy:y,tx:x,ty:y,age:.06,duration:.05,fuse:1.25+i*.17,enemy:false,radius:150,damage:170,strike:true});}}
+    // A supply drop lands round Rook's feet. Reinforcement is a rifleman who stays at his side; the gunship circles him
+    // and fires down over the walls. Blackout is an EMP across the whole map: drones fall, machines and barriers go
+    // dark, and every soldier is blinded for five seconds (a boss for one).
+    if(q.key==='supply')[['health',-46,0],['armor',46,0],['ammo',0,-46],['ammo',0,46],['lethal',-40,-40],['tactical',40,-40]].forEach(([type,dx,dy],i)=>s.pickups.push({id:'sup'+s.tick+'_'+i,x:p.x+dx,y:p.y+dy,type,taken:false}));
+    else if(q.key==='reinforce')s.allies.push({id:'ally'+s.tick,kind:'gunner',x:p.x,y:p.y,angle:p.angle,life:45,total:45,cooldown:.5,vx:0,vy:0,radius:15,moveTime:0,shotAge:10});
+    else if(q.key==='gunship')s.allies.push({id:'ally'+s.tick,kind:'gunship',x:p.x,y:p.y-240,angle:0,life:20,total:20,cooldown:.7,vx:0,vy:0,orbit:-Math.PI/2,shotAge:10});
+    else if(q.key==='blackout'){for(const h of s.hazards)h.off=9;if(s.tdm)for(const a of s.allies)if(s.enemies.some(o=>o.id===a.owner))a.life=0;for(const e of s.enemies){if(e.dead||e.gone>0)continue;const t=A[e.type];
+      if(t.flying&&t.machine){e.detonated=true;damageEnemy(s,e,999,0,.1,'blackout',true,true);}
+      else if(t.machine){e.disabled=Math.max(e.disabled||0,t.boss?4:9);e.shieldDown=Math.max(e.shieldDown||0,8);e.attack=0;e.burst=0;}
+      else{const time=t.boss?1.2:5;e.stagger=Math.max(e.stagger,time);e.flashed=time;e.attack=0;e.burst=0;e.shieldDown=Math.max(e.shieldDown||0,5);}}}
+    q.ready=false;q.charge=0;q.uses++;event(s,'support',{key:q.key,x:p.x,y:p.y,angle:p.angle});return true;}
+  // Everything Rook has put in the field that acts for itself, until its time runs out: the sentry, the hound, a
+  // reinforcement and the gunship from field support, and the seeker and trophy system from his gadgets.
+  function allyShot(s,a,damage){const b=s.projectiles.find(q=>!q.active);if(!b)return;const ang=a.angle+(rand(s)-.5)*.07,mx=a.x+Math.cos(a.angle)*30,my=a.y+Math.sin(a.angle)*30;
+    Object.assign(b,{active:true,x:mx,y:my,px:mx,py:my,vx:Math.cos(ang)*1500,vy:Math.sin(ang)*1500,remaining:620,damage,enemy:false,owner:s.player.id,weapon:'sentry',pierce:0,explosive:0,stagger:.08,breach:false,hitIds:[],whiz:false,bounce:0,chain:0,flame:false,knife:false});
+    a.shotAge=0;event(s,'shot',{x:mx,y:my,angle:ang,weapon:'smg',enemy:false,ally:true});}
+  function allyMove(s,a,to,speed,dt){const m=s.ai[a.id]||(s.ai[a.id]={}),w=waypoint(s,a,m,to),dx=w.x-a.x,dy=w.y-a.y,l=Math.hypot(dx,dy)||1,ox=a.x,oy=a.y;move(s,a,dx/l*speed*dt,dy/l*speed*dt);
+    a.vx=(a.x-ox)/dt;a.vy=(a.y-oy)/dt;a.moveTime+=Math.hypot(a.vx,a.vy)*dt/60;if(Math.hypot(a.vx,a.vy)>20)a.angle=Math.atan2(a.vy,a.vx);}
+  function stepAllies(s,dt,only){if(s.recon>0)s.recon=Math.max(0,s.recon-dt);if(!s.allies.length)return;const p=s.player,hostile=q=>q.enemy||!!s.tdm&&s.enemies.some(o=>o.id===q.owner);
+    for(const a of s.allies){if(only&&a.owner!==only)continue;a.life-=dt;a.cooldown=Math.max(0,a.cooldown-dt);a.shotAge=(a.shotAge||0)+dt;const k=a.kind,nose=k==='dog'||k==='seeker';let foe=null,bd=Infinity;
+      // The sentry and the rifleman need a line of sight; the hound and the seeker follow their noses; the gunship sees over walls.
+      if(k!=='trophy')for(const e of s.enemies){if(e.dead||e.gone>0)continue;const d=distance(a,e);if(d<bd&&(nose?d<900:k==='gunship'?distance(p,e)<680:d<560&&sees(s,a,e))){bd=d;foe=e;}}
+      if(k==='turret'||k==='gunner'){a.vx=0;a.vy=0;
+        if(foe){const want=Math.atan2(foe.y-a.y,foe.x-a.x);a.angle+=clamp(wrap(want-a.angle),-5.5*dt,5.5*dt);if(a.cooldown<=0&&Math.abs(wrap(want-a.angle))<.12){a.cooldown=k==='turret'?.14:.17;allyShot(s,a,k==='turret'?15:16);}}
+        else if(k==='gunner'&&distance(a,p)>110)allyMove(s,a,p,265,dt);}
+      else if(k==='gunship'){a.orbit+=dt*.85;const ox=a.x,oy=a.y;a.x=clamp(p.x+Math.cos(a.orbit)*240,20,s.map.width-20);a.y=clamp(p.y+Math.sin(a.orbit)*240,20,s.map.height-20);a.vx=(a.x-ox)/dt;a.vy=(a.y-oy)/dt;
+        if(foe){a.angle=Math.atan2(foe.y-a.y,foe.x-a.x);if(a.cooldown<=0){a.cooldown=.11;a.shotAge=0;event(s,'strafe',{x:a.x,y:a.y,x2:foe.x,y2:foe.y});damageEnemy(s,foe,s.tdm?7:13,a.angle,.05,'gunship');}}
+        else a.angle=a.orbit+Math.PI/2;}
+      else if(k==='trophy'){for(const g of s.grenades)if(hostile(g)&&!g.exploded&&distance(g,a)<250){g.exploded=true;event(s,'intercept',{x:g.x,y:g.y,x2:a.x,y2:a.y});}
+        for(const b of s.projectiles)if(b.active&&hostile(b)&&b.explosive&&distance(b,a)<230){b.active=false;event(s,'intercept',{x:b.x,y:b.y,x2:a.x,y2:a.y});}}
+      else{a.biteAge=(a.biteAge||0)+dt;const to=foe||p,d=distance(a,to);a.vx=0;a.vy=0;
+        if(foe&&d<32+foe.radius){if(k==='seeker'){explode(s,a.x,a.y,125,135,false,'seeker');a.life=0;a.spent=true;}
+          else{a.angle=Math.atan2(foe.y-a.y,foe.x-a.x);if(a.cooldown<=0){a.cooldown=.55;a.biteAge=0;damageEnemy(s,foe,55,a.angle,.5,'k9',true);event(s,'bite',{x:foe.x,y:foe.y});}}}
+        else if(foe||d>95)allyMove(s,a,to,k==='seeker'?300:330,dt);}}
+    for(const a of s.allies)if(a.life<=0&&(!only||a.owner===only)){delete s.ai[a.id];if(!a.spent)event(s,'allygone',{kind:a.kind,x:a.x,y:a.y});}
+    s.allies=s.allies.filter(a=>a.life>0);}
+  // ---------- AI teammates ----------
+  // A bot is a squadmate whose controls are worked from here instead of by a person: botInput returns what a player's
+  // keyboard and mouse would have sent, so everything a bot does goes through stepMate like anyone else's. It is meant
+  // to read as a decent player rather than a turret. It takes a moment to pick up a new target, its aim wanders and
+  // turns at a human rate, it fires in bursts, and its rounds do less than a person's (BOT.dmg).
+  // What it is thinking (target, route, timers) lives in s.ai, away from the operator the other players are sent.
+  const BOT={dmg:.45,sight:760,react:[.3,.65],turn:7.5,think:6},botDmg=s=>s.tdm?skill(s).dmg:BOT.dmg;
+  // The next step of the walk from an operator to a point: straight there when nothing is in the way, otherwise down a
+  // distance field of its own (kept per bot, refreshed when the destination moves to another cell).
+  function waypoint(s,op,m,to){if(distance(op,to)<60||walkClear(s,op,to))return to;const n=grid(s),cell=cellOf(n,to);let r=m.route;
+    if(!r||r.sig!==n.sig)r=m.route={sig:n.sig,dist:new Int16Array(n.w*n.h),cell:-1,at:-9};
+    if(r.cell!==cell||s.time-r.at>2){r.cell=cell;r.at=s.time;flood(n,r.dist,[cell]);}
+    const cx=clamp(Math.floor(op.x/CELL),0,n.w-1),cy=clamp(Math.floor(op.y/CELL),0,n.h-1),here=r.dist[cy*n.w+cx];let best=null,bd=here<0?32767:here;
+    for(const [dx,dy] of DIRS){const x=cx+dx,y=cy+dy;if(x<0||y<0||x>=n.w||y>=n.h)continue;const d=r.dist[y*n.w+x];if(d<0||d>=bd)continue;if(dx&&dy&&(n.blocked[cy*n.w+x]||n.blocked[y*n.w+cx]))continue;bd=d;best={x:x*CELL+20,y:y*CELL+20};}
+    return best||to;}
+  // Where a bot wants to be. In order: out from under a grenade, on revive duty, positioned against whoever it is
+  // fighting, and otherwise at Rook's shoulder (holdout) or closing on the nearest hostile (team deathmatch).
+  function botGoal(s,op,m,i,foe){const T=s.tdm,boss=s.player,off=(a,d)=>({x:op.x+Math.cos(a)*d,y:op.y+Math.sin(a)*d,direct:true});
+    for(const g of s.grenades)if((g.enemy||s.tdm&&s.enemies.some(o=>o.id===g.owner))&&Math.hypot(op.x-g.tx,op.y-g.ty)<(g.radius||155)+30)return {...off(Math.atan2(op.y-g.ty,op.x-g.tx),170),run:true};
+    if(!T&&s.station){const t=s.tags.find(q=>q.owner!==op.id&&(!q.carrier||q.carrier===op.id));if(t)return t.carrier?{x:s.station.x,y:s.station.y,run:true,revive:true,near:22}:{x:t.x,y:t.y,run:true,near:0};}
+    const leash=!T&&!boss.dead&&distance(op,boss)>520;
+    if(foe&&!leash){const d=distance(op,foe),gun=W[op.slots[op.slot]],lo=clamp(gun.range*.3,130,250),hi=clamp(gun.range*.55,230,470),a=Math.atan2(foe.y-op.y,foe.x-op.x);
+      if(s.time>m.turnAt){m.turnAt=s.time+.9+rand(s)*1.1;m.side=-m.side;}
+      if(op.health<35||d<lo||A[foe.type].melee&&d<230)return off(a+Math.PI+m.side*.5,150);
+      if(d>hi)return {x:foe.x,y:foe.y,near:hi*.9};
+      // In range: sidestep, but only to ground it can stand on and still see the target from.
+      const step=k=>{const q=off(a+k*Math.PI/2,90);return clearAt(s,q.x,q.y,17)&&lineOfSight(s,q,foe)?q:null;};return step(m.side)||step(-m.side);}
+    // Lost sight of them a moment ago: go and look where they were.
+    if(m.last&&(s.time-m.last.at>5||distance(op,m.last)<=60))m.last=null;
+    if(m.last&&!leash)return {x:m.last.x,y:m.last.y,near:50};
+    if(T){let near=null,nd=Infinity;for(const e of s.enemies){if(e.dead||e.gone>0)continue;const d=distance(op,e);if(d<nd){nd=d;near=e;}}
+      const to=near||{x:(T.bases[0].x+T.bases[1].x)/2,y:(T.bases[0].y+T.bases[1].y)/2};return {x:to.x,y:to.y,run:nd>520,near:near?30:90};}
+    // Holdout: a step behind and to one side of Rook, closing up at a run when left behind.
+    const a=boss.angle+Math.PI+(i%2?-.7:.7)*(1+(i>>1)*.5),post={x:boss.x+Math.cos(a)*95,y:boss.y+Math.sin(a)*95},d=distance(op,boss);
+    return d>170||leash?{x:clearAt(s,post.x,post.y,17)?post.x:boss.x,y:clearAt(s,post.x,post.y,17)?post.y:boss.y,run:d>360,near:40}:null;}
+  // The slower half of a bot's mind, run a few times a second: who it can see, and where it is heading.
+  function botThink(s,op,m,i){let foe=null,best=Infinity;
+    for(const e of s.enemies){if(e.dead||e.gone>0)continue;const d=distance(op,e);if(d>BOT.sight*(e.ctx&&e.ctx.perks.lowprofile?.75:1)||A[e.type].cloak&&d>170&&!(e.attack>0)||!sees(s,op,e))continue;const score=d*(e===m.foe?.75:1);if(score<best){best=score;foe=e;}}
+    if(foe!==m.foe){m.foe=foe;if(foe){m.react=(BOT.react[0]+rand(s)*(BOT.react[1]-BOT.react[0]))*(s.tdm?skill(s).react:1);m.burst=Math.max(m.burst,.4);}}
+    if(foe)m.last={x:foe.x,y:foe.y,at:s.time};
+    m.goal=botGoal(s,op,m,i,foe);m.way=m.goal?m.goal.direct?m.goal:waypoint(s,op,m,m.goal):null;}
+  function botInput(s,op,i,dt){const m=s.ai[op.id]||(s.ai[op.id]={foe:null,react:0,aim:op.angle,sway:rand(s)*6,burst:0,rest:0,side:rand(s)>.5?1:-1,turnAt:0,swing:0,goal:null,way:null,route:null,fresh:false});
+    if(!m.fresh||(s.tick+i*2)%BOT.think===0){m.fresh=true;botThink(s,op,m,i);}
+    const key=op.slots[op.slot],gun=W[key],foe=m.foe&&!m.foe.dead&&!(m.foe.gone>0)?m.foe:null,d=foe?distance(op,foe):Infinity;m.react=Math.max(0,m.react-dt);m.sway+=dt;m.swing=Math.max(0,m.swing-dt);
+    // Aim: lead the target by the bullet's flight time, wander a little, and turn no faster than a hand would.
+    const tt=foe?d/gun.speed:0,want=foe?Math.atan2(foe.y+foe.vy*tt-op.y,foe.x+foe.vx*tt-op.x):Math.hypot(op.vx,op.vy)>60?Math.atan2(op.vy,op.vx):m.aim,held=want+(foe?Math.sin(m.sway*2.3)*.045+Math.sin(m.sway*5.1)*.025:0);
+    m.aim+=clamp(wrap(held-m.aim),-BOT.turn*dt,BOT.turn*dt);
+    const input={mx:0,my:0,aimX:op.x+Math.cos(m.aim)*260,aimY:op.y+Math.sin(m.aim)*260};
+    m.burst-=dt;if(m.burst<-m.rest){m.burst=.35+rand(s)*.5;m.rest=.2+rand(s)*.45;}
+    input.fire=!!foe&&d<gun.range*.92&&m.react<=0&&(gun.rate>.2||m.burst>0)&&Math.abs(wrap(held-m.aim))<.1;
+    if(foe&&d<64&&m.swing<=0&&op.state!=='melee'){input.melee=true;input.fire=false;m.swing=.55;}
+    if(!op.reload&&(op.ammo[key]===0||!foe&&op.ammo[key]<gun.capacity*.5))input.reload=true;
+    // An AI operator in team deathmatch has the whole kit: it takes a stim when hurt and out of contact, and (above
+    // the easiest skill) throws its lethal at a target standing at grenade range, a few seconds apart.
+    if(s.tdm){if(op.health<55&&op.stims>0&&!(op.heal>0)&&(!foe||d>260))input.gadget=true;
+      if(foe&&op.lethal&&op.grenades>0&&d>190&&d<380&&skill(s).react<1.5&&s.time>(m.nadeAt??5)){m.nadeAt=s.time+7+rand(s)*7;input.grenade=true;input.fire=false;input.aimX=foe.x;input.aimY=foe.y;}}
+    const g=m.goal,w=m.way;if(g&&w){const far=distance(op,g);if(far>(g.near??16)){const dx=w.x-op.x,dy=w.y-op.y,l=Math.hypot(dx,dy);if(l>8){input.mx=dx/l;input.my=dy/l;}else m.fresh=false;input.sprint=!!g.run&&!input.fire&&far>150;}
+      if(g.revive&&distance(op,s.station)<56)input.interactDown=true;}
+    return input;}
   function warnSpawn(s,entries,quiet=false){const pts=s.map.spawnPoints||[],near=lead(s);for(const e of entries){let pos=e;if(distance(near,e)<340){pos=pts.find(a=>distance(near,a)>=340&&clearAt(s,a.x,a.y,25));}if(!pos)continue;const warning={...e,x:pos.x,y:pos.y,delay:2.3};s.spawnWarnings.push(warning);event(s,'spawnwarning',{x:warning.x,y:warning.y});}if(!quiet)event(s,'toast',{text:'HOSTILE REINFORCEMENTS / WATCH THE APPROACHES'});}
   function entriesFor(s,entries,st){const D=diff(s),pts=s.map.spawnPoints||[],out=[];
     entries.forEach((e,i)=>{if(e.min&&!atLeast(s,e.min))return;const type=s.difficulty==='story'&&e.story?e.story:e.type,p=e.at!==undefined?pts[e.at%pts.length]:e;if(!p)return;out.push({id:e.id||'s'+s.tick+'_'+i,type,x:p.x,y:p.y,zone:st.zone});
@@ -376,7 +625,7 @@
   function supplyDrop(s){const p=lead(s),d=s.director,k=1+d.wave*.06,pool=OFFERS.filter(o=>o[0]!=='gadgets'||s.player.lethal||s.player.tactical),picks=[];
     while(picks.length<3&&pool.length)picks.push(pool.splice(Math.floor(rand(s)*pool.length),1)[0]);
     picks.forEach(([kind,base],i)=>{let item=kind,weapon=null,cost=base;
-      if(item==='weapon'){const guns=Object.keys(W).filter(g=>!s.owned.includes(g));if(guns.length){weapon=guns[Math.floor(rand(s)*guns.length)];cost=Math.max(150,W[weapon].price/12);}else{item='ammo';cost=60;}}
+      if(item==='weapon'){const guns=Object.keys(W).filter(g=>!s.owned.includes(g));if(guns.length){weapon=guns[Math.floor(rand(s)*guns.length)];cost=Math.max(150,(W[weapon].price||14000)/12);}else{item='ammo';cost=60;}}
       const a=p.angle+(i-1)*.95;let spot=null;for(const r of [120,160,90,200,60]){const x=p.x+Math.cos(a)*r,y=p.y+Math.sin(a)*r;if(x>70&&y>70&&x<s.map.width-70&&y<s.map.height-70&&clearAt(s,x,y,20)){spot={x,y};break;}}
       spot=spot||{x:p.x+(i-1)*34,y:p.y};s.pickups.push({id:'offer'+d.wave+'_'+i,x:spot.x,y:spot.y,type:'offer',item,weapon,cost:Math.round(cost*k/10)*10,taken:false});});
     event(s,'supplydrop',{wave:d.wave});}
@@ -394,7 +643,7 @@
     if(d.wave===0||d.phase==='rest'){d.timer=(d.timer??3)-dt;s.progress=0;if(d.timer<=0){d.wave++;d.phase='fight';for(const q of s.pickups)if(q.type==='offer')q.taken=true;
         const names=Object.keys(MODIFIERS);d.modifier=d.wave%3===0&&d.wave%5!==0?names[Math.floor(rand(s)*names.length)]:null;if(d.modifier==='blackout'){d.lit=s.dark;s.dark=Math.max(s.dark,.86);}
         d.queue=composeWave(s,d.wave);event(s,'wave',{wave:d.wave,modifier:d.modifier});event(s,'toast',{text:'WAVE '+d.wave+(d.wave%5===0?' / COMMANDER INBOUND':d.modifier?' / '+MODIFIERS[d.modifier]:'')});}}
-    else if(!d.queue.length&&alive===0){d.phase='rest';d.timer=REST;s.stats.wave=d.wave;const bonus=40+d.wave*10+(d.modifier?50+d.wave*10:0);s.stats.credits+=bonus;event(s,'waveclear',{wave:d.wave,bonus,modifier:d.modifier});
+    else if(!d.queue.length&&alive===0){d.phase='rest';d.timer=REST;s.stats.wave=d.wave;const bonus=40+d.wave*10+(d.modifier?50+d.wave*10:0);s.stats.credits+=bonus;event(s,'waveclear',{wave:d.wave,bonus,modifier:d.modifier});charge(s,60);
       if(d.modifier==='blackout')s.dark=d.lit||0;d.modifier=null;
       s.pickups=s.pickups.filter(q=>!q.taken||q.base);for(const q of s.pickups)if(q.base)q.taken=false;supplyDrop(s);}}
   function director(s,dt){const d=s.director,p=lead(s);d.clock+=dt;d.rest=Math.max(0,d.rest-dt);d.pressure=clamp(s.enemies.filter(e=>e.active&&!e.dead).length/7+(100-p.health)/200,0,1);
@@ -414,40 +663,91 @@
       const boss=s.enemies.find(e=>e.id===st.boss.id);s.boss=boss&&!boss.dead?boss.id:null;
       if(boss){d.fired=d.fired||{};(st.waves||[]).forEach((w,i)=>{if(!d.fired[i]&&boss.hp<boss.maxHp*w.hp){d.fired[i]=true;warnSpawn(s,entriesFor(s,w.entries,st));}});if(boss.dead&&s.spawnWarnings.every(w=>w.id!==boss.id)){event(s,'toast',{text:A[boss.type].name+' DESTROYED'});rout(s);advance(s);}}}
     else if(st.kind==='endless')holdout(s,dt,d);
+    else if(st.kind==='tdm')deathmatch(s,dt,d);
   }
+  // Team deathmatch: the clock, the respawns and the result. A kill is a point for the killer's team (fallen); the
+  // first team to the limit wins, or whoever is ahead when the clock runs out. "result" is how it ended for Alpha.
+  function deathmatch(s,dt){const T=s.tdm,d=s.director;d.clock+=dt;T.left=Math.max(0,T.time-d.clock);s.progress=clamp(Math.max(T.score[0],T.score[1])/T.limit,0,1);
+    for(const op of s.roster){if(!op.dead||op.vanished)continue;op.respawn-=dt;if(op.respawn<=0)act(s,op,()=>redeploy(s,op));}
+    if(T.score[0]>=T.limit||T.score[1]>=T.limit||T.left<=0){T.winner=T.score[0]>T.score[1]?0:T.score[1]>T.score[0]?1:-1;T.result=T.winner===0?'win':T.winner===1?'loss':'draw';s.completed=true;
+      event(s,'complete',{tdm:true,winner:T.winner,result:T.result,score:[...T.score],time:s.time});}}
+  // How a finished match went for one operator: their team, the result, what it pays and whether it is kept in the
+  // record. Pay is scaled down for a short match or a smaller team opposite; only a match to 20 or more against a
+  // team at least the size of your own is "ranked".
+  function verdict(s,id){const T=s.tdm,op=s.roster.find(o=>o.id===id)||s.player,mine=s.roster.filter(o=>o.team===op.team).length,theirs=s.roster.length-mine,result=T.winner<0?'draw':T.winner===op.team?'win':'loss';
+    return {team:op.team,result,match:Math.round(TDM.pay[result]*Math.min(1,T.limit/30)*Math.min(1,theirs/mine)),ranked:T.limit>=20&&theirs>=mine,ai:s.roster.some(o=>o.team!==op.team&&o.bot)};}
   // Ending a defence or killing a boss sends that fight's reinforcements running, so extraction reads as a win rather than a mop-up.
   function rout(s){let n=0;for(const e of s.enemies)if(!e.dead&&e.spawned){e.dead=true;e.vanished=true;e.deathAge=0;n++;}s.spawnWarnings=[];if(n)event(s,'toast',{text:'REMAINING HOSTILES ARE RETREATING'});}
   function rating(s){const par=World.missions.find(m=>m.id===s.mission)?.par||240,score=Math.max(0,Math.round(10000+s.stats.flows*200-s.stats.damage*14-Math.max(0,s.time-par)*10));return {time:s.time,score,rating:score>=9600?'S':score>=8200?'A':score>=6500?'B':'C'};}
-  function stepThrown(s,dt){for(const g of s.grenades){g.age+=dt;if(g.age<g.duration){const t=clamp(g.age/g.duration,0,1);const nx=g.sx+(g.tx-g.sx)*t,ny=g.sy+(g.ty-g.sy)*t;if(!g.blocked){if(!s.walls.some(w=>!w.dead&&!w.low&&!w.pass&&circleBox(nx,ny,4,w))){g.x=nx;g.y=ny;}else g.blocked=true;}}if(g.age>=g.fuse&&!g.exploded){g.exploded=true;detonate(s,g);}}
+  function stepThrown(s,dt,only){for(const g of s.grenades){if(only&&g.owner!==only)continue;g.age+=dt;if(g.age<g.duration){const t=clamp(g.age/g.duration,0,1);const nx=g.sx+(g.tx-g.sx)*t,ny=g.sy+(g.ty-g.sy)*t;if(!g.blocked){if(!s.walls.some(w=>!w.dead&&!w.low&&!w.pass&&circleBox(nx,ny,4,w))){g.x=nx;g.y=ny;}else g.blocked=true;}}if(g.age>=g.fuse&&!g.exploded){g.exploded=true;detonate(s,g);}}
     s.grenades=s.grenades.filter(g=>!g.exploded);
-    for(const z of s.zones){z.life-=dt;if(z.kind==='fire'){z.tick-=dt;if(z.tick<=0){z.tick=.25;for(const e of s.enemies)if(!e.dead&&!A[e.type].flying&&distance(e,z)<z.r)damageEnemy(s,e,9.5,Math.atan2(e.y-z.y,e.x-z.x),.05,'incendiary');if(distance(s.player,z)<z.r)damagePlayer(s,5,z.x,z.y,'fire');}}}
+    for(const z of s.zones){if(only&&z.owner!==only)continue;z.life-=dt;
+      // Tear gas: any soldier standing in it is doubled over and cannot fight. Machines and bosses are not troubled.
+      if(z.kind==='gas'){z.tick-=dt;if(z.tick<=0){z.tick=.4;for(const e of s.enemies)if(!e.dead&&!A[e.type].machine&&!A[e.type].boss&&distance(e,z)<z.r){e.stagger=Math.max(e.stagger,.6);e.attack=0;e.burst=0;}}}
+      if(z.kind==='fire'){z.tick-=dt;if(z.tick<=0){z.tick=.25;for(const e of s.enemies)if(!e.dead&&!A[e.type].flying&&distance(e,z)<z.r)damageEnemy(s,e,9.5,Math.atan2(e.y-z.y,e.x-z.x),.05,'incendiary');if(distance(s.player,z)<z.r)damagePlayer(s,5,z.x,z.y,'fire');}}}
     s.zones=s.zones.filter(z=>z.life>0);if(s.decoy){s.decoy.life-=dt;if(s.decoy.life<=0)s.decoy=null;}
-    for(const m of s.mines){m.arm-=dt;if(m.arm<=0&&!m.done&&s.enemies.some(e=>!e.dead&&!(e.gone>0)&&!A[e.type].flying&&distance(e,m)<78+e.radius-17)){m.done=true;explode(s,m.x,m.y,150,160,false,'mine');}}
+    for(const m of s.mines){if(only&&m.owner!==only)continue;m.arm-=dt;if(m.arm<=0&&!m.done&&!m.remote&&s.enemies.some(e=>!e.dead&&!(e.gone>0)&&!A[e.type].flying&&distance(e,m)<78+e.radius-17)){m.done=true;explode(s,m.x,m.y,150,160,false,'mine');}}
     s.mines=s.mines.filter(m=>!m.done);
-    const p=s.player;p.zap=Math.max(0,(p.zap||0)-dt);const gp=s.guest&&!s.guest.dead?s.guest:null;if(gp)gp.zap=Math.max(0,(gp.zap||0)-dt);
-    for(const h of s.hazards){h.off=Math.max(0,h.off-dt);h.on=h.off<=0&&((s.time+h.phase)%h.period)<h.period*h.duty;
+    const p=s.player;p.zap=Math.max(0,(p.zap||0)-dt);const up=s.mates.filter(o=>!o.dead);for(const gp of up)gp.zap=Math.max(0,(gp.zap||0)-dt);
+    for(const h of s.hazards){if(!only||only==='player')h.off=Math.max(0,h.off-dt);h.on=h.off<=0&&((s.time+h.phase)%h.period)<h.period*h.duty;
       if(h.on&&!p.zap&&circleBox(p.x,p.y,p.radius-3,h)&&damagePlayer(s,22,h.x+h.w/2,h.y+h.h/2,'laser')){p.zap=.7;event(s,'zap',{x:p.x,y:p.y});}
-      if(h.on&&gp&&!gp.zap&&circleBox(gp.x,gp.y,gp.radius-3,h)&&damageGuest(s,22,h.x+h.w/2,h.y+h.h/2,'laser')){gp.zap=.7;event(s,'zap',{x:gp.x,y:gp.y});}}}
-  function stepPickups(s,dt){const p=s.player.dead?{x:-1e9,y:-1e9}:s.player,gp=s.guest&&!s.guest.dead?s.guest:null;for(const pick of s.pickups){if(pick.taken||pick.type==='supply'||pick.type==='offer')continue;
+      for(const gp of up)if(h.on&&!gp.zap&&circleBox(gp.x,gp.y,gp.radius-3,h)&&damageMate(s,gp,22,h.x+h.w/2,h.y+h.h/2,'laser')){gp.zap=.7;event(s,'zap',{x:gp.x,y:gp.y});}}}
+  function stepPickups(s,dt){const p=s.player.dead?{x:-1e9,y:-1e9}:s.player,up=s.mates.filter(o=>!o.dead);for(const pick of s.pickups){if(pick.taken||pick.type==='supply'||pick.type==='offer')continue;
       if(pick.type==='weapon'){if(!pick.owned&&s.owned.includes(pick.weapon))pick.owned=true;if(distance(pick,p)<=35&&!pick.owned){s.owned.push(pick.weapon);pick.owned=true;event(s,'weaponfound',{weapon:pick.weapon,x:pick.x,y:pick.y});}if(pick.owned){pick.ttl+=dt;if(pick.ttl>45)pick.taken=true;}continue;}
-      // Lethal/tactical gadgets stay player-only: the guest's leaner v1 kit has no gadget slots to fill.
+      // Lethal/tactical gadgets stay player-only: a squadmate's leaner v1 kit has no gadget slots to fill.
       if(pick.type==='lethal'){if(distance(pick,p)>35||!p.lethal)continue;p.grenades=Math.min(G[p.lethal].count+s.mods.charges+2,p.grenades+1);pick.taken=true;event(s,'pickup',{kind:pick.type,x:pick.x,y:pick.y});continue;}
       if(pick.type==='tactical'){if(distance(pick,p)>35||!p.tactical)continue;p.tacticals=Math.min(G[p.tactical].count+s.mods.charges+2,p.tacticals+1);pick.taken=true;event(s,'pickup',{kind:pick.type,x:pick.x,y:pick.y});continue;}
-      // Health/ammo/armor/intel/cache go to whichever of player/guest is actually closer, so a co-op guest can self-sustain.
-      const target=gp&&distance(pick,gp)<distance(pick,p)?gp:p;if(distance(pick,target)>35)continue;
+      // Health/ammo/armor/intel/cache go to whichever operator is actually closest, so a squadmate can self-sustain.
+      let target=p;for(const gp of up)if(distance(pick,gp)<distance(pick,target))target=gp;if(distance(pick,target)>35)continue;
       if(pick.type==='health'){if(target.health>=100)continue;target.health=Math.min(100,target.health+30);}
       else if(pick.type==='armor')target.armor=Math.min(target.maxArmor,target.armor+30);
       else if(pick.type==='ammo')for(const k of target.slots)target.reserve[k]=Math.min(reserveOf(s,k)*2,target.reserve[k]+Math.ceil(W[k].reserve/3));
       else if(pick.type==='intel'){s.stats.intel++;event(s,'intel',{x:pick.x,y:pick.y});}
       else if(pick.type==='cache'){s.stats.credits+=120;event(s,'cache',{x:pick.x,y:pick.y,credits:120});}
-      pick.taken=true;event(s,'pickup',{kind:pick.type,x:pick.x,y:pick.y,guest:target===gp});}
+      pick.taken=true;event(s,'pickup',{kind:pick.type,x:pick.x,y:pick.y,guest:target!==p,who:target!==p?target.id:s.player.id});}
     if(s.tick%600===0&&s.pickups.length>40)s.pickups=s.pickups.filter(q=>!q.taken||q.base);}
-  function step(s,input={},dt=DT){if(s.completed||s.dead)return;
-    if(s.hitstop>0){s.hitstop=Math.max(0,s.hitstop-dt);s.buffered=s.buffered||{};for(const key of ['roll','slide','interact','reload','gadget','melee','grenade','tactical','swap'])if(input[key])s.buffered[key]=true;if(input.slot!==undefined)s.buffered.slot=input.slot;return;}
+  // ---------- team deathmatch: every operator the same ----------
+  // The rules for moving, shooting, gadgets, perks and field support were written for one player, Rook, and the
+  // hostiles he faces (s.player, s.enemies, and what the simulation keeps about him). In team deathmatch each operator
+  // takes a turn at being that player: act() puts them, their own context and the other team in those places, runs
+  // the same rules, and puts everything back. Whatever an operator owns - rounds in flight, grenades, fire, mines, a
+  // sentry - is stepped in its owner's turn, so it harms the other team and its kills are its owner's.
+  function act(s,op,fn){const keep={player:s.player,mates:s.mates,enemies:s.enemies,acting:s.acting};for(const k of CTX){keep[k]=s[k];s[k]=op.ctx[k];}
+    s.player=op;s.mates=[];s.enemies=s.roster.filter(o=>o.team!==op.team);s.acting=op.id;
+    try{fn();}finally{for(const k of CTX){op.ctx[k]=s[k];s[k]=keep[k];}s.player=keep.player;s.mates=keep.mates;s.enemies=keep.enemies;s.acting=keep.acting;}}
+  // Whatever was put in the field during this turn is this operator's.
+  function claim(s,op){for(const list of [s.grenades,s.zones,s.mines,s.allies])for(const q of list)if(q.owner===undefined&&!q.enemy){q.owner=op.id;q.team=op.team;}}
+  // One operator's hit on another: armour and health as for anyone, but no protection after a hit (every pellet of a
+  // blast lands) - only a dodge, a vault or the moment after redeploying saves them. A kill is a point for the team, a
+  // bounty for a player, and a step in the killer's chain.
+  function strike(s,e,amount,angle,source,blast){const me=s.player,T=s.tdm;if(e.dead||e.iframes>0||e.state==='vault'&&e.age<.24)return;
+    if(e.state==='roll'&&e.age>=.055&&e.age<=.25||e.state==='dive'&&e.age>=.07&&e.age<=.28)return;
+    // Their flak vest against a blast; the attacker's Ambusher, which here means a hit from behind.
+    // A knife is final, as it is in any deathmatch.
+    const theirs=e.ctx.perks;if(source==='melee')amount=Math.max(amount,400);amount*=TDM.dmg*(blast&&theirs.flak?.6:1)*(s.perks.ambusher&&!blast&&Math.abs(wrap(angle-e.angle))<1?1.35:1);
+    const armor=Math.min(e.armor,amount*.65);e.armor-=armor;e.health=Math.max(0,e.health-amount+armor);e.hp=e.health;e.hurtAt=s.time;e.heal=0;s.stats.hits++;
+    event(s,'hit',{id:e.id,x:e.x,y:e.y,angle,amount,player:true,by:me.id});event(s,'damage',{x:e.x,y:e.y,amount,fromX:me.x,fromY:me.y,src:source,who:e.id});
+    if(e.health<=0&&theirs.secondwind&&!e.ctx.windUsed){e.ctx.windUsed=true;e.health=e.hp=30;e.iframes=1.2;event(s,'secondwind',{x:e.x,y:e.y,who:e.id});}
+    if(e.health>0)return;
+    fallen(s,e,me.id);s.stats.kills++;s.mastery[source]=(s.mastery[source]||0)+1;s.combo=s.time-s.comboAt<3.5?s.combo+1:1;s.comboAt=s.time;s.stats.bestCombo=Math.max(s.stats.bestCombo,s.combo);
+    const t=A.operator,credits=me.bot?0:Math.round(t.bounty*(1+.1*Math.min(s.combo-1,8))*(source==='melee'?1.5:1)*TDM.bounty),row=T.board[me.id];s.stats.credits+=credits;row.k++;row.cr+=credits;
+    event(s,'kill',{x:e.x,y:e.y,enemy:'operator',id:e.id,victim:e.id,credits,combo:s.combo,boss:false,source,by:me.id,bot:me.bot});credit(s,source,t);
+    s.pickups.push({id:'fall'+s.tick+e.id,x:e.x,y:e.y,type:'ammo',taken:false});}
+  function stepVersus(s,input,dt){s.tick++;s.time+=dt;
+    s.roster.forEach((op,i)=>act(s,op,()=>{s.flowTime=Math.max(0,s.flowTime-dt);op.stagger=Math.min(TDM.stun,Math.max(0,(op.stagger||0)-dt));
+      const raw=i?input.mates&&input.mates[i-1]||{}:input;stepPlayer(s,op.dead||op.vanished?{}:op.bot?botInput(s,op,i,dt):raw,dt);claim(s,op);
+      stepAllies(s,dt,op.id);stepProjectiles(s,dt,op.id);stepThrown(s,dt,op.id);if(!op.dead)stepPickups(s,dt);claim(s,op);op.hp=op.health;}));
+    deathmatch(s,dt);}
+  function step(s,input={},dt=DT){if(s.completed||s.dead)return;if(s.tdm)return stepVersus(s,input,dt);
+    if(s.hitstop>0){s.hitstop=Math.max(0,s.hitstop-dt);s.buffered=s.buffered||{};for(const key of ['roll','slide','interact','reload','gadget','melee','grenade','tactical','swap','support'])if(input[key])s.buffered[key]=true;if(input.slot!==undefined)s.buffered.slot=input.slot;return;}
     if(s.buffered){input={...input,...s.buffered};s.buffered=null;}
     s.tick++;s.time+=dt;s.flowTime=Math.max(0,s.flowTime-dt);
     if(s.cinematic>0){s.cinematic+=dt;const cin=stageDef(s).cinematic||{duration:2.5,beats:[]};s.beats=s.beats||{};cin.beats.forEach((b,i)=>{if(s.cinematic>b.at&&!s.beats[i]){s.beats[i]=true;if(b.explode)explode(s,s.player.x+b.explode[0],s.player.y+b.explode[1],b.explode[2],0);if(b.radio)event(s,'radio',{...b.radio});}});if(s.cinematic>cin.duration){s.completed=true;event(s,'complete',{...rating(s)});}return;}
-    stepPlayer(s,input,dt);if(s.dead)return;if(s.guest)stepGuest(s,input.guest||{},dt);stepRevive(s,input,dt);stepEnemies(s,dt);stepProjectiles(s,dt);stepThrown(s,dt);if(s.dead)return;stepPickups(s,dt);director(s,dt);
+    stepPlayer(s,input,dt);if(s.dead)return;
+    // Each squadmate's controls for this step: the AI's for a bot, otherwise what its player sent (input.mates, or
+    // input.guest for the first of them).
+    if(s.mates.length){const inputs={player:input};s.mates.forEach((m,i)=>{const mi=m.dead?{}:m.bot?botInput(s,m,i,dt):input.mates&&input.mates[i]||i===0&&input.guest||{};inputs[m.id]=mi;stepMate(s,m,mi,dt);});stepRevive(s,inputs,dt);}
+    stepEnemies(s,dt);stepAllies(s,dt);stepProjectiles(s,dt);stepThrown(s,dt);if(s.dead)return;stepPickups(s,dt);director(s,dt);
   }
-  return {DT,CELL,REVIVE_TIME,create,step,move,clearAt,lineOfSight,sees,circleBox,segmentBox,segmentCircle,distance,shoot,damagePlayer,damageEnemy,damageProp,explode,vault,interact,melee,checkpoint,resupply,rating,stageDef,advance,enterStage,eligible,navField,nearbyWeapon,nearbyOffer,reserveOf,diff,MODIFIERS,STAMINA_SHORT,STAMINA_LONG,WINDED_UNTIL};
+  return {DT,CELL,REVIVE_TIME,TDM,BOT,create,step,move,clearAt,lineOfSight,sees,circleBox,segmentBox,segmentCircle,distance,shoot,damagePlayer,damageEnemy,damageProp,explode,vault,interact,melee,checkpoint,resupply,rating,stageDef,arena,ops,botInput,act,verdict,callSupport,chargeSupport:charge,advance,enterStage,eligible,navField,nearbyWeapon,nearbyOffer,reserveOf,diff,MODIFIERS,STAMINA_SHORT,STAMINA_LONG,WINDED_UNTIL};
 });

@@ -60,6 +60,16 @@ the address.
 - **Restarts.** Rooms live in memory. Restarting or redeploying the relay ends the games in progress; players are told
   the connection was lost and can host again.
 
+## Before the game is sold
+
+- **Give the relay an address you own.** The address in `blackout/online-config.js` is built into every copy of the
+  game. Point a domain of yours at the service and ship that, so the relay can move hosts without a game update.
+- **Use a tier that does not sleep**, in the region most of your players are in.
+- **Set `RELAY_TRUST_PROXY=1`** on platforms that put a proxy in front (the Dockerfile does; a plain `npm start`
+  service does not unless you add it). Without it the per-address limits count every player as one address.
+- **Monitor `/health`.** Redeploy at quiet hours: a restart ends the games in progress.
+- **Changing the protocol:** raise `PROTOCOL` here and in `blackout/online.js`, and deploy the relay first.
+
 ## Settings
 
 All optional, all environment variables.

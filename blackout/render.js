@@ -7,16 +7,16 @@
   subway:{ground:0x2b2c2f,specks:[0x6b6d72,0x141517],road:0x202124,alt:0x37383c,mark:0x2a2b2e,roof:0x1a1b1d,edge:0x46484c,curb:0x55575c,wall:0x161719,rock:0x3c3e42,rockTop:0x5d5f64,water:0x1f3238},
   desert:{ground:0x76644a,specks:[0xb39d74,0x4e412c],road:0x3b3934,alt:0x86724f,mark:0x45413b,roof:0x6b5b42,edge:0xa89069,curb:0x8d7a5b,wall:0x5c4d37,rock:0x6b573d,rockTop:0x9c8460,water:0x3e5550,tint:[0xd39a52,.06]},
   facility:{ground:0x384047,specks:[0x8d9aa4,0x1d2328],road:0x2c3339,alt:0x434c54,mark:0x30373d,roof:0x272e33,edge:0x6f8290,curb:0x5f6f7a,wall:0x20272c,rock:0x45515a,rockTop:0x6f7f8a,water:0x24363f,accent:0x6fd0e8}};
- const TINTS={infantry:0xb2a797,rusher:0xb8a58e,sniper:0x8dafa1,shield:0xaaa58e,commander:0xc9aa89,scout:0x9fb08a,breacher:0x8e8d84,grenadier:0xa69278,gunner:0x9a8c7a,rocketeer:0x9e9c82,elite:0x8aa8b8,ghost:0x6f7d84,wraith:0x5a6670};
+ const TINTS={infantry:0xb2a797,rusher:0xb8a58e,sniper:0x8dafa1,shield:0xaaa58e,commander:0xc9aa89,scout:0x9fb08a,breacher:0x8e8d84,grenadier:0xa69278,gunner:0x9a8c7a,rocketeer:0x9e9c82,elite:0x8aa8b8,ghost:0x6f7d84,wraith:0x5a6670,raider:0xc59a86,striker:0xc9a078,deadeye:0xb98f9a};
  const PICKUP={health:0x5c7155,armor:0x526559,ammo:0x797153,lethal:0x6b6a4a,tactical:0x4f6670,intel:0x8a7340,cache:0x9a8240,supply:0x5c7155};
  class Render {
   constructor(scene){this.scene=scene;this.staticObjects=[];this.actors=new Map();this.props=new Map();this.particles=Array.from({length:360},()=>({active:false}));this.flashes=[];this.decals=[];this.cameraX=0;this.cameraY=0;this.lastMap=null;this.hurt=[];this.hitMark=0;this.killMark=0;this.weather=[];
    this.effects=scene.add.graphics().setDepth(11000);this.lines=scene.add.graphics().setDepth(10900);this.decalsGraphics=scene.add.graphics().setDepth(2);this.smoke=scene.add.graphics().setDepth(11500);this.uiGraphics=scene.add.graphics().setScrollFactor(0).setDepth(20000);
    this.crosshair=scene.add.graphics().setScrollFactor(0).setDepth(20010);this.brush=scene.make.graphics({x:0,y:0,add:false});this.dark=null;
    this.sprites=new Map();this.frame=0;this.labels=Array.from({length:6},()=>scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:'10px',fontStyle:'600',color:'#f4cf8e',stroke:'#0b0f0a',strokeThickness:3}).setOrigin(.5,1).setDepth(12001).setVisible(false));
-   // Co-op: a callsign over each operator, and the caption under the revive station.
+   // Squads: a callsign over each operator, and the caption under the revive station.
    const small=(size,color)=>scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:size,fontStyle:'600',color,stroke:'#0b0f0a',strokeThickness:3}).setDepth(12001).setVisible(false);
-   this.nameTags=[small('9px','#e2b074').setOrigin(.5,1),small('9px','#8fe3ff').setOrigin(.5,1)];this.stationLabel=small('8px','#9fd08a').setOrigin(.5,0).setText('REVIVE STATION');
+   this.nameTags=Array.from({length:8},()=>small('9px','#8fe3ff').setOrigin(.5,1));this.stationLabel=small('8px','#9fd08a').setOrigin(.5,0).setText('REVIVE STATION');
    this.texts=Array.from({length:14},()=>({obj:scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:'12px',fontStyle:'600',color:'#e2b074',stroke:'#10150f',strokeThickness:3}).setOrigin(.5).setDepth(12000).setVisible(false),life:0}));
   }
   clear(){for(const obj of this.staticObjects)obj.destroy();this.staticObjects=[];for(const a of this.actors.values())for(const obj of Object.values(a))if(obj?.destroy)obj.destroy();this.actors.clear();this.props.clear();this.decals=[];this.flashes=[];this.hurt=[];for(const p of this.particles)p.active=false;for(const t of this.texts){t.life=0;t.obj.setVisible(false);}for(const o of this.sprites.values())o.destroy();this.sprites.clear();for(const l of [...this.labels,...this.nameTags,this.stationLabel])l.setVisible(false);this.decalsGraphics.clear();this.effects.clear();this.lines.clear();this.smoke.clear();this.uiGraphics.clear();this.crosshair.clear();if(this.dark){this.dark.destroy();this.dark=null;}}
@@ -100,11 +100,32 @@
   }
   actor(id){let a=this.actors.get(id);if(a)return a;const scene=this.scene;a={shadow:scene.add.ellipse(0,0,40,24,C.shadow,.5),feet:scene.add.sprite(0,0,'characters','feet/idle/0'),ghost:scene.add.sprite(0,0,'characters','rifle/idle/0').setVisible(false),body:scene.add.sprite(0,0,'characters','rifle/idle/0'),gear:scene.add.graphics(),phase:0,lastFrame:'',lastSeq:'',blend:0};this.actors.set(id,a);return a;}
   hide(a){for(const obj of [a.body,a.ghost,a.feet,a.gear,a.shadow])obj.setVisible(false);}
-  drawActor(e,s,dt,isPlayer){const a=this.actor(e.id||'rook'),type=e.type,meta=BPWorld.archetypes[type],w=isPlayer?BPWorld.weapons[e.slots[e.slot]]:BPWorld.weapons[e.gun]||BPWorld.weapons.rifle;
+  // Field support in the field. Both are drawn in code, like the drones and the mech: the sentry in the squad's green
+  // with a ring that runs down as its time does, the hound nose-first along the way it is running. Each flickers in its last two seconds.
+  drawAlly(al,s,dt){
+   // A reinforcement is a soldier like any other, in the squad's grey-blue.
+   if(al.kind==='gunner'){this.drawActor({id:al.id,ally:true,team:al.team,x:al.x,y:al.y,vx:al.vx,vy:al.vy,angle:al.angle,moveAngle:al.angle,slots:['rifle','pistol'],slot:0,state:Math.hypot(al.vx,al.vy)>20?'run':'idle',shotAge:al.shotAge,age:0,duration:1,reload:0,heal:0},s,dt,true);return;}
+   const a=this.actor(al.id),g=a.gear,t=s.time,dog=al.kind==='dog',fade=al.life<2?.35+.65*Math.abs(Math.sin(t*13)):1;a.body.setVisible(false);a.feet.setVisible(false);a.ghost.setVisible(false);
+   a.shadow.setVisible(true).setPosition(al.x+5,al.y+8).setDepth(4).setScale(dog?.75:1).setAlpha(.45*fade);g.clear().setVisible(true).setAlpha(fade).setPosition(al.x,al.y).setDepth(al.y+52);
+   // The seeker rolls; the trophy system shows the ground it covers; the gunship flies above everything, its shadow on the ground beneath.
+   if(al.kind==='seeker'){g.setRotation((al.moveTime||0)*2.2);g.fillStyle(0x2b3136).fillCircle(0,0,9);g.lineStyle(2.5,0x8796a0).strokeCircle(0,0,9);g.lineStyle(2,0x8796a0).lineBetween(-9,0,9,0);g.fillStyle(C.red,Math.sin(t*18)>0?1:.35).fillCircle(0,0,3);return;}
+   if(al.kind==='trophy'){g.setRotation(0);g.fillStyle(0x2c3338).fillRect(-11,-7,22,14);g.lineStyle(2,0x8796a0).strokeRect(-11,-7,22,14);g.fillStyle(C.cyan,.9).fillCircle(0,0,4);g.lineStyle(1,C.cyan,.16+.08*Math.sin(t*4)).strokeCircle(0,0,250);
+    g.lineStyle(2,C.cyan,.55);g.beginPath();g.arc(0,0,17,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.max(0,al.life/(al.total||20)));g.strokePath();return;}
+   if(al.kind==='gunship'){a.shadow.setPosition(al.x+26,al.y+46).setScale(1.9).setAlpha(.28*fade);g.setDepth(14000).setRotation(al.angle);g.fillStyle(0x3d4733).fillRect(-46,-3,22,6).fillRect(-50,-9,5,18);g.fillStyle(0x4d5a41).fillEllipse(0,0,56,22);g.fillStyle(0x8fe3ff,.8).fillEllipse(17,0,13,11);
+    g.lineStyle(3,0x1d2327).lineBetween(22,-6,34,-6).lineBetween(22,6,34,6);const q=t*38-al.angle;g.lineStyle(3,0xc3cdb0,.55);for(const o of [0,Math.PI/2])g.lineBetween(Math.cos(q+o)*38,Math.sin(q+o)*38,-Math.cos(q+o)*38,-Math.sin(q+o)*38);return;}
+   if(!dog){g.setRotation(0);const c=Math.cos(al.angle),sn=Math.sin(al.angle),k=al.shotAge<.06?3:0;g.fillStyle(0x2c3830).fillCircle(0,0,18);g.lineStyle(3,0x9fd08a,.9).strokeCircle(0,0,18);g.fillStyle(0x4a5e52).fillCircle(0,0,11);
+    g.lineStyle(7,0x1d2723).lineBetween(c*4,sn*4,c*(32-k),sn*(32-k));g.lineStyle(3,0x9fb5a0).lineBetween(c*6,sn*6,c*(30-k),sn*(30-k));g.fillStyle(0x9fd08a,.95).fillCircle(c*8,sn*8,3);
+    g.lineStyle(2,0x9fd08a,.55);g.beginPath();g.arc(0,0,25,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.max(0,al.life/(al.total||30)));g.strokePath();return;}
+   // The hound, drawn facing right and turned to its heading: legs that swing with its stride, and a lunge on each bite.
+   const run=Math.hypot(al.vx,al.vy)>20,sw=run?Math.sin((al.moveTime||0)*9)*6:0,bite=(al.biteAge??9)<.18?5:0;g.setRotation(al.angle);
+   g.lineStyle(4,0x2b3136);for(const [x,y,d] of [[9,-7,1],[9,7,-1],[-10,-7,-1],[-10,7,1]])g.lineBetween(x,y,x+sw*d,y+(y<0?-7:7));
+   g.lineStyle(3,0x596670).lineBetween(-15,0,-24,-4+Math.sin(t*9)*3);g.fillStyle(0x596670).fillEllipse(0,0,34,15);g.fillStyle(0x5d6a41).fillRect(-7,-8,11,16);
+   g.fillStyle(0x6b7a85).fillCircle(17+bite,0,7.5);g.fillStyle(0x2b3136).fillRect(21+bite,-3,8,6).fillTriangle(13+bite,-6,17+bite,-12,19+bite,-5).fillTriangle(13+bite,6,17+bite,12,19+bite,5);g.fillStyle(0x8fe3ff).fillCircle(19+bite,-3,1.5).fillCircle(19+bite,3,1.5);}
+  drawActor(e,s,dt,isPlayer){const a=this.actor(isPlayer&&e.id==='player'?'rook':e.id||'rook'),type=e.type,meta=BPWorld.archetypes[type],w=isPlayer?BPWorld.weapons[e.slots[e.slot]]:BPWorld.weapons[e.gun]||BPWorld.weapons.rifle;
    if(e.vanished||e.gone>0){this.hide(a);return;}
    if(meta?.machine){this.drawMachine(a,e,s,dt,meta);return;}
    const speed=Math.hypot(e.vx,e.vy),state=e.state||'idle';a.phase+=speed*dt/95;const face=e.angle||0;let feetSeq='idle',seq='idle',bodyTime=s.time*10,footTime=a.phase*20,angle=face,scaleX=1,scaleY=1,lift=0;
-   const melee=meta?.melee,tint=isPlayer?(e.decoy?C.cyan:0xc4cfad):TINTS[type]||0xb2a797;
+   const melee=meta?.melee,tint=isPlayer?(e.decoy?C.cyan:s.tdm&&this.self&&e.team!==undefined&&e.team!==this.self.team?0xe6a38a:e.ally?0x9fb4bd:0xc4cfad):TINTS[type]||0xb2a797;
    if(e.dead||state==='death'){a.shadow.setVisible(false);a.feet.setVisible(false);a.body.setVisible(true).setFrame((melee?'knife':w.sprite)+'/idle/8').setPosition(e.x+6,e.y).setRotation(face+.6).setScale(.86,.55).setTint(0x747761).setDepth(3).setAlpha(.65);a.gear.clear();a.ghost.setVisible(false);return;}
    if(speed>8){feetSeq=state==='sprint'?'run':'walk';seq='move';bodyTime=a.phase*20;const moveAngle=isPlayer?e.moveAngle:Math.atan2(e.vy,e.vx),relative=Math.atan2(Math.sin(moveAngle-face),Math.cos(moveAngle-face));if(Math.abs(relative)>.6&&Math.abs(relative)<2.5)feetSeq=relative>0?'strafe_right':'strafe_left';if(Math.abs(relative)>2.5)footTime=-a.phase*20;}
    let count=20,group=melee?'knife':w.sprite;if(isPlayer&&e.reload>0){seq='reload';bodyTime=(1-e.reload/e.reloadTotal)*(group==='handgun'?15:20);count=group==='handgun'?15:20;}
@@ -121,7 +142,7 @@
    if(a.lastSeq!==group+'/'+seq){a.ghost.setFrame(a.lastFrame||frame).setVisible(true);a.blend=.07;a.lastSeq=group+'/'+seq;}
    a.blend=Math.max(0,a.blend-dt);a.lastFrame=frame;
    // Ghosts are only clearly visible up close, mid-strike, when hit or flashed; the Wraith shimmers.
-   let alpha=1;if(meta?.cloak){const d=Math.hypot(e.x-s.player.x,e.y-s.player.y);alpha=e.attack>0||e.flashed>0||a.hitTime>0||d<170?1:Math.max(.1,.55-(d-170)/500);alpha*=.85+.15*Math.sin(s.time*13+e.x);}if(type==='wraith')alpha=.8+.2*Math.sin(s.time*9);if(e.decoy)alpha=.55+.25*Math.sin(s.time*20);
+   let alpha=1;if(meta?.cloak&&!(s.recon>0)){const d=Math.hypot(e.x-s.player.x,e.y-s.player.y);alpha=e.attack>0||e.flashed>0||a.hitTime>0||d<170?1:Math.max(.1,.55-(d-170)/500);alpha*=.85+.15*Math.sin(s.time*13+e.x);}if(type==='wraith')alpha=.8+.2*Math.sin(s.time*9);if(e.decoy)alpha=.55+.25*Math.sin(s.time*20);
    const feetFrame=feetSeq==='idle'?0:Math.floor(((footTime%20)+20)%20);
    a.shadow.setPosition(e.x+5,e.y+9).setVisible(true).setScale(1-lift/55).setDepth(4).setAlpha(alpha*.5);
    a.feet.setFrame('feet/'+feetSeq+'/'+feetFrame).setPosition(e.x,e.y-lift*.45).setRotation(face).setScale(state==='dive'?1.2:1,state==='roll'?.72:1).setTint(tint).setVisible(true).setDepth(e.y+50).setAlpha(alpha);
@@ -161,8 +182,8 @@
   emit(x,y,count,kind='spark',angle=null){const max=this.scene.settings.quality==='low'?Math.ceil(count/2):count;for(let i=0;i<max;i++){const p=this.particles.find(p=>!p.active);if(!p)break;const a=angle===null?Math.random()*Math.PI*2:angle+(Math.random()-.5)*1.8;const speed=kind==='smoke'?15+Math.random()*35:kind==='ember'?20+Math.random()*40:70+Math.random()*190;Object.assign(p,{active:true,x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-(kind==='ember'?30:0),life:kind==='smoke'?1.4+Math.random()*1.4:.2+Math.random()*.6,total:kind==='smoke'?2:.8,kind,size:kind==='smoke'?7+Math.random()*14:1+Math.random()*4,color:kind==='spark'?0xddb170:kind==='glass'?0xa8c5b7:kind==='cloth'?0x987c62:kind==='dust'?0xa7a087:kind==='casing'?0xad9b64:kind==='emp'?C.cyan:kind==='ember'?0xe58f45:0x596457});}}
   popup(x,y,text,color='#e2b074'){const t=this.texts.find(q=>q.life<=0)||this.texts[0];t.life=.95;t.x=x;t.y=y;t.obj.setText(text).setColor(color).setPosition(x,y).setVisible(true).setAlpha(1).setScale(1.25);}
   event(e){const sim=this.scene.sim;switch(e.type){case 'shot':{const tr=BPWorld.weapons[e.weapon]?.tracer;this.emit(e.x,e.y,e.weapon==='shotgun'||e.weapon==='sawedoff'||e.weapon==='autoshotgun'?13:4,tr?'emp':'spark',e.angle);this.emit(e.x,e.y,2,'smoke',e.angle);if(!tr)this.emit(e.x-Math.cos(e.angle)*16,e.y-Math.sin(e.angle)*16,1,'casing',e.angle+Math.PI/2);this.flashes.push({x:e.x,y:e.y,angle:e.angle,life:.055,big:['shotgun','sawedoff','autoshotgun','rail','rocket','magnum'].includes(e.weapon),color:tr});if(!e.enemy&&['shotgun','sawedoff','autoshotgun','rail','rocket'].includes(e.weapon))this.shake(.045,.002);break;}
-    case 'hit':{this.emit(e.x,e.y,5,'cloth',e.angle);const actor=this.actors.get(e.id);if(actor)actor.hitTime=.14;if(e.player)this.hitMark=.12;break;}
-    case 'kill':if(e.credits)this.popup(e.x,e.y-26,'+'+e.credits+(e.combo>1?'  ×'+e.combo:''),e.combo>=3?'#f1c27d':'#e2b074');this.killMark=.24;if(e.boss)this.shake(.4,.01);break;
+    case 'hit':{this.emit(e.x,e.y,5,'cloth',e.angle);const actor=this.actors.get(e.id);if(actor)actor.hitTime=.14;if(e.player&&(e.by||'player')===(this.scene.selfId||'player'))this.hitMark=.12;break;}
+    case 'kill':if(e.credits&&(!sim.tdm||e.by===(this.scene.selfId||'player')))this.popup(e.x,e.y-26,'+'+e.credits+(e.combo>1?'  ×'+e.combo:''),e.combo>=3?'#f1c27d':'#e2b074');if((e.by||'player')===(this.scene.selfId||'player'))this.killMark=.24;if(e.boss)this.shake(.4,.01);break;
     case 'cache':this.popup(e.x,e.y-20,'+'+e.credits+' CR','#f1d27d');break;case 'intel':this.popup(e.x,e.y-20,'INTEL','#f1d27d');break;
     case 'weaponfound':this.popup(e.x,e.y-24,'NEW WEAPON','#f1d27d');this.emit(e.x,e.y,18,'spark');break;
     case 'bulletimpact':this.emit(e.x,e.y,5,'spark');this.decals.push({x:e.x,y:e.y,size:2});break;
@@ -175,33 +196,54 @@
     case 'blink':case 'blinkin':this.emit(e.x,e.y,16,'smoke');this.flashes.push({x:e.x,y:e.y,life:.3,ring:true,radius:60,color:0xb8c8d0});break;
     case 'deploy':this.emit(e.x,e.y,10,'dust');break;case 'gate':this.emit(e.x,e.y,20,'dust');this.shake(.1,.003);break;
     case 'action':if(['slide','roll','dive','vault'].includes(e.action))this.emit(e.x,e.y,7,'dust');break;
-    case 'damage':if(!this.scene.settings.flash)this.damageFlash=.17;this.shake(.09,.002);if(Number.isFinite(e.fromX)){const p=sim.player;this.hurt.push({angle:Math.atan2(e.fromY-p.y,e.fromX-p.x),life:.9});if(this.hurt.length>6)this.hurt.shift();}break;
+    case 'damage':if(!this.scene.settings.flash)this.damageFlash=.17;this.shake(.09,.002);if(Number.isFinite(e.fromX)){const p=this.self||sim.player;this.hurt.push({angle:Math.atan2(e.fromY-p.y,e.fromX-p.x),life:.9});if(this.hurt.length>6)this.hurt.shift();}break;
     case 'armorbreak':this.flashes.push({x:sim.player.x,y:sim.player.y,life:.3,ring:true,radius:70,color:0xb7d7e8});break;
     case 'pickup':this.emit(e.x,e.y,8,'dust');break;
-    case 'down':this.emit(e.x,e.y,14,'dust');this.shake(.2,.006);break;case 'tags':this.emit(e.x,e.y,8,'spark');break;
+    case 'down':this.emit(e.x,e.y,14,'dust');if(!e.tdm||e.who===(this.scene.selfId||'player'))this.shake(.2,.006);break;
+    case 'support':if(e.key==='recon')this.flashes.push({x:e.x,y:e.y,life:.9,ring:true,radius:1100,color:C.cyan});else if(e.key==='airstrike')this.shake(.35,.005);else this.emit(e.x,e.y,14,'dust');break;
+    case 'arc':(this.bolts=this.bolts||[]).push({x:e.x,y:e.y,x2:e.x2,y2:e.y2,life:.16,color:C.cyan,w:3});this.emit(e.x2,e.y2,10,'emp');break;
+    case 'strafe':(this.bolts=this.bolts||[]).push({x:e.x,y:e.y,x2:e.x2,y2:e.y2,life:.06,color:0xf6d99a,w:1.5});this.emit(e.x2,e.y2,2,'spark');break;
+    case 'intercept':(this.bolts=this.bolts||[]).push({x:e.x2,y:e.y2,x2:e.x,y2:e.y,life:.14,color:C.cyan,w:2});this.emit(e.x,e.y,12,'emp');break;
+    case 'grapple':(this.bolts=this.bolts||[]).push({x:e.x,y:e.y,x2:e.x+Math.cos(e.angle)*e.d,y2:e.y+Math.sin(e.angle)*e.d,life:.24,color:0xc3cdb0,w:1.5});break;
+    case 'ricochet':this.emit(e.x,e.y,7,'spark');break;case 'sensor':this.flashes.push({x:e.x,y:e.y,life:.6,ring:true,radius:420,color:C.cyan});break;
+    case 'bite':this.emit(e.x,e.y,9,'cloth');break;case 'allygone':this.emit(e.x,e.y,10,'smoke');break;
+    case 'secondwind':this.flashes.push({x:e.x,y:e.y,life:.5,ring:true,radius:120,color:0xffffff});break;
+    case 'respawn':this.flashes.push({x:e.x,y:e.y,life:.45,ring:true,radius:70,color:0x9fd08a});this.emit(e.x,e.y,10,'spark');break;case 'tags':this.emit(e.x,e.y,8,'spark');break;
     case 'revive':this.flashes.push({x:e.x,y:e.y,life:.5,ring:true,radius:90,color:0x9fd08a});this.emit(e.x,e.y,18,'spark');break;
    }if(this.decals.length>160)this.decals.splice(0,this.decals.length-160);}
   shake(duration,intensity){const strength=this.scene.settings.shake;if(strength>0)this.scene.cameras.main.shake(duration*1000,intensity*strength);}
-  update(s,dt,pointer,self=s.player){if(this.lastMap!==s.map.id)this.build(s,self);this.frame++;const g=this.effects,l=this.lines,cam=this.scene.cameras.main,p=self,t=s.time;g.clear();l.clear();this.smoke.clear();this.uiGraphics.clear();
+  update(s,dt,pointer,self=s.player){if(this.lastMap!==s.map.id)this.build(s,self);this.frame++;this.self=self;const g=this.effects,l=this.lines,cam=this.scene.cameras.main,p=self,t=s.time;g.clear();l.clear();this.smoke.clear();this.uiGraphics.clear();
    // The camera leads the aim, and further when steadying a long gun: a marksman rifle sees more ahead than a pistol.
    const ahead=p.aiming?115*Math.max(.85,Math.min(1.7,(BPWorld.weapons[p.slots?.[p.slot]]?.range||940)/940)):65,aimX=Math.cos(p.angle)*ahead,aimY=Math.sin(p.angle)*ahead,targetX=p.x+p.vx*.14+aimX,targetY=p.y+p.vy*.14+aimY,lerp=1-Math.exp(-dt*6);
    this.cameraX+=(targetX-this.cameraX)*lerp;this.cameraY+=(targetY-this.cameraY)*lerp;cam.centerOn(this.cameraX,this.cameraY);
    for(const b of s.walls)if(b.deployed&&!this.props.has(b.id))this.prop(b);
    for(const {container,b} of this.props.values()){container.setVisible(!b.dead);if(!b.dead&&Number.isFinite(b.hp)&&b.hp<b.maxHp)container.setAlpha(.6+.4*b.hp/b.maxHp);if(container.blink&&!b.dead)container.list[0].setAlpha(Math.sin(t*6)>0?1:.85);if(container.pulse&&!b.dead)container.setScale(1+.04*Math.sin(t*5));}
    this.drawActor(s.player,s,dt,true);
-   if(s.guest&&!s.guest.vanished)this.drawActor({...s.guest,id:'guest'},s,dt,true);else{const a=this.actors.get('guest');if(a)this.hide(a);}
+   for(const id of ['guest','m2','m3','m4','m5','m6','m7']){const m=(s.mates||[]).find(o=>o.id===id);if(m&&!m.vanished)this.drawActor(m,s,dt,true);else{const a=this.actors.get(id);if(a)this.hide(a);}}
+   // Their ids change with every call, so the drawing of one that has gone is put away.
+   // A hostile is "sensed" while a recon sweep is up or it stands in a sensor dart's ground: boxed, and marked at the screen edge.
+   const mind=s.tdm&&self.ctx||s,foe=q=>!!s.tdm&&q.team!==undefined&&q.team!==self.team,sides=s.tdm?Object.fromEntries(s.roster.map(o=>[o.id,o.team])):null;
+   const sensed=e=>mind.recon>0||s.zones.some(z=>z.kind==='sensor'&&(!s.tdm||z.team===self.team)&&BPCore.distance(z,e)<z.r);
+   const allies=s.allies||[];for(const al of allies){this.drawAlly(al,s,dt);if(foe(al)&&al.kind!=='gunner'){const a=this.actors.get(al.id);if(a)a.gear.lineStyle(2,C.red,.85).strokeCircle(0,0,al.kind==='gunship'?36:al.kind==='trophy'?20:25);}}for(const [id,a] of this.actors)if(id.startsWith('ally')&&!allies.some(al=>al.id===id))this.hide(a);
    if(s.decoy)this.drawActor({id:'decoy',decoy:true,x:s.decoy.x,y:s.decoy.y,vx:0,vy:0,angle:Math.sin(t*1.3)*1.4,slots:p.slots,slot:p.slot,state:'idle',shotAge:10,age:0,duration:1,reload:0,heal:0},s,dt,true);else{const a=this.actors.get('decoy');if(a)this.hide(a);}
+   if(s.tdm)for(const o of s.roster){const d=o.ctx&&o.ctx.decoy,id='decoy-'+o.id;if(d)this.drawActor({id,decoy:true,x:d.x,y:d.y,vx:0,vy:0,angle:Math.sin(t*1.3)*1.4,slots:o.slots,slot:o.slot,state:'idle',shotAge:10,age:0,duration:1,reload:0,heal:0},s,dt,true);else{const a=this.actors.get(id);if(a)this.hide(a);}
+    if(foe(o)&&!o.dead&&sensed(o)){l.lineStyle(1.5,C.red,.45+.3*Math.sin(t*8)).strokeRect(o.x-21,o.y-21,42,42);this.marker(o,C.red,cam,true);}}
    for(const e of s.enemies){const visible=e.x>cam.worldView.x-120&&e.x<cam.worldView.right+120&&e.y>cam.worldView.y-120&&e.y<cam.worldView.bottom+120;if(visible)this.drawActor(e,s,dt,false);else{const a=this.actors.get(e.id);if(a)this.hide(a);}
+    // A recon sweep boxes every hostile in view, noticed or not.
+    if(visible&&!e.dead&&!(e.gone>0)&&sensed(e)){const k=.45+.3*Math.sin(t*8);l.lineStyle(1.5,C.red,k).strokeRect(e.x-21,e.y-21,42,42);}
     if(visible&&e.active&&!e.dead&&!(e.gone>0)){const meta=BPWorld.archetypes[e.type];if(e.attack>0){const k=Math.min(1,e.attackAge/e.attack),d=Math.min(meta.range||950,BPCore.distance(e,p)+40),aim=meta.static?e.angle:e.aim;
       if(meta.lob||e.mode==='mortar'){const pts=e.mode==='mortar'?[[0,0],[110,-60],[-100,70]]:[[0,0]];for(const [dx,dy] of pts){l.lineStyle(2,C.red,.25+.6*k).strokeCircle(e.targetX+dx,e.targetY+dy,meta.lob?130*(.4+.6*k):120*(.4+.6*k));}}
       else if(!meta.melee&&!meta.kamikaze&&e.mode!=='stomp'){const sniper=meta.locked;l.lineStyle(sniper?2+(meta.rocket?2:0):1,sniper?C.red:C.amber,.2+.6*k);l.lineBetween(e.x,e.y,e.x+Math.cos(aim)*d,e.y+Math.sin(aim)*d);}
       l.lineStyle(2,C.red,.8).strokeCircle(e.x,e.y,(meta.radius||17)+7+4*k);}
      if(e.hp<e.maxHp&&!meta.boss){l.fillStyle(0x111d16,.8).fillRect(e.x-22,e.y-38,44,3);l.fillStyle(0xb1b99b).fillRect(e.x-22,e.y-38,44*Math.max(0,e.hp/e.maxHp),3);}if(e.type==='commander'){l.fillStyle(0x111d16,.8).fillRect(e.x-22,e.y-38,44,3);l.fillStyle(C.amber).fillRect(e.x-22,e.y-38,44*Math.max(0,e.hp/e.maxHp),3);}}}
-   for(const b of s.projectiles){if(!b.active)continue;const tr=BPWorld.weapons[b.weapon]?.tracer;if(b.weapon==='rail'&&!b.enemy){g.lineStyle(5,tr,.35).lineBetween(b.x,b.y,b.x-b.vx*.03,b.y-b.vy*.03);g.lineStyle(2,0xffffff,.95).lineBetween(b.x,b.y,b.x-b.vx*.03,b.y-b.vy*.03);continue;}
-    g.lineStyle(b.explosive?4:2,tr&&!b.enemy?tr:b.enemy?(b.weapon==='pulse'?C.cyan:0xd5a385):0xe0caa0,.9).lineBetween(b.x,b.y,b.x-b.vx*.013,b.y-b.vy*.013);if(b.explosive){g.fillStyle(b.enemy?0xff9a6a:0xf6d99a,.85).fillCircle(b.x,b.y,b.enemy?5:4);this.emit(b.x,b.y,1,'smoke');}}
-   for(const grenade of s.grenades){const k=Math.min(1,grenade.age/grenade.duration),lift=Math.sin(k*Math.PI)*45,kind=grenade.kind||'frag',col=grenade.enemy?C.red:kind==='emp'?C.cyan:kind==='smoke'?0xb8bfb2:kind==='flash'?0xffffff:kind==='incendiary'?0xe58f45:0xaeb78c;g.fillStyle(0x1c271c,.8).fillEllipse(grenade.x+3,grenade.y+4,12,7);const gs=this.sprite('gr'+s.grenades.indexOf(grenade),'g:'+(kind==='frag'||!BPWorld.gear[kind]?'frag':kind));if(gs)gs.setPosition(grenade.x,grenade.y-lift).setDisplaySize(19,19).setRotation(k<1?grenade.age*11:.3).setDepth(11001);else g.fillStyle(col).fillCircle(grenade.x,grenade.y-lift,5);if(grenade.enemy)g.lineStyle(2,C.red,.9).strokeCircle(grenade.x,grenade.y-lift,11);
-    if(grenade.age>=grenade.duration&&(kind==='frag')){const r=grenade.radius||155;l.lineStyle(1,grenade.enemy?C.red:C.amber,.65).strokeCircle(grenade.x,grenade.y,r);l.lineStyle(2,grenade.enemy?C.red:C.amber,.9);l.beginPath();l.arc(grenade.x,grenade.y,13,-Math.PI/2,-Math.PI/2+(grenade.age/grenade.fuse)*Math.PI*2);l.strokePath();if(grenade.enemy)this.marker(grenade,C.red,cam,false);}}
-   for(const z of s.zones){if(z.kind==='smoke'){const fade=Math.min(1,z.life/1.5,(10.5-z.life)/.6+.2);for(let i=0;i<9;i++){const q=i*.7+t*.15,r=z.r*(.45+.25*Math.sin(i*1.7+t*.3));this.smoke.fillStyle(i%2?0xb3b9ad:0x9ca394,.32*fade).fillCircle(z.x+Math.cos(q)*z.r*.42,z.y+Math.sin(q)*z.r*.42,r);}this.smoke.fillStyle(0xa9afa1,.5*fade).fillCircle(z.x,z.y,z.r*.7);}
+   for(const b of s.projectiles){if(!b.active)continue;const tr=BPWorld.weapons[b.weapon]?.tracer,hostile=b.enemy||!!sides&&sides[b.owner]!==undefined&&sides[b.owner]!==self.team;if(b.weapon==='rail'&&!b.enemy){g.lineStyle(5,tr,.35).lineBetween(b.x,b.y,b.x-b.vx*.03,b.y-b.vy*.03);g.lineStyle(2,0xffffff,.95).lineBetween(b.x,b.y,b.x-b.vx*.03,b.y-b.vy*.03);continue;}
+    g.lineStyle(b.explosive?4:2,tr&&!b.enemy?tr:hostile?(b.weapon==='pulse'?C.cyan:0xe39a82):0xe0caa0,.9).lineBetween(b.x,b.y,b.x-b.vx*.013,b.y-b.vy*.013);if(b.explosive){g.fillStyle(hostile?0xff9a6a:0xf6d99a,.85).fillCircle(b.x,b.y,hostile?5:4);this.emit(b.x,b.y,1,'smoke');}}
+   for(const grenade of s.grenades){const gfoe=grenade['enemy']||foe(grenade),k=Math.min(1,grenade.age/grenade.duration),lift=Math.sin(k*Math.PI)*45,kind=grenade.kind||'frag',col=gfoe?C.red:kind==='emp'?C.cyan:kind==='smoke'?0xb8bfb2:kind==='flash'?0xffffff:kind==='incendiary'?0xe58f45:0xaeb78c;g.fillStyle(0x1c271c,.8).fillEllipse(grenade.x+3,grenade.y+4,12,7);const gs=this.sprite('gr'+s.grenades.indexOf(grenade),'g:'+(kind==='frag'||!BPWorld.gear[kind]?'frag':kind));if(gs)gs.setPosition(grenade.x,grenade.y-lift).setDisplaySize(19,19).setRotation(k<1?grenade.age*11:.3).setDepth(11001);else g.fillStyle(col).fillCircle(grenade.x,grenade.y-lift,5);if(gfoe)g.lineStyle(2,C.red,.9).strokeCircle(grenade.x,grenade.y-lift,11);
+    if(grenade.age>=grenade.duration&&(kind==='frag')){const r=grenade.radius||155;l.lineStyle(1,gfoe?C.red:C.amber,.65).strokeCircle(grenade.x,grenade.y,r);l.lineStyle(2,gfoe?C.red:C.amber,.9);l.beginPath();l.arc(grenade.x,grenade.y,13,-Math.PI/2,-Math.PI/2+(grenade.age/grenade.fuse)*Math.PI*2);l.strokePath();if(gfoe)this.marker(grenade,C.red,cam,false);}}
+   for(const z of s.zones){
+    if(z.kind==='sensor'){const k=(t*1.1)%1;l.lineStyle(1.5,C.cyan,.5*(1-k)).strokeCircle(z.x,z.y,z.r*k);l.lineStyle(1,C.cyan,.22).strokeCircle(z.x,z.y,z.r);g.fillStyle(C.cyan,.95).fillCircle(z.x,z.y,4);continue;}
+    if(z.kind==='gas'){const fade=Math.min(1,z.life/1.2);for(let i=0;i<8;i++){const q=i*.8+t*.2;this.smoke.fillStyle(i%2?0xc9c86a:0xa9a850,.2*fade).fillCircle(z.x+Math.cos(q)*z.r*.45,z.y+Math.sin(q)*z.r*.45,z.r*(.42+.2*Math.sin(i+t*.4)));}continue;}
+    if(z.kind==='smoke'){const fade=Math.min(1,z.life/1.5,(10.5-z.life)/.6+.2);for(let i=0;i<9;i++){const q=i*.7+t*.15,r=z.r*(.45+.25*Math.sin(i*1.7+t*.3));this.smoke.fillStyle(i%2?0xb3b9ad:0x9ca394,.32*fade).fillCircle(z.x+Math.cos(q)*z.r*.42,z.y+Math.sin(q)*z.r*.42,r);}this.smoke.fillStyle(0xa9afa1,.5*fade).fillCircle(z.x,z.y,z.r*.7);}
     else{const f=Math.min(1,z.life);g.fillStyle(0xb5562a,.18*f).fillCircle(z.x,z.y,z.r);for(let i=0;i<7;i++){const a=i/7*Math.PI*2+t,r=z.r*(.3+.4*((i*37)%10)/10);g.fillStyle(0xe8914a,.55*f).fillTriangle(z.x+Math.cos(a)*r-7,z.y+Math.sin(a)*r,z.x+Math.cos(a)*r+7,z.y+Math.sin(a)*r,z.x+Math.cos(a)*r,z.y+Math.sin(a)*r-14-6*Math.sin(t*14+i));}if(Math.random()<dt*14)this.emit(z.x+(Math.random()-.5)*z.r,z.y+(Math.random()-.5)*z.r,1,'ember');}}
    for(const m of s.mines){const ms=this.sprite('mine'+m.id,'g:mine');if(ms)ms.setPosition(m.x,m.y).setDisplaySize(26,26).setRotation(0).setDepth(6);else{g.fillStyle(0x2a3022).fillCircle(m.x,m.y,8);g.lineStyle(2,0x6b7552).strokeCircle(m.x,m.y,8);}g.fillStyle(m.arm<=0?C.red:C.amber,Math.sin(t*(m.arm<=0?8:20))>0?1:.25).fillCircle(m.x,m.y,2.5);}
    for(const h of s.hazards){const vertical=h.h>h.w,on=h.on;if(on){g.fillStyle(C.red,.18).fillRect(h.x,h.y-(vertical?0:6),h.w+(vertical?0:0),h.h+(vertical?0:12));g.lineStyle(3,0xff6a5a,.9);if(vertical)g.lineBetween(h.x+h.w/2,h.y,h.x+h.w/2,h.y+h.h);else g.lineBetween(h.x,h.y+h.h/2,h.x+h.w,h.y+h.h/2);g.lineStyle(1,0xffd2c8,.9);if(vertical)g.lineBetween(h.x+h.w/2,h.y,h.x+h.w/2,h.y+h.h);else g.lineBetween(h.x,h.y+h.h/2,h.x+h.w,h.y+h.h/2);}
@@ -209,17 +251,19 @@
     g.fillStyle(0x3a4248).fillRect(vertical?h.x+h.w/2-6:h.x-4,vertical?h.y-4:h.y+h.h/2-6,vertical?12:8,vertical?8:12).fillRect(vertical?h.x+h.w/2-6:h.x+h.w-4,vertical?h.y+h.h-4:h.y+h.h/2-6,vertical?12:8,vertical?8:12);}
    for(const w of s.spawnWarnings){l.lineStyle(2,C.red,.65).strokeRect(w.x-25,w.y-25,50,50);l.lineBetween(w.x-9,w.y-9,w.x+9,w.y+9);l.lineBetween(w.x-9,w.y+9,w.x+9,w.y-9);}
    this.drawPickups(s,g,t);
-   if(!s.training&&BPCore.stageDef(s).kind!=='endless'){const obj=s.goal,pulse=1+Math.sin(t*2)*.05;l.lineStyle(2,C.amber,.65).strokeRect(obj.x-22*pulse,obj.y-22*pulse,44*pulse,44*pulse);l.lineStyle(1,C.amber,.25).strokeCircle(obj.x,obj.y,58);l.lineBetween(obj.x-8,obj.y,obj.x+8,obj.y);l.lineBetween(obj.x,obj.y-8,obj.x,obj.y+8);this.marker(obj,C.amber,cam);}
+   if(!s.training&&!BPCore.arena(s)){const obj=s.goal,pulse=1+Math.sin(t*2)*.05;l.lineStyle(2,C.amber,.65).strokeRect(obj.x-22*pulse,obj.y-22*pulse,44*pulse,44*pulse);l.lineStyle(1,C.amber,.25).strokeCircle(obj.x,obj.y,58);l.lineBetween(obj.x-8,obj.y,obj.x+8,obj.y);l.lineBetween(obj.x,obj.y-8,obj.x,obj.y+8);this.marker(obj,C.amber,cam);}
    this.decalsGraphics.clear();for(const d of this.decals)this.decalsGraphics.fillStyle(0x18241b,.55).fillEllipse(d.x,d.y,d.size*1.5,d.size);
    this.squad(s,g,l,cam,t);
    for(const fire of this.fires){const sz=fire.size;g.fillStyle(0xac713b,.16).fillCircle(fire.x,fire.y,sz*1.9);g.fillStyle(0xb88446,.65).fillEllipse(fire.x,fire.y,sz+Math.sin(t*11)*3,sz*.7);g.fillStyle(0xe6bc76,.8).fillTriangle(fire.x-sz*.35,fire.y,fire.x+sz*.35,fire.y,fire.x+Math.sin(t*6)*5,fire.y-sz*(.8+.15*Math.sin(t*8)));if(Math.random()<dt*9&&this.scene.settings.quality==='high')this.emit(fire.x,fire.y-10,1,'smoke');}
    for(const part of this.particles){if(!part.active)continue;part.life-=dt;if(part.life<=0){part.active=false;continue;}part.x+=part.vx*dt;part.y+=part.vy*dt;const fade=Math.min(1,part.life/(part.kind==='smoke'?.9:.3));if(part.kind==='smoke'){part.size+=dt*8;part.vx*=Math.exp(-dt);part.vy-=dt*6;g.fillStyle(part.color,.24*fade).fillCircle(part.x,part.y,part.size);}else{part.vx*=Math.exp(-dt*4);part.vy*=Math.exp(-dt*4);g.fillStyle(part.color,fade).fillRect(part.x,part.y,part.size,part.kind==='casing'?2:part.size);}}
+   // Short-lived lines: an arc caster's jump, a gunship's burst, a trophy system's intercept, a grapple line.
+   this.bolts=(this.bolts||[]).filter(b=>{b.life-=dt;if(b.life<=0)return false;g.lineStyle(b.w,b.color,Math.min(1,b.life*12)).lineBetween(b.x,b.y,b.x2,b.y2);return true;});
    this.flashes=this.flashes.filter(f=>{f.life-=dt;if(f.life<=0)return false;if(f.ring){const k=1-f.life/(f.total||(f.total=f.life+dt));if(f.fill&&!this.scene.settings.flash)g.fillStyle(f.color,.5*(1-k)).fillCircle(f.x,f.y,f.radius*.6*k+20);g.lineStyle(4,f.color,.8*(1-k)).strokeCircle(f.x,f.y,f.radius*k);return true;}if(f.explosion){const k=1-f.life/.32;g.fillStyle(0xb36c35,.18*(1-k)).fillCircle(f.x,f.y,f.radius*.8*k+15);g.fillStyle(0xe4ac5a,.55*(1-k)).fillCircle(f.x,f.y,15+f.radius*.35*k);if(!this.scene.settings.flash)g.fillStyle(0xf3d599,.6*(1-k)).fillCircle(f.x,f.y,10+f.radius*.13*k);}else{const size=f.big?24:14;g.fillStyle(f.color||0xedbe78,.9).fillTriangle(f.x+Math.cos(f.angle)*size,f.y+Math.sin(f.angle)*size,f.x+Math.cos(f.angle+1.5)*5,f.y+Math.sin(f.angle+1.5)*5,f.x+Math.cos(f.angle-1.5)*5,f.y+Math.sin(f.angle-1.5)*5);}return true;});
    for(const q of this.texts){if(q.life<=0)continue;q.life-=dt;q.y-=dt*44;q.obj.setPosition(q.x,q.y).setAlpha(Math.min(1,q.life*2.2)).setScale(1+Math.max(0,q.life-.75));if(q.life<=0)q.obj.setVisible(false);}
    if(p.aiming){l.lineStyle(1,0xc3cbb0,.3).lineBetween(p.x+Math.cos(p.angle)*40,p.y+Math.sin(p.angle)*40,p.x+Math.cos(p.angle)*500,p.y+Math.sin(p.angle)*500);}
    if(p.state==='melee'){const k=p.age/p.duration;l.lineStyle(p.heavy?5:3,0xd6d3ac,.35);l.beginPath();l.arc(p.x,p.y,p.heavy?68:52,p.angle-1+k*2,p.angle-.3+k*2);l.strokePath();}
    this.darkness(s,cam,self);this.drawWeather(s,cam,dt);
-   for(const e of s.enemies)if(e.active&&!e.dead&&!(e.gone>0)&&BPCore.distance(p,e)<1000)this.marker(e,C.red,cam,true);
+   for(const e of s.enemies)if(!e.dead&&!(e.gone>0)&&(e.active&&BPCore.distance(p,e)<1000||sensed(e)))this.marker(e,C.red,cam,true);
    // Damage direction: a red arc on the side the hit came from, so cover can be chosen without guessing.
    this.hurt=this.hurt.filter(h=>(h.life-=dt)>0);for(const h of this.hurt){const r=Math.min(cam.width,cam.height)*.32;this.uiGraphics.lineStyle(10,C.red,.55*Math.min(1,h.life*1.6));this.uiGraphics.beginPath();this.uiGraphics.arc(cam.width/2,cam.height/2,r,h.angle-.32,h.angle+.32);this.uiGraphics.strokePath();}
    this.hitMark=Math.max(0,this.hitMark-dt);this.killMark=Math.max(0,this.killMark-dt);
@@ -229,12 +273,15 @@
    this.sweep();
    if(s.cinematic>0){this.uiGraphics.fillStyle(0x10170f,.95).fillRect(0,0,cam.width,38).fillRect(0,cam.height-38,cam.width,38);}
   }
-  // Co-op only. Callsigns ride above both operators (yours amber, your squadmate's blue). The revive station is a pad
+  // Squads only. Callsigns ride above every operator (yours amber, another player's blue, an AI teammate's grey-blue;
+  // in team deathmatch a fallen operator's tag counts down to their return). The revive station is a pad
   // on the ground that wakes up while someone is down and fills with colour, clockwise, as a revive is held; dog tags
   // lie where an operator fell, then ride with whoever picked them up. Whatever the survivor needs next - the tags, then the station - gets an arrow at the screen edge.
-  squad(s,g,l,cam,t){const names=this.scene.names,ops=[s.player,s.guest],tags=s.tags||[];
-   this.nameTags.forEach((tag,i)=>{const e=ops[i],name=names&&s.guest&&!s.guest.vanished?names[i?'guest':'player']:null;if(!e||!name){tag.setVisible(false);return;}
-    tag.setText(e.dead?name+' / DOWN':name).setColor((names.self==='guest')===!!i?'#e2b074':'#8fe3ff').setAlpha(e.dead?.6:.95).setPosition(e.x,e.y-(e.dead?22:34)).setVisible(true);});
+  squad(s,g,l,cam,t){const names=this.scene.names,ops=BPCore.ops(s),tags=s.tags||[],shown=names&&ops.some((o,i)=>i&&!o.vanished),me=names&&ops.find(o=>o.id===names.self)||s.player;
+   if(s.tdm)for(const e of ops){if(e.dead||e.vanished)continue;const col=e===me?0xe2b074:e.team!==me.team?0xe39a82:0x8fc7e8;l.lineStyle(1.5,col,.5).strokeCircle(e.x,e.y+2,22);
+    if(e!==me&&e.health<100){l.fillStyle(0x111d16,.8).fillRect(e.x-22,e.y-33,44,3);l.fillStyle(col).fillRect(e.x-22,e.y-33,44*Math.max(0,e.health/100),3);}}
+   this.nameTags.forEach((tag,i)=>{const e=ops[i],name=shown&&e&&!e.vanished?names[e.id]:null;if(!name){tag.setVisible(false);return;}
+    tag.setText(e.dead?name+(s.tdm?' / '+Math.max(1,Math.ceil(e.respawn||0)):' / DOWN'):name).setColor(names.self===e.id?'#e2b074':s.tdm&&e.team!==me.team?'#e39a82':e.bot?'#9fb4bd':'#8fe3ff').setAlpha(e.dead?.6:.95).setPosition(e.x,e.y-(e.dead?22:34)).setVisible(true);});
    const st=s.station;this.stationLabel.setVisible(!!st);if(!st)return;const need=tags.length>0,fill=Math.min(1,Math.max(0,...tags.map(q=>q.progress||0))),col=need?0x9fd08a:0x6f8a66,beat=need&&!fill?1+Math.sin(t*5)*.07:1,d=this.decalsGraphics,top=-Math.PI/2;
    d.fillStyle(0x16241a,.6).fillCircle(st.x,st.y,42);
    if(fill>0){d.fillStyle(0x9fd08a,.5).slice(st.x,st.y,42,top,top+Math.PI*2*fill).fillPath();l.lineStyle(4,0xd6f2c4,.95).beginPath();l.arc(st.x,st.y,42,top,top+Math.PI*2*fill);l.strokePath();}
@@ -246,7 +293,7 @@
     if(!q.carrier){l.lineStyle(2,C.amber,.5+.4*Math.sin(t*6)).strokeCircle(q.x,q.y,22+Math.sin(t*6)*3);this.marker(q,C.amber,cam);}}}
   // Pickups use the shared icon art. Dropped guns lie on their side inside a pulsing amber outline with a name label as Rook closes in;
   // lethal/tactical refills show the gadget they will actually top up.
-  drawPickups(s,g,t){const p=s.player,RING={health:0xd4846c,supply:0xd4846c,armor:0x9fc0d0,ammo:0xd4c79b,lethal:0xc9d09a,tactical:C.cyan,intel:0xf1d27d,cache:0xf1d27d};let labels=0;
+  drawPickups(s,g,t){const p=this.self||s.player,RING={health:0xd4846c,supply:0xd4846c,armor:0x9fc0d0,ammo:0xd4c79b,lethal:0xc9d09a,tactical:C.cyan,intel:0xf1d27d,cache:0xf1d27d};let labels=0;
    for(const pick of s.pickups){if(pick.taken)continue;const x=pick.x,y=pick.y,bob=Math.sin(t*3+x*.01)*2;
     if(pick.type==='weapon'){const w=BPWorld.weapons[pick.weapon],sz=BPIcons.size(pick.weapon),dw=sz.w*.47,dh=sz.h*.47,pulse=.5+.5*Math.sin(t*4),fresh=!pick.owned,rot=((Math.floor(x)*7+Math.floor(y)*3)%50-25)/100;
      g.fillStyle(C.amber,fresh?.13+.08*pulse:.05).fillEllipse(x,y,dw*1.3,dh*2);g.lineStyle(2,C.amber,fresh?.5+.4*pulse:.28).strokeEllipse(x,y,dw*1.2+4*pulse,dh*1.8+3*pulse);g.fillStyle(0x0b0f0a,.45).fillEllipse(x+3,y+5,dw*.92,dh*.55);
@@ -269,7 +316,7 @@
    const rt=this.dark,b=this.brush,p=self,ox=cam.scrollX,oy=cam.scrollY,light=(x,y,r,steps=4)=>{for(let i=0;i<steps;i++)b.fillStyle(0xffffff,.28).fillCircle(x-ox,y-oy,r*(1-i*.18));};rt.setVisible(true).clear().fill(0x05070a,level);b.clear();
    light(p.x,p.y,135);const a=p.angle,len=p.aiming?560:470,spread=p.aiming?.32:.46;for(let i=0;i<4;i++){const k=1-i*.16,sp=spread*k,L=len*k;b.fillStyle(0xffffff,.27).fillTriangle(p.x-ox,p.y-oy,p.x+Math.cos(a-sp)*L-ox,p.y+Math.sin(a-sp)*L-oy,p.x+Math.cos(a+sp)*L-ox,p.y+Math.sin(a+sp)*L-oy);b.fillCircle(p.x+Math.cos(a)*L*.82-ox,p.y+Math.sin(a)*L*.82-oy,L*Math.tan(sp)*.8);}
    for(const l of s.map.lights||[])light(l.x,l.y,level<.7?190:130,3);for(const f of this.flashes)light(f.x,f.y,f.explosion?f.radius*1.1:f.ring?f.radius*.5:85,2);for(const z of s.zones)if(z.kind==='fire')light(z.x,z.y,z.r*1.6,3);
-   for(const e of s.enemies)if(!e.dead&&e.attack>0&&BPWorld.archetypes[e.type].locked)light(e.x,e.y,40,2);for(const g of s.grenades)if(g.enemy&&g.age>=g.duration)light(g.x,g.y,70,2);
+   for(const e of s.enemies)if(!e.dead&&(s.recon>0||e.attack>0&&BPWorld.archetypes[e.type].locked))light(e.x,e.y,s.recon>0?46:40,2);for(const al of s.allies||[])light(al.x,al.y,60,2);for(const g of s.grenades)if(g.enemy&&g.age>=g.duration)light(g.x,g.y,70,2);
    rt.erase(b,0,0);}
   drawWeather(s,cam,dt){if(!this.weather.length)return;const ui=this.uiGraphics,w=cam.width,h=cam.height,kind=s.map.weather||'ash',dx=(this.lastCamX===undefined?0:cam.scrollX-this.lastCamX),dy=(this.lastCamY===undefined?0:cam.scrollY-this.lastCamY);this.lastCamX=cam.scrollX;this.lastCamY=cam.scrollY;
    for(const q of this.weather){if(kind==='snow'){q.y+=dt*(.05+.07*q.z);q.x+=dt*(.015*Math.sin(s.time+q.p))-dx/w*q.z;q.y-=dy/h*q.z;}else if(kind==='dust'){q.x+=dt*(.25+.3*q.z)-dx/w*q.z;q.y+=dt*.02*Math.sin(s.time+q.p)-dy/h*q.z;}else{q.y-=dt*(.02+.03*q.z);q.x+=dt*.01*Math.sin(s.time*.7+q.p)-dx/w*q.z;q.y-=dy/h*q.z;}

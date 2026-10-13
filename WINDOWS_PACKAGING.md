@@ -23,6 +23,18 @@ Apps list entry ("Blackout Protocol 0.2.0, Neon Arcade"); the installed game lau
 started a run; and the uninstaller removed all of it while leaving the save folder alone.
 The later wizard pages (folder choice, progress, finish) were not looked at by eye.
 
+Since then (13 October 2026) the shell was hardened and the build now checks itself; the full account is in
+`docs/RELEASE_READINESS_REPORT.md`, and `docs/STEAM_RELEASE.md` covers delivery through Steam. In short:
+
+- `npm run dist:win` also runs `build/verify-package.cjs` on the result and writes SteamPipe scripts to
+  `release/steam/`. `npm run dist:steam` builds the game folder only.
+- `npm run test:packaged` starts the built exe and drives it; `npm run test:release` runs every automated check.
+- The exe refuses to start if `resources/app.asar` has been altered, and cannot be run as plain Node.js
+  (`build/after-pack.cjs`). `app.asar` is an archive, not encryption: its contents can be unpacked and read.
+- Only the English Chromium locale ships; licence notices sit beside the exe.
+- The first build on a machine may fail to unpack electron-builder's signing tools (two macOS symbolic links in the
+  download). Turn on Windows Developer Mode, or run that first build once from an administrator prompt.
+
 Things to know:
 
 - **Not code-signed.** Windows SmartScreen will warn on first run until it is signed.
@@ -30,6 +42,8 @@ Things to know:
   packaging kept its save under `%APPDATA%\blackout-protocol-windows`; the first start under
   the new name copies that across.
 - **One copy at a time.** Starting the game again brings the running window forward.
+- **Problems are logged** to `%APPDATA%Blackout Protocollogslackout.log`.
+- **QUIT** is on the main menu's top bar (press twice). F11 or Alt+Enter leaves full screen.
 - `dist:win` first runs `npm run verify` (`blackout/tools/verify-static.cjs`), which checks
   every referenced file exists, asset hashes match, and no stylesheet or script loads from
   the network.
@@ -114,7 +128,9 @@ not been run since the `package.json` rewrite.
 5. Decide on code signing. electron-builder will produce an unsigned exe by default,
    which triggers a Windows SmartScreen warning on first run. Not required to run the
    game, but worth deciding before any wide distribution.
-6. For Steam specifically (not started, out of scope for this task beyond noting it):
+6. For Steam specifically — **superseded: see `docs/STEAM_RELEASE.md`.** The game is delivered as a plain folder and
+   needs no Steamworks SDK to be launched by Steam; the SDK is only needed for achievements, cloud calls and the
+   like, none of which are implemented. The original note read:
    - Integrate the Steamworks SDK (e.g. via `steamworks.js` or `greenworks`) for basic
      app-id handshake, and optionally achievements/cloud saves — currently the game only
      persists to `localStorage` (`blackout/save.js`), which works fine standalone but

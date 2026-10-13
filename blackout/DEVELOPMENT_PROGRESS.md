@@ -1,5 +1,29 @@
 # Development progress
 
+## 13 October 2026 — team deathmatch becomes Alpha against Delta
+
+Team deathmatch was a squad of four against a hostile fireteam; it is now two teams of up to four operators each, players or AI in any mix, for up to eight players on a LAN (see `GAME_DESIGN.md`). Every operator in it runs the full player rules: in `core.js` each takes a turn at being `s.player`, with the other team as `s.enemies` and a context of their own for score, perks and field support (`act`, `stepVersus`, `strike`), so nothing about moves, gadgets or support was written twice. The special hostile roster (Assault, Pointman, Sharpshooter) is no longer used by any mode. The lobby has eight seats in two teams, a kill limit and a field support switch; the LAN host takes seven guests; a guest sends the whole control set and gets the same debrief as the host, paid into their own save. A host's pause is announced to everyone, and a host looking away from the window no longer pauses a match others are in. `electron/net/e2e-squad.cjs` plays it with three real app instances.
+
+Not done yet: team deathmatch online; lag compensation (the host has none of the delay a guest has, which only matters off a LAN); the full kit for a holdout squadmate; play-balancing of versus damage, AI skill and field support against real players.
+
+## 13 October 2026 — field support, perks, career challenges, call-outs
+
+A loadout now also carries one field support ability and up to three perks (see `GAME_DESIGN.md`): four abilities (recon sweep, sentry turret, K9 unit, airstrike) charged by score and called with V, nine perks in three rank-gated slots, and five career challenges that award the ones credits cannot buy. The armory has SUPPORT and PERKS tabs, and its guns and gadgets are filed in category tabs. The commander calls kill streaks (two, three, five, eight, twelve), knife kills, perfect flows, a boss going down, the support meter filling, and the turns of a team deathmatch. `blackout/tests/support.cjs` covers the abilities, perks and challenges.
+
+The second wave followed the same day: five guns, nine gadgets and four more field support calls, each with a mechanic of its own (see `GAME_DESIGN.md`), five more career challenges, and silhouettes in the armory and pickers for whatever the player cannot have yet. `blackout/tests/arsenal.cjs` covers them. The pacing estimate is now about 13 hours for everything but the legendary pair and about 21 for the whole armory.
+
+Not done yet: field support, perks and gadgets for LAN guests and AI teammates (still guns only); a riot shield and a suppressed weapon, which need rules the simulation does not have (blocking, and hostiles that hear); play-balancing of any of the numbers above.
+
+## 13 October 2026 — lobby modes, AI teammates, team deathmatch
+
+The HOLDOUT card on the main menu is now the lobby for every mode played from it (COMBAT MODES): mode, map, enemy pressure and loadout are chosen there and remembered. Holdout's open slot can take an AI teammate. Team deathmatch is new: four against four on any killhouse map, first to 30, both sides redeploying, with its own hostile roster and payout (see `GAME_DESIGN.md`). The simulation's single co-op guest became a squad of up to three mates (`s.mates`; `s.guest` is still the first), each worked by a LAN player or by `botInput`. The LAN host accepts up to three guests and tags each message with the connection it came on; one world update serves every guest. Online play is unchanged: two-player holdout.
+
+The lobby's mode switch sits under the loadout as two picture tiles (stills captured by `blackout/qa/mode-shots.cjs`). The commander announces whichever mode the lobby opens in or is switched to (`vo-mode-tdm*`), and has a line on each map as it is picked (`vo-map-*`). `npm run profile:test` / `npm run profile:restore` swap the desktop app's save for a maxed-out one for trying things out, and back again (quit the game first).
+
+Grades: each armory tier has a colour (silver, green, blue, gold, fiery red) shown on every gun, gadget and upgrade in the armory, the pickers, the loadout and the lobby cards, and the enemy pressure buttons run from green (Story) to red (Insane). The legendary pair went from 24,000 / 34,000 CR at rank 13 to 60,000 / 85,000 CR at rank 15; `node blackout/qa/economy-report.cjs` now puts the rest of the catalogue at about 9 hours and the whole of it at about 16. The figures in `docs/BLACKOUT_GAMEPLAY_PLAN.md` predate this.
+
+Not done yet: more lobby modes (Frontline and others), team deathmatch online, and rewards for LAN guests (as in holdout, only the host's save is paid).
+
 ## 13 October 2026 — economy rebalance, stamina, holdout depth
 
 Delivered, following `docs/BLACKOUT_GAMEPLAY_PLAN.md`: holdout income roughly halved (smaller combo bonus, ×0.6 bounties, smaller wave bonus); new prices in five rank-gated armory tiers with a steeper XP curve; enemy-dropped guns usable for the run only, with a 25% armory discount once found; purchasable weapon kit parts gated by mastery; killhouse pay multipliers and per-killhouse records. Stamina now waits 1 s before refilling (3 s and a "winded" lock if emptied), rolls delay it, a refused roll is signalled, and reloading at a jog replaces the walk. Three more flow chains (slide kill, dive into knife kill, rolling through an attack), buffered slide and interact presses, weapon-scaled camera look-ahead, edge arrows for off-screen attackers and HUD panels that fade over hostiles. Holdout gained the between-wave supply drop and four wave modifiers. Around the game: a first-launch movement drill, daily contracts on the main menu, loadout presets, a next-goal line on the debrief and a next-up marker in the armory. The killhouse picker shows screenshots of each map.

@@ -1,6 +1,7 @@
 'use strict';
-// Exposes a narrow, JSON-only LAN co-op API to the renderer. contextIsolation is on and nodeIntegration is off
-// (see main.js), so this is the game's only path to the net/os modules used by electron/net/host.js and guest.js.
+// Exposes a narrow, JSON-only LAN co-op API to the renderer. contextIsolation is on, nodeIntegration is off and the
+// page is sandboxed (see main.js), so this is the game's only path to the net/os modules used by electron/net/host.js
+// and guest.js. main.js checks every call made through it: who sent it, and what it carries.
 const { contextBridge, ipcRenderer } = require('electron');
 
 // A synchronous, localStorage-shaped store backed by a file in userData (see main.js's wireStore) instead
@@ -14,6 +15,12 @@ contextBridge.exposeInMainWorld('BPStore', {
   },
 });
 
+// What only the desktop app can do for the page. Its presence is also how the page knows it is running as an
+// installed game rather than in a browser tab (game.js shows QUIT on the main menu only then).
+contextBridge.exposeInMainWorld('BPDesktop', {
+  quit: () => ipcRenderer.send('app:quit'),
+});
+
 contextBridge.exposeInMainWorld('BPNet', {
   available: true,
   // Optional relay address for online co-op, for running against a relay without editing blackout/online-config.js.
@@ -21,9 +28,14 @@ contextBridge.exposeInMainWorld('BPNet', {
 
   listLocalAddresses: () => ipcRenderer.invoke('net:listAddresses'),
 
-  hostStart: (port) => ipcRenderer.invoke('net:hostStart', port),
+  // "max" is how many guests may connect (1 for two-player co-op, up to 3 for a four-player squad); hostLimit changes
+  // it while the lobby is open. hostSend reaches every guest, or only the one whose number is passed as "to" - the
+  // number each of their messages arrives with as "from". hostKick ends that guest's connection.
+  hostStart: (port, max) => ipcRenderer.invoke('net:hostStart', port, max),
   hostStop: () => ipcRenderer.invoke('net:hostStop'),
-  hostSend: (msg) => ipcRenderer.invoke('net:hostSend', msg),
+  hostSend: (msg, to) => ipcRenderer.invoke('net:hostSend', msg, to),
+  hostLimit: (max) => ipcRenderer.invoke('net:hostLimit', max),
+  hostKick: (id) => ipcRenderer.invoke('net:hostKick', id),
   // One event channel per role, carrying whatever {type,...} message the host/guest socket produced -
   // including synthetic ones this process adds itself: guestJoined, guestLeft, hostClosed.
   onHostEvent: (cb) => { ipcRenderer.on('net:hostEvent', (_e, data) => cb(data)); },

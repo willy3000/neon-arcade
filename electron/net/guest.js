@@ -1,6 +1,7 @@
 'use strict';
 // LAN guest side: connects to a host's IP:port, same newline-delimited JSON framing as host.js.
 const net = require('node:net');
+const { MAX_LINE, readLines } = require('./host.js');
 
 const CONNECT_TIMEOUT_MS = 6000;
 
@@ -26,26 +27,18 @@ class Guest {
       });
       this.buffer = '';
       socket.setEncoding('utf8');
-      socket.on('data', (chunk) => this._onData(chunk));
-      socket.on('close', () => { this.socket = null; this.onClose?.(); });
+      socket.on('data', (chunk) => this._onData(socket, chunk));
+      socket.on('close', () => { if (this.socket === socket) this.socket = null; this.onClose?.(); });
       socket.on('error', (err) => { if (!settled) { settled = true; clearTimeout(timer); reject(err); } });
     });
   }
 
-  _onData(chunk) {
-    this.buffer += chunk;
-    let idx;
-    while ((idx = this.buffer.indexOf('\n')) >= 0) {
-      const line = this.buffer.slice(0, idx);
-      this.buffer = this.buffer.slice(idx + 1);
-      if (!line) continue;
-      let msg;
-      try { msg = JSON.parse(line); } catch { continue; }
-      this.onMessage?.(msg);
-    }
+  _onData(socket, chunk) {
+    this.buffer = readLines(this.buffer, chunk, (msg) => this.onMessage?.(msg));
+    if (this.buffer.length > MAX_LINE) socket.destroy();
   }
 
-  send(msg) { if (this.socket) this.socket.write(JSON.stringify(msg) + '\n'); }
+  send(msg) { if (this.socket && !this.socket.destroyed) this.socket.write((typeof msg === 'string' ? msg : JSON.stringify(msg)) + '\n'); }
 
   disconnect() { if (this.socket) this.socket.end(); this.socket = null; }
 }

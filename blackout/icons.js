@@ -51,7 +51,46 @@
   reflex:r(22,14,14,40,G1,3)+r(24,10,10,6,BR,2)+st('M42 18 Q54 30 42 44 M48 14 Q62 30 48 48',CY,2.5),
   conditioning:p('M32 54 L10 32 Q2 20 14 13 Q24 8 32 18 Q40 8 50 13 Q62 20 54 32Z',RD)+st('M8 32 H22 L26 24 L32 40 L36 28 L40 32 H56','#f6e9e2',2.5),
   scavenger:[48,40,32,24].map((y,i)=>`<ellipse cx="32" cy="${y}" rx="18" ry="6" fill="${i%2?'#c9a24f':'#e2b074'}"/>`).join('')+`<text x="32" y="27" font-family="monospace" font-size="7" font-weight="700" fill="#5e5034" text-anchor="middle" stroke="none">CR</text>`};
- function art(kind,key){if(kind==='weapon'){const d=W[key]||W.rifle;return {w:d[0],h:d[1],body:d[2]};}const set=kind==='gear'?GEAR:kind==='upgrade'?UP:PICK;return {w:S,h:S,body:set[key]||PICK.gadget};}
+   // Field support: what gets called in. Perks: an emblem for what each one changes.
+  const ring=(x,y,R,s,w=1.5,o=1)=>`<circle cx="${x}" cy="${y}" r="${R}" fill="none" stroke="${s}" stroke-width="${w}" opacity="${o}"/>`,FR='#9fd08a';
+  const SUP={
+   recon:c(32,32,25,'#1f2a22')+ring(32,32,17,G2)+ring(32,32,9,G2)+p('M32 32 L32 7 A25 25 0 0 1 53.6 19.5Z',CY,NS+' opacity=".45"')+ln(32,32,32,7,CY,2)+c(43,23,3,RD,NS)+c(21,41,2.5,RD,NS)+c(32,32,2.5,HL,NS),
+   turret:ln(32,40,13,58,G1,4)+ln(32,40,51,58,G1,4)+ln(32,40,32,59,G1,4)+r(18,23,26,19,G2,4)+r(42,28,18,8,G1,2)+r(58,27,4,10,G2,1)+r(21,19,10,5,G1,1)+c(27,33,4,FR,NS),
+   dog:st('M13 33 Q5 27 7 18',G2,3.5)+ln(19,42,17,57,G1,4.5)+ln(27,44,27,58,G1,4.5)+ln(39,44,40,58,G1,4.5)+ln(45,40,48,57,G1,4.5)+`<ellipse cx="30" cy="36" rx="19" ry="9.5" fill="${G2}"/>`+r(23,28,13,16,OD,2)+pg('43,31 55,20 61,27 59,33 50,38',G2)+pg('51,22 53,12 58,21',G1)+r(57,28,5,4,G1,1)+c(54,26,1.9,CY,NS),
+   airstrike:ring(32,45,13,RD,2.5)+ln(32,28,32,62,RD,1.5)+ln(15,45,49,45,RD,1.5)+p('M25 9 H39 L40 15 V25 Q32 36 24 25 V15Z',OD)+r(23,5,18,5,G1,1)+ln(28,14,36,14,HL,1.5,.5)};
+  const PERK={
+   regen:r(26,13,12,38,'#6fa36a',2)+r(13,26,38,12,'#6fa36a',2)+st('M8 46 Q12 59 28 58',HL,2.5)+pg('28,53 35,58 28,63',HL,NS),
+   flak:PICK.armor+pg('46,4 49,12 57,12 51,17 53,25 46,20 39,25 41,17 35,12 43,12',RD),
+   secondwind:p('M32 58 L13 39 Q6 28 16 22 Q25 18 32 27 Q39 18 48 22 Q58 28 51 39Z',RD)+pg('32,2 43,15 36,15 36,24 28,24 28,15 21,15',HL),
+   scrounger:[10,20,30].map(x=>r(x,18,7,30,BR,3.5)+r(x,40,7,10,WD2,1)).join('')+r(47,16,5,19,FR,1,NS)+r(40,23,19,5,FR,1,NS),
+   ambusher:st('M7 32 Q32 11 57 32 Q32 53 7 32Z',G3,3)+c(32,32,8,G1)+c(32,32,3,HL,NS)+ln(11,55,53,9,RD,3.5),
+   executioner:p('M7 42 L43 15 L50 22 L14 46Z',HL)+ln(41,10,56,25,G1,4.5)+ln(51,15,60,6,WD,7)+c(13,55,4.5,RD),
+   lowprofile:st('M8 28 Q32 48 56 28',G3,3.5)+ln(16,38,12,47,G3,2.5)+ln(26,43,24,52,G3,2.5)+ln(38,43,40,52,G3,2.5)+ln(48,38,52,47,G3,2.5),
+   flowstate:st('M9 16 L25 32 L9 48',CY,6)+st('M25 16 L41 32 L25 48',CY,6,.65)+st('M41 16 L57 32 L41 48',CY,6,.35),
+   hardline:ln(42,14,48,3,G1,3)+r(15,13,34,43,OD,4)+r(20,18,24,8,G1,1)+pg('35,29 25,43 32,43 29,53 40,39 33,39 37,29','#e9d48a',NS)};
+  // The second wave of the armory. Two of the guns are built on an existing one, marked with what sets them apart.
+  Object.assign(W,{
+   burst:[W.rifle[0],W.rifle[1],W.rifle[2]+r(98,1,3.5,8,BR,1.5)+r(105,1,3.5,8,BR,1.5)+r(112,1,3.5,8,BR,1.5)],
+   ricochet:[W.battle[0],W.battle[1],W.battle[2]+st('M118 46 L132 36 L144 48 L158 38',BR,2.6)],
+   flamer:[152,62,r(6,34,44,20,'#8a3b2c',7)+r(14,30,10,6,G1,1)+r(46,20,58,12,G1,3)+r(50,22,50,3,G2,1,NS)+pg('58,32 68,32 65,50 56,49',G1)+r(104,23,32,6,G2,1)+r(134,21,6,10,G1,1)+p('M140 27 Q151 16 148 27 Q153 35 140 33Z','#f0a24a',NS)],
+   minigun:[176,60,r(4,22,36,18,G1,4)+r(14,10,22,12,OD,2)+r(40,18,30,26,G2,4)+[20,26,32,38].map(y=>r(70,y,96,4,G1,1)).join('')+r(100,17,6,28,G2,1)+r(160,17,8,28,G2,2)+pg('48,44 60,44 57,58 46,57',G1)],
+   arc:[W.pulse[0],W.pulse[1],W.pulse[2]+pg('136,4 126,20 133,20 128,36 144,16 136,16 141,4','#e9fbff',NS)]});
+  Object.assign(GEAR,{
+   knife:p('M10 50 L46 12 L52 18 L20 54Z',HL)+ln(14,44,24,54,G1,3.5)+ln(7,57,17,47,WD,7),
+   cluster:[0,1,2,3,4].map(i=>c((32+Math.cos(i*1.257)*23).toFixed(1),(37+Math.sin(i*1.257)*23).toFixed(1),5.5,G2)).join('')+c(32,37,15,OD)+r(27,13,10,9,G2,2)+st('M36 15 Q48 18 45 34',G3,3.5),
+   c4:r(11,23,42,27,'#b9a77a',3)+ln(11,36,53,36,G1,2)+ln(32,23,32,50,G1,2)+r(24,14,16,12,G1,2)+c(32,20,3,RD,NS)+st('M40 18 Q55 14 53 31',RD,1.8),
+   seeker:c(32,37,19,G1)+ring(32,37,12,G2,3)+c(32,37,5,RD,NS)+ln(32,18,32,8,G2,2.5)+c(32,7,2.8,RD,NS),
+   grapple:st('M9 55 L37 27',G3,3)+st('M37 27 Q29 10 46 8',G2,5)+st('M37 27 Q54 35 56 18',G2,5)+st('M37 27 L50 14',G2,5)+c(37,27,4.5,G1),
+   sensor:ring(32,24,22,CY,1.2,.4)+ring(32,24,14,CY,1.5,.7)+pg('32,8 38,42 26,42',G2)+r(28,42,8,14,G1,1)+c(32,24,3.2,CY,NS),
+   gas:r(20,18,24,38,'#7d8a5a',4)+r(20,28,24,6,'#d9d36a',0,NS)+r(26,10,12,9,G2,2)+st('M16 14 Q8 8 14 2 M48 14 Q56 8 50 2','#d9d36a',3),
+   trophy:ln(18,54,12,61,G1,3)+ln(46,54,52,61,G1,3)+r(14,40,36,14,G1,3)+r(22,26,20,16,G2,3)+ln(32,26,32,11,G3,3)+ring(32,8,9,CY,1.5,.6)+c(32,8,4,CY,NS),
+   ammobox:PICK.ammo});
+  Object.assign(SUP,{
+   supply:st('M10 22 Q32 -4 54 22',G3,3)+ln(10,22,24,40,G3,1.5)+ln(54,22,40,40,G3,1.5)+ln(32,9,32,40,G3,1.5)+r(18,38,28,21,OD,3)+r(29,42,6,13,'#f2f5ea',0,NS)+r(25.5,45.5,13,6,'#f2f5ea',0,NS),
+   reinforce:p('M12 59 Q12 35 32 35 Q52 35 52 59Z','#6b7a4c')+r(26,41,12,10,'#39422f',2)+c(32,21,10,'#dcab80')+p('M20 17 Q32 2 44 17 L44 20 H20Z','#56633f'),
+   gunship:ln(6,21,54,21,G3,2.5)+ln(30,21,30,28,G1,3)+`<ellipse cx="30" cy="36" rx="20" ry="9" fill="${OD}"/>`+pg('46,34 60,30 60,39',OD)+r(57,25,3,13,G1,1)+r(13,32,11,7,CY,2,NS)+ln(20,47,40,47,G1,2.5),
+   blackout:c(32,32,25,'#11161a')+ring(32,32,25,CY,2.5)+pg('36,11 22,34 31,34 27,53 43,28 34,28 39,11','#e9fbff',NS)});
+  function art(kind,key){if(kind==='weapon'){const d=W[key]||W.rifle;return {w:d[0],h:d[1],body:d[2]};}const set=kind==='gear'?GEAR:kind==='upgrade'?UP:kind==='support'?SUP:kind==='perk'?PERK:PICK;return {w:S,h:S,body:set[key]||PICK.gadget};}
  function svg(kind,key,cls=''){const a=art(kind,key);return `<svg class="icon icon-${kind} ${cls}" viewBox="0 0 ${a.w} ${a.h}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><g stroke="${O}" stroke-width="1.3" stroke-linejoin="round">${a.body}</g></svg>`;}
  function uri(kind,key,scale=2){const a=art(kind,key),s=`<svg xmlns="http://www.w3.org/2000/svg" width="${a.w*scale}" height="${a.h*scale}" viewBox="0 0 ${a.w} ${a.h}"><g stroke="${O}" stroke-width="1.4" stroke-linejoin="round">${a.body}</g></svg>`;return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);}
  // Cartoon operator for the co-op lobby: a stocky, front-facing soldier at low ready, holding whichever weapon art is
@@ -79,5 +118,25 @@
  // Rasterize every icon into a Phaser texture. Images decode asynchronously; the renderer falls back to drawn shapes until each texture exists.
  function load(scene){const jobs=[...Object.keys(W).map(k=>['weapon',k]),...Object.keys(GEAR).map(k=>['gear',k]),...Object.keys(PICK).map(k=>['pickup',k])];
   for(const [kind,key] of jobs){const id=keyOf(kind,key);if(scene.textures.exists(id))continue;const img=new Image();img.onload=()=>{if(!scene.textures.exists(id))scene.textures.addImage(id,img);};img.src=uri(kind,key,kind==='weapon'?2:2);}}
- root.BPIcons={svg,uri,art,load,keyOf,soldier,size:k=>W[k]?{w:W[k][0],h:W[k][1]}:{w:S,h:S}};
+ // Enemy pressure, as faces: who you are up against at each tier. One easy-going soldier for Story, one steady
+ // regular for Standard, two hard-eyed ones for High Intensity, and for Insane three masked figures in black with red
+ // eyes. Drawn in the same hand as the lobby's operator, so they read as the same world.
+ const MOODS={
+  story:{helmet:'#6f9a62',rim:'#4d7245',skin:'#e6b98f',eye:'#1c1a16',band:'#35482f'},
+  standard:{helmet:'#6b7a4c',rim:'#4d5937',skin:'#dcab80',eye:'#191713',band:'#39422f'},
+  intense:{helmet:'#4b4a3a',rim:'#33322a',skin:'#b78763',eye:'#120f0c',band:'#24241d'},
+  insane:{helmet:'#1b1e21',rim:'#0d0f11',skin:'#4c4340',eye:'#ff3b2f',band:'#7a1a14'}};
+ function head(mood,dx=0,dy=0,k=1){const m=MOODS[mood],evil=mood==='insane',hard=mood==='intense';
+  const brows=mood==='story'?st('M17 29 Q22 26 27 29',O,2.2)+st('M33 29 Q38 26 43 29',O,2.2):mood==='standard'?ln(17,29,27,29.5,O,2.4)+ln(43,29,33,29.5,O,2.4):ln(16,26.5,27,31.5,O,evil?3.4:3)+ln(44,26.5,33,31.5,O,evil?3.4:3);
+  const eyes=evil?c(22.5,35,5,m.eye,NS+' opacity=".35"')+c(37.5,35,5,m.eye,NS+' opacity=".35"')+c(22.5,35,2.7,m.eye,NS)+c(37.5,35,2.7,m.eye,NS)+c(22.5,35,1,'#ffd9d2',NS)+c(37.5,35,1,'#ffd9d2',NS)
+   :c(22.5,35,2.7,m.eye,NS)+c(37.5,35,2.7,m.eye,NS)+(mood==='story'?c(23.4,34,1,'#fff',NS)+c(38.4,34,1,'#fff',NS):'');
+  const mouth=mood==='story'?st('M23 42 Q30 48.5 37 42',O,2.2):mood==='standard'?ln(25,43.5,35,43.5,O,2.2):hard?st('M24 45.5 Q30 41.5 36 45.5',O,2.4)+ln(14,38,19,44,'#6e4a32',1.6,.6)+ln(46,38,41,44,'#6e4a32',1.6,.6)
+   :p('M13.5 38.5 Q30 45 46.5 38.5 L45 47 Q30 56 15 47Z','#101214')+ln(22,45,38,45,'#2c3036',1.4)+ln(24,48.5,36,48.5,'#2c3036',1.4);
+  const body=c(13,34,3.6,m.skin)+c(47,34,3.6,m.skin)+c(30,33,17,m.skin)+(hard||evil?p('M13 33 Q30 27 47 33 L47 30 Q30 22 13 30Z','#000',NS+' opacity=".28"'):'')+eyes+brows+mouth
+   +p('M11.5 33 Q7 8 30 8 Q53 8 48.5 33 Q40 25.5 30 25.5 Q20 25.5 11.5 33Z',m.helmet)+st('M12.5 28 Q30 19.5 47.5 28',m.band,3)+st('M17 17 Q23 11 31 10.5',m.rim,2.4,.8)+(evil?r(27,8.5,6,10,'#c1271d',1,NS):'');
+  return `<g transform="translate(${dx} ${dy}) scale(${k})">${body}</g>`;}
+ function pressure(level){const mood=MOODS[level]?level:'standard',n=mood==='insane'?3:mood==='intense'?2:1,w=n===1?60:n===2?92:118;
+  const heads=n===1?head(mood):n===2?head(mood,34,3,.94)+head(mood,0,0):head(mood,0,6,.86)+head(mood,66,6,.86)+head(mood,29,0);
+  return `<svg class="pressure-icon pressure-${mood}" viewBox="0 0 ${w} 58" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><g stroke="${O}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">${heads}</g></svg>`;}
+ root.BPIcons={svg,uri,art,load,keyOf,soldier,pressure,size:k=>W[k]?{w:W[k][0],h:W[k][1]}:{w:S,h:S}};
 })(globalThis);

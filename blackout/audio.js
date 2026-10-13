@@ -5,7 +5,15 @@
   // More ways of announcing each mode, and the commander's word on every gun (vo-w-<weapon>) and gadget (vo-g-<gadget>) as it is bought or equipped.
   'vo-mode-holdout-2.ogg','vo-mode-holdout-3.ogg','vo-mode-holdout-4.ogg','vo-mode-campaign-2.ogg','vo-mode-campaign-3.ogg','vo-mode-campaign-4.ogg','vo-range-2.ogg','vo-range-3.ogg',
   'vo-w-rifle.ogg','vo-w-shotgun.ogg','vo-w-pistol.ogg','vo-w-smg.ogg','vo-w-marksman.ogg','vo-w-battle.ogg','vo-w-precision.ogg','vo-w-lmg.ogg','vo-w-autoshotgun.ogg','vo-w-launcher.ogg','vo-w-pulse.ogg','vo-w-rail.ogg','vo-w-machinepistol.ogg','vo-w-magnum.ogg','vo-w-sawedoff.ogg','vo-w-thumper.ogg','vo-w-rocket.ogg',
-  'vo-g-frag.ogg','vo-g-incendiary.ogg','vo-g-mine.ogg','vo-g-flash.ogg','vo-g-smoke.ogg','vo-g-emp.ogg','vo-g-decoy.ogg','vo-g-cover.ogg'];
+  'vo-g-frag.ogg','vo-g-incendiary.ogg','vo-g-mine.ogg','vo-g-flash.ogg','vo-g-smoke.ogg','vo-g-emp.ogg','vo-g-decoy.ogg','vo-g-cover.ogg',
+  // Team deathmatch on the lobby's mode switch, and the commander's word on each map (vo-map-<map>) as it is picked there.
+  'vo-mode-tdm.ogg','vo-mode-tdm-2.ogg','vo-map-killhouse.ogg','vo-map-crash.ogg','vo-map-ruins.ogg','vo-map-kestrel.ogg','vo-map-underground.ogg','vo-map-convoy.ogg','vo-map-meridian.ogg',
+  // Field support: the call that the meter is full, and the commander's word on each ability (vo-s-<id>) and perk (vo-p-<id>) as it is bought or equipped.
+  'vo-support-ready.ogg','vo-s-recon.ogg','vo-s-turret.ogg','vo-s-dog.ogg','vo-s-airstrike.ogg','vo-p-regen.ogg','vo-p-flak.ogg','vo-p-secondwind.ogg','vo-p-scrounger.ogg','vo-p-ambusher.ogg','vo-p-executioner.ogg','vo-p-lowprofile.ogg','vo-p-flowstate.ogg','vo-p-hardline.ogg',
+  // Call-outs for what the player has just done (kill streaks, a knife kill, a perfect flow, a boss down) and for how a team deathmatch stands.
+  'vo-streak-double.ogg','vo-streak-double-2.ogg','vo-streak-triple.ogg','vo-streak-heat.ogg','vo-streak-unstoppable.ogg','vo-streak-blackout.ogg','vo-knife.ogg','vo-flow.ogg','vo-boss-down.ogg','vo-tdm-lead.ogg','vo-tdm-behind.ogg','vo-tdm-close.ogg',
+  // The second wave of the armory: five guns, nine gadgets and four more field support calls.
+  'vo-w-burst.ogg','vo-w-ricochet.ogg','vo-w-flamer.ogg','vo-w-minigun.ogg','vo-w-arc.ogg','vo-g-knife.ogg','vo-g-cluster.ogg','vo-g-c4.ogg','vo-g-seeker.ogg','vo-g-grapple.ogg','vo-g-sensor.ogg','vo-g-gas.ogg','vo-g-trophy.ogg','vo-g-ammobox.ogg','vo-s-supply.ogg','vo-s-reinforce.ogg','vo-s-gunship.ogg','vo-s-blackout.ogg'];
  // Per-theme ambience bed (sample, volume, rate) layered under the drone score.
  const BEDS={city:[['wind',.035,.7],['ambience',.055,.7]],ruins:[['wind',.05,.55],['ambience',.05,.6]],snow:[['wind',.09,.45]],subway:[['ambience',.07,.45],['wind',.02,1.3]],desert:[['wind',.07,.85]],facility:[['ambience',.06,.9],['wind',.02,1.6]],range:[['wind',.035,.7],['ambience',.055,.7]]};
  const MUSIC='blackout/assets/audio/menu-music.mp3',MUSIC_VOLUME=.5;
@@ -42,7 +50,7 @@
    if(now>=this.beatAt){this.tone(62,.16,{vol:.22-.08*k,to:38,attack:.006});this.tone(55,.14,{vol:.14-.05*k,to:34,attack:.006,delay:.16});this.beatAt=now+.48+.55*k;}
    if(now>=this.breathAt){const len=1+.6*k;this.noise(len*.42,{vol:.045,freq:700,q:.7,attack:len*.3});this.noise(len*.55,{vol:.035,freq:420,q:.6,attack:.05,delay:len*.5});this.breathAt=now+len*1.15;}}
   event(e){switch(e.type){
-   case 'shot':{const kind=e.weapon,sounds={precision:['rifle',.8,.7],marksman:['rifle',.7,.78],battle:['rifle',.62,.82],lmg:['rifle',.5,.9],rocket:['boom',.7,.9],launcher:['shotgun',.7,.75],thumper:['shotgun',.7,.7],magnum:['pistol',.75,.7],machinepistol:['smg',.43,1.15],sawedoff:['shotgun',.95,.86],autoshotgun:['shotgun',.75,1.08],pulse:['laser',.32,1],rail:['laser-large',.7,.85]};
+   case 'shot':{const kind=e.weapon,sounds={precision:['rifle',.8,.7],marksman:['rifle',.7,.78],battle:['rifle',.62,.82],lmg:['rifle',.5,.9],rocket:['boom',.7,.9],launcher:['shotgun',.7,.75],thumper:['shotgun',.7,.7],magnum:['pistol',.75,.7],machinepistol:['smg',.43,1.15],sawedoff:['shotgun',.95,.86],autoshotgun:['shotgun',.75,1.08],pulse:['laser',.32,1],rail:['laser-large',.7,.85],burst:['rifle',.45,1.12],ricochet:['rifle',.5,.92],flamer:['wind',.2,1.7],minigun:['rifle',.34,1.28],arc:['laser-large',.5,1.3]};
      const [key,vol,rate]=sounds[kind]||[kind,kind==='shotgun'?.85:.43,1];this.play(key,e.enemy?.18:vol,rate,e.x,e.y);if((kind==='shotgun'||kind==='sawedoff')&&!e.enemy)this.play('metal',.28,1.5);if(kind==='rail'&&!e.enemy)this.play('rumble',.45,1.4);if(kind==='rocket'&&e.enemy)this.tone(400,.4,{type:'sawtooth',vol:.02,to:120});break;}
    case 'footstep':{this.step++;const snow=e.surface==='snow';this.play(snow?(this.step%2?'footstep-snow-0':'footstep-snow-1'):this.step%2?'footstep-concrete-0':'footstep-concrete-1',.13,1+(this.step%3)*.035,e.x,e.y);break;}
    case 'reload':this.play('reload-'+(['shotgun','autoshotgun','sawedoff','launcher','thumper'].includes(e.weapon)?'shotgun':BPWorld.weapons[e.weapon]?.sprite==='handgun'?'pistol':'rifle'),.44);break;
@@ -51,8 +59,8 @@
    case 'action':this.play(e.action==='slide'?'wood':'body',.3,e.action==='vault'?.75:1.2,e.x,e.y);break;
    case 'meleeswing':this.play('wind',.16,e.heavy?2:3);break;
    case 'meleeimpact':this.play('body',.8,.75,e.x,e.y);this.play(e.finish?'punch':'metal',e.finish?.5:.25,1.3,e.x,e.y);break;
-   case 'hit':this.play('body',.3,1.3,e.x,e.y);if(e.player)this.tone(2300,.03,{type:'square',vol:.018});break;
-   case 'kill':if(e.credits){this.tone(1180,.07,{type:'triangle',vol:.05});this.tone(1760+Math.min(8,e.combo)*90,.12,{type:'triangle',vol:.045,delay:.05});}if(e.boss){this.play('rumble',.8,.7);this.play('bell',.5,.8);}break;
+   case 'hit':this.play('body',.3,1.3,e.x,e.y);if(e.player&&(e.by||'player')===(this.scene.selfId||'player'))this.tone(2300,.03,{type:'square',vol:.018});break;
+   case 'kill':if(e.credits&&(e.by||'player')===(this.scene.selfId||'player')){this.tone(1180,.07,{type:'triangle',vol:.05});this.tone(1760+Math.min(8,e.combo)*90,.12,{type:'triangle',vol:.045,delay:.05});}if(e.boss){this.play('rumble',.8,.7);this.play('bell',.5,.8);}break;
    case 'armorhit':this.play('plate',.35,1.4,e.x,e.y);break;case 'shieldhit':this.play('forcefield',.28,1.6,e.x,e.y);break;
    case 'explosion':this.play('explosion',.9,.9,e.x,e.y);this.play('rumble',.6,1,e.x,e.y);{const p=this.scene.sim?.player;if(p&&Math.hypot(p.x-e.x,p.y-e.y)<200&&e.radius>60)this.tone(3600,1.1,{vol:.02,attack:.05});}break;
    case 'destroy':this.play(e.kind==='glass'?'glass':e.kind==='crate'?'wood':'metal',.6,.9,e.x,e.y);if(e.kind==='jammer'||e.kind==='generator')this.play('forcefield',.6,.6,e.x,e.y);break;
@@ -64,6 +72,11 @@
    case 'checkpoint':case 'unlock':this.play('pickup',.55,.8);break;
    case 'healstart':this.play('reload-pistol',.3,1.3);this.noise(.5,{vol:.03,freq:3000,type:'highpass'});break;
    case 'radio':this.play('radio',.16,1.1);break;
+   // Field support: a radio click for any call, the whistle of shells for an airstrike, and the hound's bite.
+   case 'support':this.play('radio',.3,.9);if(e.key==='airstrike')this.tone(1500,1.3,{type:'sine',vol:.045,to:320});else if(e.key==='recon')this.tone(880,.5,{type:'sine',vol:.04,to:1760});else this.play('metal',.4,.8,e.x,e.y);break;
+   case 'arc':this.play('forcefield',.3,1.8,e.x2,e.y2);break;case 'strafe':this.play('rifle',.2,1.3,e.x,e.y);break;case 'intercept':this.play('forcefield',.4,2,e.x,e.y);break;
+   case 'ricochet':this.play('metal',.2,2.2,e.x,e.y);break;case 'grapple':this.play('wind',.4,1.2);break;case 'sensor':this.tone(1320,.25,{type:'sine',vol:.035});break;
+   case 'bite':this.play('body',.55,1.5,e.x,e.y);break;case 'allygone':this.play('metal',.25,.6,e.x,e.y);break;
    case 'damage':this.play('body',.5,.7);break;case 'armorbreak':this.play('glass',.5,.7);this.play('plate',.5,.8);break;
    case 'throw':case 'plant':this.play('metal',.2,1.8);break;
    case 'whiz':{const now=this.scene.sound.context?.currentTime||0;if(now-this.lastWhiz>.09){this.lastWhiz=now;this.noise(.16,{vol:.05,freq:3200,sweep:900,q:3});}break;}

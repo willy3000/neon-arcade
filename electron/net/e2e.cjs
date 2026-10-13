@@ -2,6 +2,8 @@
 // Real end-to-end check: launches two actual Electron app instances (the exact built app, preload and all,
 // not a mock) on one machine and drives a full host+guest LAN co-op session through the real squad lobby UI.
 // Needs the default LAN port free: quit any running copy of the game that is hosting before running this.
+const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const { _electron: electron } = require('playwright');
@@ -9,23 +11,30 @@ const { _electron: electron } = require('playwright');
 const ROOT = path.join(__dirname, '..', '..');
 const SAVE_KEY = 'blackout-protocol-progress';
 
-// Each instance serves the game from its own loopback port, so a save written here is private to that window.
+// Each instance gets a folder of its own for its save, cache and one-copy-at-a-time lock (--user-data-dir, see
+// electron/main.js), so two can run side by side and neither touches the save of a game installed on this machine.
+// The save is written there before launch: the desktop app keeps it in a file, not in the page's localStorage.
+const dirs = [];
 async function bootWindow(save) {
-  const app = await electron.launch({ args: [path.join(ROOT, 'electron', 'main.js'), '--windowed'], cwd: ROOT });
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'blackout-e2e-'));
+  dirs.push(dir);
+  fs.writeFileSync(path.join(dir, 'save-store.json'), JSON.stringify({ [SAVE_KEY]: JSON.stringify(save) }));
+  // A shell that sets ELECTRON_RUN_AS_NODE (VS Code's terminal does) would start Electron as plain Node.
+  const env = { ...process.env };
+  delete env.ELECTRON_RUN_AS_NODE;
+  const app = await electron.launch({ args: [path.join(ROOT, 'electron', 'main.js'), '--windowed', '--user-data-dir=' + dir], cwd: ROOT, env });
   const win = await app.firstWindow();
   const loaded = () => win.waitForFunction(() => document.getElementById('loading')?.hidden && window.BPApp, null, { timeout: 30000 });
   await loaded();
-  await win.evaluate(([key, value]) => localStorage.setItem(key, JSON.stringify(value)), [SAVE_KEY, save]);
-  await win.reload();
-  await loaded();
   return { app, win };
 }
+const cleanUp = () => { for (const dir of dirs) try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* still held by a closing process */ } };
 const lobbyOf = (w) => w.win.evaluate(() => window.BPApp.snapshot().lobby);
 const modeIs = (w, mode) => w.win.waitForFunction((m) => window.BPApp.snapshot().mode === m, mode, { timeout: 10000 });
 
 (async () => {
-  const host = await bootWindow({ version: 2, settings: { volume: 0, callsign: 'ROOK' } });
-  const guest = await bootWindow({ version: 2, owned: { weapons: ['rifle', 'pistol', 'shotgun'], gear: [] }, loadout: { primary: 'shotgun', secondary: 'pistol' }, settings: { volume: 0, callsign: 'VIPER' } });
+  const host = await bootWindow({ version: 3, drill: true, settings: { volume: 0, callsign: 'ROOK' } });
+  const guest = await bootWindow({ version: 3, drill: true, owned: { weapons: ['rifle', 'pistol', 'shotgun'], gear: [] }, loadout: { primary: 'shotgun', secondary: 'pistol' }, settings: { volume: 0, callsign: 'VIPER' } });
   try {
     assert.equal(await host.win.evaluate(() => !!window.BPNet?.available), true, 'host window must have window.BPNet (preload wired correctly)');
     assert.equal(await guest.win.evaluate(() => !!window.BPNet?.available), true, 'guest window must have window.BPNet too');
@@ -109,5 +118,6 @@ const modeIs = (w, mode) => w.win.waitForFunction((m) => window.BPApp.snapshot()
   } finally {
     await host.app.close();
     await guest.app.close();
+    cleanUp();
   }
 })().catch((e) => { console.error(e); process.exit(1); });
