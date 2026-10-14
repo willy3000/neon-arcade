@@ -6,6 +6,8 @@
   snow:{ground:0x6b7880,specks:[0xc9d5da,0x48545c],road:0x56626a,alt:0x7d8b93,mark:0x5f6b73,roof:0x48525a,edge:0xa9bac2,curb:0x8c9aa2,wall:0x384147,rock:0x3b444a,rockTop:0xc4d0d6,water:0x9fb7c4,tint:[0x6c86a8,.08]},
   subway:{ground:0x2b2c2f,specks:[0x6b6d72,0x141517],road:0x202124,alt:0x37383c,mark:0x2a2b2e,roof:0x1a1b1d,edge:0x46484c,curb:0x55575c,wall:0x161719,rock:0x3c3e42,rockTop:0x5d5f64,water:0x1f3238},
   desert:{ground:0x76644a,specks:[0xb39d74,0x4e412c],road:0x3b3934,alt:0x86724f,mark:0x45413b,roof:0x6b5b42,edge:0xa89069,curb:0x8d7a5b,wall:0x5c4d37,rock:0x6b573d,rockTop:0x9c8460,water:0x3e5550,tint:[0xd39a52,.06]},
+  rain:{ground:0x2e3740,specks:[0x7d8fa0,0x161d24],road:0x232b33,alt:0x343e48,mark:0x2a333c,roof:0x3a4550,edge:0x6f8496,curb:0x5c6d7c,wall:0x222a31,rock:0x3d4852,rockTop:0x627382,water:0x1d2c38,tint:[0x4a6a90,.1]},
+  citadel:{ground:0x33302f,specks:[0x8a8380,0x191716],road:0x272423,alt:0x3e3a38,mark:0x2d2a29,roof:0x1f1d1c,edge:0x6b625e,curb:0x5a5350,wall:0x1a1817,rock:0x403b39,rockTop:0x6c6461,water:0x22292b,accent:0xc0473a,tint:[0x9a3a30,.05]},
   facility:{ground:0x384047,specks:[0x8d9aa4,0x1d2328],road:0x2c3339,alt:0x434c54,mark:0x30373d,roof:0x272e33,edge:0x6f8290,curb:0x5f6f7a,wall:0x20272c,rock:0x45515a,rockTop:0x6f7f8a,water:0x24363f,accent:0x6fd0e8}};
  // Supply crates by grade (Meta.RARITY order), what each sells shown as, and its short name.
  const RARITY_COL=[0xb9c2a8,0x8fd07a,0x6fb4f0,0xb68cf0,0xf4c04e],RARITY_HEX=['#d3dbc7','#b3e6a4','#a9d3f8','#d4b8f8','#f8d784'];
@@ -14,7 +16,7 @@
  // What each kind of hostile wears on its head, seen from above: the first thing that tells a medic from a rifleman.
  // Shape does as much of the work as colour (a brim, a visor, a stripe, a cross, a ghillie hood), so it reads for
  // colour-blind players too. Drawn in the body's frame (facing +x), on the helmet.
- const HEAD={infantry:{c:0x5d6646,r:7},rusher:{band:0xc0473a},scout:{c:0xb4a36f,r:6.2,brim:true},breacher:{c:0x2f332c,r:8,visor:0x8fa3ad},sniper:{ghillie:true},deadeye:{ghillie:true},
+ const HEAD={voss:{c:0x26292f,r:7.5,beret:true,badge:0xd8ac4a},infantry:{c:0x5d6646,r:7},rusher:{band:0xc0473a},scout:{c:0xb4a36f,r:6.2,brim:true},breacher:{c:0x2f332c,r:8,visor:0x8fa3ad},sniper:{ghillie:true},deadeye:{ghillie:true},
   shield:{c:0x39434d,r:8,visor:0x9fb4c0},grenadier:{c:0x5d6646,r:7,stripe:0xe08a3c},gunner:{c:0x34382c,r:8.5},rocketeer:{c:0x5d6646,r:7,stripe:0xe08a3c},medic:{c:0xeeebe2,r:7.5,cross:0xc8463a},
   mortar:{c:0x5d6646,r:7,stripe:0xe08a3c},engineer:{c:0xe3b544,r:7,brim:true},jammer:{c:0x3c4650,r:7,headset:0x8fe3ff},heavy:{c:0x1d1f1e,r:9.5,visor:0xd8503e},elite:{c:0x5c6a73,r:7.5,visor:0x8fe3ff},
   commander:{c:0x7a2f2c,r:7.5,beret:true,badge:0xe2b074},ghost:{c:0x2a3136,r:7}};
@@ -29,7 +31,7 @@
  // settings swaps the three in place (Render.palette), so everything drawn with them follows. The colour-safe sets are
  // from the Okabe-Ito palette; telegraphs also differ by shape and thickness, so none relies on colour alone.
  const PALETTES={standard:{red:0xd3846c,amber:0xe2b074,cyan:0x8fe3ff},redgreen:{red:0xd55ec8,amber:0xf0e442,cyan:0x56b4e9},blueyellow:{red:0xff4b5c,amber:0xff9ec8,cyan:0x2bd9c1},contrast:{red:0xff3b30,amber:0xffd60a,cyan:0x64d2ff}};
- const TINTS={infantry:0xb2a797,rusher:0xb8a58e,sniper:0x8dafa1,shield:0xaaa58e,commander:0xc9aa89,scout:0x9fb08a,breacher:0x8e8d84,grenadier:0xa69278,gunner:0x9a8c7a,rocketeer:0x9e9c82,elite:0x8aa8b8,ghost:0x6f7d84,wraith:0x5a6670,medic:0xc9c4b8,mortar:0x9a9178,heavy:0x7b766c,engineer:0xbba66c,jammer:0x8c99a6,raider:0xc59a86,striker:0xc9a078,deadeye:0xb98f9a};
+ const TINTS={infantry:0xb2a797,rusher:0xb8a58e,sniper:0x8dafa1,shield:0xaaa58e,commander:0xc9aa89,scout:0x9fb08a,breacher:0x8e8d84,grenadier:0xa69278,gunner:0x9a8c7a,rocketeer:0x9e9c82,elite:0x8aa8b8,ghost:0x6f7d84,wraith:0x5a6670,medic:0xc9c4b8,mortar:0x9a9178,heavy:0x7b766c,engineer:0xbba66c,jammer:0x8c99a6,raider:0xc59a86,striker:0xc9a078,deadeye:0xb98f9a,voss:0x8d919c};
  const PICKUP={health:0x5c7155,armor:0x526559,ammo:0x797153,lethal:0x6b6a4a,tactical:0x4f6670,intel:0x8a7340,cache:0x9a8240,supply:0x5c7155};
  class Render {
   constructor(scene){this.scene=scene;this.staticObjects=[];this.actors=new Map();this.props=new Map();this.particles=Array.from({length:360},()=>({active:false}));this.flashes=[];this.decals=[];this.cameraX=0;this.cameraY=0;this.lastMap=null;this.hurt=[];this.hitMark=0;this.killMark=0;this.weather=[];
@@ -194,11 +196,12 @@
    if(a.lastSeq!==group+'/'+seq){a.ghost.setFrame(a.lastFrame||frame).setVisible(true);a.blend=.07;a.lastSeq=group+'/'+seq;}
    a.blend=Math.max(0,a.blend-dt);a.lastFrame=frame;
    // Ghosts are only clearly visible up close, mid-strike, when hit or flashed; the Wraith shimmers.
-   let alpha=1;if(meta?.cloak&&!(s.recon>0)){const d=Math.hypot(e.x-s.player.x,e.y-s.player.y);alpha=e.attack>0||e.flashed>0||a.hitTime>0||d<170?1:Math.max(.1,.55-(d-170)/500);alpha*=.85+.15*Math.sin(s.time*13+e.x);}if(type==='wraith')alpha=.8+.2*Math.sin(s.time*9);if(e.decoy)alpha=.55+.25*Math.sin(s.time*20);
+   let alpha=1;if(e.cloak&&this.self&&e.team!==this.self.team&&BPCore.veiled(s,e,this.self))alpha=.05+.05*Math.sin(s.time*11+e.x*.01);
+   else if(meta?.cloak&&!(s.recon>0)){const d=Math.hypot(e.x-s.player.x,e.y-s.player.y);alpha=e.attack>0||e.flashed>0||a.hitTime>0||d<170?1:Math.max(.1,.55-(d-170)/500);alpha*=.85+.15*Math.sin(s.time*13+e.x);}if(type==='wraith')alpha=.8+.2*Math.sin(s.time*9);if(e.decoy)alpha=.55+.25*Math.sin(s.time*20);
    const feetFrame=feetSeq==='idle'?0:Math.floor(((footTime%20)+20)%20);
    a.shadow.setPosition(e.x+5,e.y+9).setVisible(true).setScale(1-lift/55).setDepth(4).setAlpha(alpha*.5);
    a.feet.setFrame('feet/'+feetSeq+'/'+feetFrame).setPosition(e.x,e.y-lift*.45).setRotation(face).setScale(state==='dive'?1.2:1,state==='roll'?.72:1).setTint(tint).setVisible(true).setDepth(e.y+50).setAlpha(alpha);
-   const recoil=e.shotAge<.12?(1-e.shotAge/.12)*(w.cls==='shotgun'?5:2):0,big=type==='heavy'?1.4:type==='commander'||type==='gunner'?1.12:type==='scout'?.94:1;
+   const recoil=e.shotAge<.12?(1-e.shotAge/.12)*(w.cls==='shotgun'?5:2):0,big=type==='heavy'?1.4:type==='voss'?1.16:type==='commander'||type==='gunner'?1.12:type==='scout'?.94:1;
    a.body.setVisible(true).setFrame(frame).setPosition(e.x-Math.cos(face)*recoil,e.y-lift-Math.sin(face)*recoil).setRotation(angle).setScale(scaleX*big,scaleY*big).setTint(tint).setAlpha((a.blend>0?1-a.blend/.07:1)*alpha).setDepth(e.y+51);
    a.ghost.setPosition(e.x,e.y-lift).setRotation(angle).setScale(scaleX*big,scaleY*big).setTint(tint).setAlpha(a.blend/.07*alpha).setDepth(e.y+50.5).setVisible(a.blend>0);
    a.gear.setVisible(true).clear().setPosition(e.x,e.y-lift).setRotation(angle).setDepth(e.y+53).setAlpha(alpha);const g=a.gear;
@@ -206,6 +209,8 @@
    else{g.lineStyle(4,type==='elite'?C.cyan:0x9a705b,.9).lineBetween(-8,-15,-2,-13);}
    if(type==='shield'){const down=e.shieldDown>0;g.fillStyle(0x677064,down?.35+.2*Math.sin(s.time*30):.95).fillRoundedRect(20,-28,10,56,3);g.lineStyle(2,down?C.cyan:0xa8ad90,.7).strokeRoundedRect(20,-28,10,56,3);g.lineStyle(3,0xe0b572,.6).lineBetween(21,-7,28,-7);}
    if(type==='commander'){g.lineStyle(3,C.amber,.9).lineBetween(-9,-18,-1,-16);}
+   // Voss: an officer's long coat over his armour and a red armband.
+   if(type==='voss'){g.fillStyle(0x22252b,.95).fillRoundedRect(-18,-16,20,32,6);g.lineStyle(1.5,0x5b606b,.8).strokeRoundedRect(-18,-16,20,32,6);g.lineStyle(3,0xc0473a,.95).lineBetween(-6,-16,-6,-10);g.fillStyle(0xd8ac4a).fillCircle(-12,-9,1.8).fillCircle(-12,9,1.8);}
    if(type==='breacher'){g.fillStyle(0x4b4c44,.95).fillRect(-6,-13,14,26);g.lineStyle(2,0x8a8a7c,.7).strokeRect(-6,-13,14,26);}
    if(type==='grenadier'){g.lineStyle(3,0x5e5a3f,.9).lineBetween(-12,-12,8,12);for(let i=0;i<3;i++)g.fillStyle(0x8a8a58).fillCircle(-8+i*7,-8+i*7,3);}
    if(type==='gunner'){g.fillStyle(0x4a4639,.95).fillRect(-16,6,14,12);g.fillStyle(0x6a6450).fillCircle(-4,-17,7).fillCircle(-4,17,7);}
@@ -278,6 +283,12 @@
     case 'hit':{this.emit(e.x,e.y,5,'cloth',e.angle);const actor=this.actors.get(e.id);if(actor)actor.hitTime=.14;if(e.player&&(e.by||'player')===(this.scene.selfId||'player'))this.hitMark=.12;break;}
     case 'kill':if(e.credits&&(!sim.tdm||e.by===(this.scene.selfId||'player')))this.popup(e.x,e.y-26,'+'+e.credits+(e.combo>1?'  ×'+e.combo:''),e.combo>=3?'#f1c27d':'#e2b074');if((e.by||'player')===(this.scene.selfId||'player'))this.killMark=.24;if(e.boss)this.shake(.4,.01);break;
     case 'cache':this.popup(e.x,e.y-20,'+'+e.credits+' CR','#f1d27d');break;
+    case 'blink':this.emit(e.from.x,e.from.y,10,'smoke');this.emit(e.x,e.y,10,'smoke');this.flashes.push({x:e.x,y:e.y,ring:true,radius:60,color:C.cyan,life:.3});break;
+    case 'sweep':this.flashes.push({x:e.x,y:e.y,ring:true,radius:140,color:C.red,life:.8});break;
+    case 'relay':this.popup(e.x,e.y-40,'RELAY '+e.id,e.team===(this.self?.team??0)?'#8fe3ff':'#ff7b6b');break;
+    case 'planted':this.popup(e.x,e.y-40,'CHARGE PLANTED','#ff7b6b');break;
+    case 'defused':this.popup(e.x,e.y-40,'DEFUSED','#8fe3ff');this.flashes.push({x:e.x,y:e.y,ring:true,radius:90,color:C.cyan,life:.5});break;
+    case 'detonated':this.shake(.6,.012);this.emit(e.x,e.y,30,'ember');break;
     case 'countershot':this.popup(e.x,e.y-40,'COUNTER','#f1d27d');this.emit(e.x,e.y,8,'spark');break;
     // A perfect flow: an amber ring off the operator and a spray of sparks (no flash, so reduced-flash play keeps it).
     case 'flow':this.flashes.push({x:e.x,y:e.y,ring:true,radius:95,color:C.amber,life:.4});this.emit(e.x,e.y,12,'spark');break;case 'intel':this.popup(e.x,e.y-20,'INTEL','#f1d27d');break;
@@ -366,6 +377,7 @@
    const up=BPCore.arena(s)&&s.director?.uplink;if(up&&up.x!==undefined&&!up.done){const k=up.progress||0,beat=1+.05*Math.sin(t*5);g.fillStyle(0x0b0f0a,.5).fillEllipse(up.x+3,up.y+14,40,14);g.fillStyle(0x24302a).fillRoundedRect(up.x-15,up.y-15,30,30,4);g.lineStyle(2,0x9fd08a,.9).strokeRoundedRect(up.x-15,up.y-15,30,30,4);
     g.lineStyle(2,0x9fd08a).lineBetween(up.x,up.y-15,up.x,up.y-36);g.fillStyle(0x9fd08a,.5+.5*Math.sin(t*8)).fillCircle(up.x,up.y-38,4);l.lineStyle(1.5,0x9fd08a,.45).strokeCircle(up.x,up.y,80*beat);
     if(k>0){l.lineStyle(5,0xd6f2c4,.95).beginPath();l.arc(up.x,up.y,80,-Math.PI/2,-Math.PI/2+Math.PI*2*k);l.strokePath();}this.marker(up,0x9fd08a,cam);}
+   this.objectives(s,g,l,t,cam,self);
    // A partner told to hold: where.
    if(s.order==='hold'&&s.orderAt){l.lineStyle(1.5,0x9fb4bd,.6).strokeCircle(s.orderAt.x,s.orderAt.y,30);l.lineBetween(s.orderAt.x,s.orderAt.y-30,s.orderAt.x,s.orderAt.y-52);l.fillStyle(0x9fb4bd,.8).fillTriangle(s.orderAt.x,s.orderAt.y-52,s.orderAt.x+14,s.orderAt.y-47,s.orderAt.x,s.orderAt.y-42);}
    this.drawPickups(s,g,t);
@@ -398,7 +410,7 @@
   squad(s,g,l,cam,t){const names=this.scene.names,ops=BPCore.ops(s),tags=s.tags||[],shown=names&&ops.some((o,i)=>i&&!o.vanished),me=names&&ops.find(o=>o.id===names.self)||s.player;
    if(s.tdm)for(const e of ops){if(e.dead||e.vanished)continue;const col=e===me?0xe2b074:e.team!==me.team?0xe39a82:0x8fc7e8;l.lineStyle(1.5,col,.5).strokeCircle(e.x,e.y+2,22);
     if(e!==me&&e.health<100){l.fillStyle(0x111d16,.8).fillRect(e.x-22,e.y-33,44,3);l.fillStyle(col).fillRect(e.x-22,e.y-33,44*Math.max(0,e.health/100),3);}}
-   this.nameTags.forEach((tag,i)=>{const e=ops[i],name=shown&&e&&!e.vanished?names[e.id]:null;if(!name){tag.setVisible(false);return;}
+   this.nameTags.forEach((tag,i)=>{const e=ops[i],name=shown&&e&&!e.vanished&&!(e.cloak&&this.self&&e.team!==this.self.team&&BPCore.veiled(s,e,this.self))?names[e.id]:null;if(!name){tag.setVisible(false);return;}
     tag.setText(e.dead?name+(s.tdm?' / '+Math.max(1,Math.ceil(e.respawn||0)):' / DOWN'):name).setColor(names.self===e.id?'#e2b074':s.tdm&&e.team!==me.team?'#e39a82':e.bot?'#9fb4bd':'#8fe3ff').setAlpha(e.dead?.6:.95).setPosition(e.x,e.y-(e.dead?22:34)).setVisible(true);});
    const st=s.station;this.stationLabel.setVisible(!!st);if(!st)return;const need=tags.length>0,fill=Math.min(1,Math.max(0,...tags.map(q=>q.progress||0))),col=need?0x9fd08a:0x6f8a66,beat=need&&!fill?1+Math.sin(t*5)*.07:1,d=this.decalsGraphics,top=-Math.PI/2;
    d.fillStyle(0x16241a,.6).fillCircle(st.x,st.y,42);
@@ -452,6 +464,31 @@
   drawWeather(s,cam,dt){if(!this.weather.length)return;const ui=this.uiGraphics,w=cam.width,h=cam.height,kind=s.map.weather||'ash',dx=(this.lastCamX===undefined?0:cam.scrollX-this.lastCamX),dy=(this.lastCamY===undefined?0:cam.scrollY-this.lastCamY);this.lastCamX=cam.scrollX;this.lastCamY=cam.scrollY;
    for(const q of this.weather){if(kind==='snow'){q.y+=dt*(.05+.07*q.z);q.x+=dt*(.015*Math.sin(s.time+q.p))-dx/w*q.z;q.y-=dy/h*q.z;}else if(kind==='dust'){q.x+=dt*(.25+.3*q.z)-dx/w*q.z;q.y+=dt*.02*Math.sin(s.time+q.p)-dy/h*q.z;}else{q.y-=dt*(.02+.03*q.z);q.x+=dt*.01*Math.sin(s.time*.7+q.p)-dx/w*q.z;q.y-=dy/h*q.z;}
     q.x=(q.x%1+1)%1;q.y=(q.y%1+1)%1;const x=q.x*w,y=q.y*h;if(kind==='snow')ui.fillStyle(0xf2f6f8,.35+.4*q.z).fillCircle(x,y,1+q.z*1.6);else if(kind==='dust')ui.lineStyle(1,0xd8c49a,.15+.2*q.z).lineBetween(x,y,x+18*q.z,y);else ui.fillStyle(q.p>3?0xe58f45:0xa49d92,.25+.3*q.z).fillRect(x,y,1.5,1.5);}}
+  // Versus objectives. Uplink's relays: a ring in the colour of whoever holds it (blue yours, red theirs, pale for
+  // nobody's), the way it is being turned as an arc, a flicker while it is contested, and its letter. Breach's site: an
+  // amber ring with the plant (or, once planted, the fuse and the defuse) drawn round it.
+  objectives(s,g,l,t,cam,self){this.coopObjectives(s,g,l,t,cam);const T=s.tdm,labels=this.objLabels||(this.objLabels=Array.from({length:4},()=>this.scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, monospace',fontSize:'15px',color:'#e7e8de',stroke:'#0b0f0a',strokeThickness:4}).setOrigin(.5).setDepth(10960)));
+   labels.forEach(q=>q.setVisible(false));if(!T)return;const mine=self?.team??0,team=x=>x<0?0xc9d0b6:x===mine?C.cyan:C.red;
+   (T.relays||[]).forEach((z,i)=>{const col=team(z.owner),k=Math.abs(z.progress),by=z.progress>0?0:1,flick=z.contested?.45+.45*Math.abs(Math.sin(t*9)):1;
+    g.fillStyle(col,.07*flick).fillCircle(z.x,z.y,z.r);l.lineStyle(2,col,.75*flick).strokeCircle(z.x,z.y,z.r);
+    if(k>0&&k<1){l.lineStyle(5,team(by),.95).beginPath();l.arc(z.x,z.y,z.r,-Math.PI/2,-Math.PI/2+Math.PI*2*k);l.strokePath();}
+    g.fillStyle(0x1b221b,.9).fillCircle(z.x,z.y,15);g.lineStyle(2,col,.95).strokeCircle(z.x,z.y,15);labels[i].setVisible(true).setText(z.id).setPosition(z.x,z.y).setColor('#'+col.toString(16).padStart(6,'0'));
+    if(z.owner!==mine)this.marker(z,col,cam);});
+   if(T.site&&T.phase!=='over'){const z=T.site,armed=T.planted,col=armed?C.red:C.amber,beat=armed?.6+.4*Math.abs(Math.sin(t*(T.fuse<8?14:6))):1;
+    g.fillStyle(col,.08*beat).fillCircle(z.x,z.y,z.r);l.lineStyle(2.5,col,.85*beat).strokeCircle(z.x,z.y,z.r);
+    const k=armed?(T.defuse>0?T.defuse/5:1-T.fuse/30):T.plant/4,arc=armed&&T.defuse>0?C.cyan:col;if(k>0){l.lineStyle(5,arc,.95).beginPath();l.arc(z.x,z.y,z.r+7,-Math.PI/2,-Math.PI/2+Math.PI*2*k);l.strokePath();}
+    g.fillStyle(0x1b221b,.9).fillRoundedRect(z.x-14,z.y-10,28,20,3);g.lineStyle(2,col,.95).strokeRoundedRect(z.x-14,z.y-10,28,20,3);if(armed)g.fillStyle(C.red,beat).fillCircle(z.x,z.y,4);
+    labels[3].setVisible(true).setText(armed?'CHARGE · '+Math.max(0,Math.ceil(T.fuse))+'s':'SITE').setPosition(z.x,z.y-z.r-14).setColor(armed?'#ff7b6b':'#e2b074');this.marker(z,col,cam);}}
+  // A flow-trial ghost: the best run's operator, drawn pale and see-through beside the player.
+  drawGhost(gs,dt){const p=gs.player;this.drawActor({...p,id:'ghost-run'},gs,dt,true);const a=this.actors.get('ghost-run');if(!a)return;for(const o of [a.body,a.feet,a.gear])o.setAlpha(.32).setTint?.(0x9fe0ff);a.shadow.setAlpha(.12);}
+  // Extraction: the caches (a crate with a pulsing amber ring) and the landing zone, with the hold drawn round it.
+  // Flow trials: the gates in order - the next one bright with its number, the rest faint - and a marker to the next.
+  coopObjectives(s,g,l,t,cam){const tl=this.trialLabels||(this.trialLabels=Array.from({length:12},()=>this.scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, monospace',fontSize:'15px',color:'#e7e8de',stroke:'#0b0f0a',strokeThickness:4}).setOrigin(.5).setDepth(10960)));tl.forEach(q=>q.setVisible(false));
+   const X=s.extract;if(X){for(const q of s.pickups){if(q.type!=='loot'||q.taken)continue;const beat=1+.08*Math.sin(t*5+q.x);g.fillStyle(0x0b0f0a,.5).fillEllipse(q.x+3,q.y+12,38,12);g.fillStyle(0x3d3424).fillRoundedRect(q.x-15,q.y-11,30,22,3);g.lineStyle(2,C.amber,.95).strokeRoundedRect(q.x-15,q.y-11,30,22,3);g.lineStyle(2,C.amber,.6).lineBetween(q.x-15,q.y-2,q.x+15,q.y-2);l.lineStyle(1.5,C.amber,.45).strokeCircle(q.x,q.y,34*beat);if(!X.called)this.marker(q,C.amber,cam);}
+    const z=X.lz,k=Math.min(1,X.hold/X.need),col=0x9fd08a;g.fillStyle(col,.07).fillCircle(z.x,z.y,z.r);l.lineStyle(2,col,X.called?.95:.6).strokeCircle(z.x,z.y,z.r);l.lineStyle(2,col,.5).lineBetween(z.x-18,z.y,z.x+18,z.y).lineBetween(z.x,z.y-18,z.x,z.y+18);
+    if(k>0){l.lineStyle(5,0xd6f2c4,.95).beginPath();l.arc(z.x,z.y,z.r+6,-Math.PI/2,-Math.PI/2+Math.PI*2*k);l.strokePath();}tl[0].setVisible(true).setText(X.called?'HOLD · '+Math.max(0,Math.ceil(X.need-X.hold))+'s':'LANDING ZONE').setPosition(z.x,z.y-z.r-14).setColor('#9fd08a');this.marker(z,col,cam);}
+   const T=s.trial;if(T){T.gates.forEach((q,i)=>{if(i===0&&T.started)return;const next=i===T.next,done=i<T.next,col=next?C.amber:0xc9d0b6;if(done)return;
+     l.lineStyle(next?3:1.5,col,next?.95:.35).strokeCircle(q.x,q.y,q.r);if(next){g.fillStyle(col,.08).fillCircle(q.x,q.y,q.r);this.marker(q,col,cam);}if(i<tl.length-1)tl[i+1].setVisible(true).setText(i===0?'START':i===T.gates.length-1?'FINISH':String(i)).setPosition(q.x,q.y).setColor(next?'#e2b074':'#9aa58c').setAlpha(next?1:.55);});}}
   marker(obj,col,cam,enemy=false){const x=(obj.x-cam.scrollX)*cam.zoom,y=(obj.y-cam.scrollY)*cam.zoom,w=cam.width,h=cam.height;if(x>40&&x<w-40&&y>90&&y<h-100)return;const dx=x-w/2,dy=y-h/2,a=Math.atan2(dy,dx),radius=Math.min((w/2-40)/(Math.abs(Math.cos(a))||.01),(h/2-105)/(Math.abs(Math.sin(a))||.01)),sx=w/2+Math.cos(a)*radius,sy=h/2+Math.sin(a)*radius;const g=this.uiGraphics;g.fillStyle(col,enemy?.65:.95).fillTriangle(sx+Math.cos(a)*7,sy+Math.sin(a)*7,sx+Math.cos(a+2.2)*6,sy+Math.sin(a+2.2)*6,sx+Math.cos(a-2.2)*6,sy+Math.sin(a-2.2)*6);}
  }
  Render.palette=k=>Object.assign(C,PALETTES[k]||PALETTES.standard);

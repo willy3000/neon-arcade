@@ -13,14 +13,16 @@ Story: Rook's helicopter is shot down over occupied Vesper City and his extracti
 | 5 | IRON CONVOY | Desert highway | Burn two fuel tankers, clear the halted column across open ground | Explosives (M79 / AT4 / mines) | **Bulwark** armoured carrier |
 | 6 | GHOST SIGNAL | Halcyon black-site labs | Front-armoured sentries, cycling laser grids, server racks behind glass, a vent bypass | EMP + pulse/rail | **Warden** mech fed by shield generators |
 
-Checkpoints save at each stage, after every destroyed objective target, and remember which soldiers are already dead. The final operation ends on a cliffhanger: Voss traces Lark.
+Checkpoints save at each stage, after every destroyed objective target, and remember which soldiers are already dead. Act II ends on a cliffhanger: Voss traces Lark.
 
-## Planned — Act III / The Truth (not playable)
+## Playable — Act III / The Truth
 
-| # | Chapter | Idea |
-|---|---|---|
-| 7 | REDLINE | Network counter-attack on Lark's safehouse; escort and rescue. |
-| 8 | CITADEL | Assault Voss's command facility; vertical multi-route breach. |
-| 9 | BLACKOUT | Final multi-stage fight against Voss; resolution of the protocol. |
+| # | Operation | Landscape | Problem it poses | Recommended | Finale |
+|---|---|---|---|---|---|
+| 7 | REDLINE | Canal district at night in the rain | Reach Lark's safehouse before Halcyon's breach team; escort her across the canal past sharpshooter lanes (she follows, takes reduced damage, and her going down fails the operation) | SMG / battle rifle + smoke | Hold the garage for 60 s while she hot-wires a car |
+| 8 | CITADEL | Halcyon fortress | Two ways in - the main gate's gun line or the west storm drain (a breakable wall, ghosts); three shield pylons | Launcher / rockets + EMP | The **Havoc tank** at the keep, the keep's garrison, 60 s at the lift |
+| 9 | BLACKOUT | The Citadel's summit | The command deck, three reactor couplings, then the lights go out | Pulse / rail + EMP, flashbangs | **Colonel Voss**: a generator-fed barrier, then the Wraith's blink, then the commander's spread; broadcast the list |
+
+Act III introduces Halcyon's special forces (ASSAULT, POINTMAN, SHARPSHOOTER) and ends the story: the Blackout Protocol is published and Voss is dead. Three acts of three keep each act to a beginning (the fall, the hunt, the truth), a turn and a boss, without a fourth act that would need a new antagonist. The operation challenges for Act III: bring Lark out with 100 health or more; a ×8 combo; Voss without dying and under 100 damage taken.
 
 New operations are added as `missions.js` builders plus an entry in `list`; the operations board, briefing, save, debrief, medals and tests pick them up from that data.

@@ -128,7 +128,7 @@ test('each mutator changes how a run plays, and pays for it',()=>{
   side.director.wave=4;Core.supplyDrop(side);assert(side.pickups.filter(q=>q.type==='offer'&&q.item==='weapon').every(q=>W[q.weapon].slot===1),'and none is offered in a crate');
   const scarce=Core.create({mission:'holdout',mutators:['scarcity']}),full=Core.create({mission:'holdout'});assert.equal(scarce.player.reserve.rifle,Math.floor(full.player.reserve.rifle/2));
   const pay=muts=>Meta.settle(Save.defaults(),{mode:'campaign',mission:'crash',difficulty:'standard',mutators:muts,completed:true,time:120,stats:{kills:10,flows:0,damage:50,credits:300,intel:0,bestCombo:2,wave:0},mastery:{},rating:'B',score:7000,deaths:1},20450).credits;
-  assert(pay(['night','sidearms'])>pay([]));assert.equal(Core.create({mode:'tdm',mission:'holdout',mutators:['night']}).mut.night,undefined,'team deathmatch has no mutators');});
+  assert(pay(['night','sidearms'])>pay([]));const vs=Core.create({mode:'tdm',mission:'holdout',mutators:['night','veterans']});assert.equal(vs.mut.night,true,'a match carries night ops');assert.equal(vs.mut.veterans,undefined,'but not veterans, which is about hostile soldiers');});
 test('an operation challenge pays once, for what it asks',()=>{
   const save=Save.defaults(),run=flows=>({mode:'campaign',mission:'crash',difficulty:'standard',completed:true,time:200,stats:{kills:15,flows,damage:30,credits:500,intel:0,bestCombo:4,wave:0},mastery:{},rating:'A',score:9000,deaths:0});
   assert(!Meta.settle(save,run(2),20460).lines.some(l=>l.label.startsWith('OPERATION CHALLENGE')));const r=Meta.settle(save,run(3),20460);assert(r.lines.some(l=>l.label.startsWith('OPERATION CHALLENGE')));assert.equal(save.missions.crash.opChallenge,true);

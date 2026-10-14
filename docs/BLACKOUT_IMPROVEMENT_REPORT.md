@@ -388,3 +388,39 @@ Made after this report was first written, at the project owner's request.
   - **Older saves** are back-filled from the progress they already have.
   - **Tests:** `blackout/tests/intel.cjs` (7 checks, in `npm test`).
   - **Not filed:** three soldier types defined in `world.js` (assault, pointman, sharpshooter) never spawn anywhere, so they have no file.
+
+## 12. New content: combat modes and Act III
+
+**Six new combat modes** in the shared lobby, chosen from a picker grouped into co-op and versus (details in `blackout/GAME_DESIGN.md`):
+- **Versus:** Arms Race, Uplink, Hunted and Breach. They run on the Team Deathmatch engine with rules of their own (`VERSUS` in `core.js`), so seats, AI, LAN play, the scoreboard and pay carry over.
+- **Co-op:** Extraction and Flow Trials. They run on the Holdout engine with a stage of their own. Flow Trials save the best run on a course as a ghost to race.
+- **Mutators:** Night Ops, Sidearms Only and Scarcity can be applied to versus matches.
+- **AI:**
+  - Bots now pursue each mode's objective: relays, the breach site, the hunter's hunt-and-fade, and keeping a squad together.
+  - All bots can now free themselves when stuck on a tight corner. This also fixes a bot stall in team deathmatch.
+- **Balance with bots:**
+  - **Hunted:** the hunter wins about half its rounds against three or four AI squadmates, and about 80% against two.
+  - **Breach:** all-AI matches run 4 to 6 minutes with every kind of round win.
+- **Pictures:** each mode has its own lobby picture, captured from play (`blackout/qa/mode-shots.cjs`).
+
+**The campaign is complete at three acts of nine operations.** Act III / The Truth adds:
+- **REDLINE:** escort Lark.
+- **CITADEL:** two routes in, three pylons, the Havoc tank, the lift.
+- **BLACKOUT:** the reactor, then Colonel Voss.
+
+What Act III brings in:
+- **Engine:** an escort mechanic, a new final boss built from existing mechanics, and two new map themes (rain, citadel).
+- **Hostiles:** first campaign use of the three Halcyon special-forces types, which now have Intel files (29 files in all).
+- **Maps:** three new killhouses for Holdout and versus play.
+- **Economy:** three new operation challenges. The armory pacing estimate stays inside the agreed band at 18.2 hours.
+- **Ending:** GHOST SIGNAL's "Act III is in development" outro has been replaced. BLACKOUT ends the story.
+
+**Tests:**
+- New: `blackout/tests/modes.cjs` (11 checks).
+- The campaign replay suite now plays all nine operations; Act III runs with the upgrades a player has by then.
+- Updated deliberately for the new content:
+  - the locked operation and killhouse counts in `browser.cjs`;
+  - Intel's file total;
+  - the quality check that said team deathmatch takes no mutators.
+- Each of the three Act III operations was also replayed without upgrades and completes.
+- **Not yet tested over a real network:** the four new versus modes and Extraction with a LAN guest. Their objective state is sent in the snapshot, but only team deathmatch and holdout have end-to-end network tests.

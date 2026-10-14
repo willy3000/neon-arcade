@@ -514,7 +514,7 @@ body.fit .killfeed{zoom:var(--hud-scale,1)}
    Team deathmatch shows no objective line: the score at the top says how the match stands. */
 body[data-phase="playing"] .topbar{height:auto;top:8px;justify-content:flex-end;padding:0 calc(2% + 172px) 0 0;background:none}
 body[data-phase="playing"] .topbar>.operation,body[data-phase="playing"] .header-actions>:not(#settings-button){display:none}
-#hud .mission-hud{top:14px;left:2%}#hud .mission-hud>p,#hud .mission-hud h2{display:none}#hud.versus .mission-hud{display:none}
+#hud .mission-hud{top:14px;left:2%}#hud .mission-hud>p,#hud .mission-hud h2{display:none}#hud.versus:not(.objective-mode) .mission-hud{display:none}
 #hud .objective{gap:8px;align-items:flex-start;max-width:440px}#hud .objective-diamond{font-size:18px;line-height:1.15}
 #hud .objective b{font-size:var(--t3);line-height:1.25;text-shadow:0 1px 3px #000,0 0 8px #000}
 #hud .objective small{font-size:var(--t1);line-height:1.35;margin-top:3px;text-shadow:0 1px 3px #000,0 0 8px #000;transition:opacity .6s}#hud .mission-hud.quiet .objective small{opacity:0}
@@ -786,3 +786,11 @@ body.text-large .dossier .map-art{display:none}body.text-large .dossier{max-heig
 .intel-progress{display:grid;gap:5px;margin-top:10px}.intel-progress small{font:var(--t1) var(--mono);color:#c9d1bb;letter-spacing:.4px}.intel-progress .xp-track i{background:var(--rar,var(--amber))}
 #armory-cats button[data-rar]{color:color-mix(in srgb,var(--rar) 75%,#e7e8de)}#armory-cats button[data-rar].active{border-color:var(--rar)}
 #armory-cats .cats-sum{margin-left:auto;align-self:center;font:var(--t1) var(--mono);letter-spacing:.6px;color:var(--muted);white-space:nowrap}
+
+/* Versus modes: the rules panel's line of text for modes without a kill limit. */
+.rules .rule-text{flex-basis:100%;margin:0 0 4px;font:var(--t1)/1.6 var(--mono);color:#c9d1bb;letter-spacing:.3px}
+/* Combat modes: the lobby shows the mode in force beside a way to all of them; the picker groups co-op and versus. */
+.mode-tile.all-modes{background:repeating-linear-gradient(135deg,#151b15 0 10px,#121812 10px 20px);border-style:dashed}.mode-tile.all-modes b{color:var(--amber)}
+.picker-list.modes .pick-head{grid-column:1 / -1;margin:8px 0 0;font:var(--t1) var(--mono);letter-spacing:1px;color:var(--amber)}
+.picker-list.modes .pick small{display:block;font:var(--t1)/1.4 var(--mono);color:#9aa58c;margin-top:3px}
+.picker-list.modes{grid-template-columns:repeat(3,minmax(0,1fr))}.picker-list.modes .pick-art{height:62px}.picker-list.modes .pick>div:last-child{padding:7px 10px 8px}.picker-list.modes .pick b{font-size:18px}

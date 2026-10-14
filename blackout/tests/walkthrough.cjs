@@ -15,7 +15,7 @@ function pathTo(s,target){const W=Math.ceil(s.map.width/TILE),H=Math.ceil(s.map.
 function clearShot(s,p,box){const c={x:box.x+box.w/2,y:box.y+box.h/2};return !s.walls.some(w=>w!==box&&!w.dead&&!w.pass&&w.kind!=='glass'&&Core.segmentBox(p.x,p.y,c.x,c.y,w)!==null);}
 // Ordinary control packets only: movement, aim, fire, reload, stim, grenade, gadget, swap and interact. Nothing in the simulation is edited.
 // The bot walks while it reloads (it lets go of sprint), as it did before reloading at a jog existed; its routes were tuned to that pace.
-const LOADOUTS={crash:{primary:'rifle',secondary:'pistol'},ruins:{primary:'shotgun',secondary:'pistol',lethal:'frag'},kestrel:{primary:'marksman',secondary:'pistol',lethal:'frag',tactical:'smoke'},underground:{primary:'shotgun',secondary:'pistol',lethal:'frag',tactical:'flash'},convoy:{primary:'rifle',secondary:'rocket',lethal:'frag'},meridian:{primary:'pulse',secondary:'thumper',lethal:'frag',tactical:'emp'},holdout:{primary:'rifle',secondary:'pistol',lethal:'frag'}};
+const LOADOUTS={redline:{primary:'battle',secondary:'magnum',lethal:'frag',tactical:'smoke'},citadel:{primary:'battle',secondary:'rocket',lethal:'frag',tactical:'emp'},blackout:{primary:'pulse',secondary:'rocket',lethal:'frag',tactical:'emp'},crash:{primary:'rifle',secondary:'pistol'},ruins:{primary:'shotgun',secondary:'pistol',lethal:'frag'},kestrel:{primary:'marksman',secondary:'pistol',lethal:'frag',tactical:'smoke'},underground:{primary:'shotgun',secondary:'pistol',lethal:'frag',tactical:'flash'},convoy:{primary:'rifle',secondary:'rocket',lethal:'frag'},meridian:{primary:'pulse',secondary:'thumper',lethal:'frag',tactical:'emp'},holdout:{primary:'rifle',secondary:'pistol',lethal:'frag'}};
 function run(difficulty='standard',checkpoint=null,mission='crash',options={}){const loadout=options.loadout||(mission==='crash'?undefined:LOADOUTS[mission]);
  const s=Core.create({difficulty,checkpoint,mission,loadout,owned:Object.keys(World.weapons),profile:options.profile});let nav=[],lastTarget='',lastStage=s.stage;const records=[],limit=options.limit||72000,human={id:'',seen:0,angle:null};
  for(let i=0;i<limit&&!s.completed&&!s.dead;i++){
@@ -50,7 +50,9 @@ function run(difficulty='standard',checkpoint=null,mission='crash',options={}){c
  return {s,out};
 }
 // Default replay: THE CRASH on its three original tiers, then every later operation on standard with the modest upgrades a player owns by then.
-const PLAN=[['crash','story'],['crash','standard'],['crash','intense'],['ruins','standard'],['kestrel','standard'],['underground','standard'],['convoy','standard',{upgrades:{plating:1,medic:1}}],['meridian','standard',{upgrades:{plating:1,medic:1}}]];
+const PLAN=[['crash','story'],['crash','standard'],['crash','intense'],['ruins','standard'],['kestrel','standard'],['underground','standard'],['convoy','standard',{upgrades:{plating:1,medic:1}}],['meridian','standard',{upgrades:{plating:1,medic:1}}],
+  // Act III: the upgrades a player has by then.
+  ['redline','standard',{upgrades:{plating:2,medic:2,conditioning:1}}],['citadel','standard',{upgrades:{plating:2,medic:2,conditioning:1}}],['blackout','standard',{upgrades:{plating:2,medic:2,conditioning:1}}]];
 if(require.main===module){const plan=process.argv[2]?[[process.argv[2],process.argv[3]||'standard']]:PLAN;
  for(const [mission,difficulty,profile] of plan){const {s,out}=run(difficulty,null,mission,{profile});console.log(JSON.stringify({mission:out.mission,difficulty,completed:out.completed,time:out.time,health:out.health,kills:out.kills,credits:out.credits}));assert(s.completed,`${mission} ${difficulty} must complete with normal control packets`);}
  // Insane is a skill tier: a player who fights in the open with human reaction and aim limits does not survive it.

@@ -69,9 +69,13 @@
     const training=options.training===true,id=training?'range':options.mission||'crash',tdm=!training&&options.mode==='tdm',last0=World.mission(id),cp=training||tdm?null:options.checkpoint||null;
     // Team deathmatch borrows a killhouse's ground and swaps its waves for the match.
     const limit=TDM.limits.includes(options.limit)?options.limit:TDM.limit;
-    const map=tdm?{...last0,enemies:[],intro:{speaker:'LARK',text:'Team deathmatch. Alpha against Delta, first to '+limit+'.',duration:5},
+    // Extraction and flow trials also borrow a killhouse map, each with a single stage of its own kind.
+    const onKillhouse=!training&&!tdm&&World.holdoutMaps.some(h=>h.id===id),extract=onKillhouse&&options.extraction===true,trialRun=onKillhouse&&!extract&&!!options.trial&&Number.isFinite(options.trial.seed);
+    const map=extract?{...last0,enemies:[],intro:{speaker:'LARK',text:'Five caches, one bird out. Take what you can carry and get to the landing zone.',duration:6},stages:[{kind:'extraction',zone:0,x:last0.start.x,y:last0.start.y,name:'Recover the caches',hint:'Take the caches, then hold the landing zone until the bird arrives. Die and the loot is lost.',spawn:{x:last0.start.x,y:last0.start.y}}]}
+     :trialRun?{...last0,enemies:[],intro:null,stages:[{kind:'trial',zone:0,x:last0.start.x,y:last0.start.y,name:'Flow trial',hint:'Gates in order, targets on the way. Every perfect flow takes half a second off.',spawn:{x:last0.start.x,y:last0.start.y}}]}
+     :tdm?{...last0,enemies:[],intro:{speaker:'LARK',text:'Team deathmatch. Alpha against Delta, first to '+limit+'.',duration:5},
       stages:[{kind:'tdm',zone:0,x:last0.start.x,y:last0.start.y,name:'Team deathmatch',hint:'First team to '+limit+' kills wins. Everyone redeploys a few seconds after going down.',spawn:{x:last0.start.x,y:last0.start.y}}]}:last0,last=map.stages.length-1;
-    if(tdm)map.objectives=map.stages;
+    if(tdm||extract||trialRun)map.objectives=map.stages;
     let stage=cp?clamp(Math.floor(cp.stage)||0,0,last):0;while(stage>0&&!map.stages[stage].spawn)stage--;
     const st=map.stages[stage],up=options.profile?.upgrades||{},lvl=k=>clamp(Math.floor(up[k]||0),0,3);
     const s={map,mission:id,training,stage,time:cp?.time||0,seed:options.seed||1701,tick:0,events:[],walls:map.walls.map(w=>({...w,maxHp:w.maxHp??w.hp})),enemies:[],projectiles:Array.from({length:192},()=>({active:false})),grenades:[],zones:[],mines:[],decoy:null,hazards:map.hazards.map(h=>({...h})),pickups:map.pickups.map(p=>({...p,taken:false,base:true})),spawnWarnings:[],
@@ -89,13 +93,13 @@
     const slots=okSlots(cp?.slots)?[...cp.slots]:okSlots([lo.primary,lo.secondary])?[lo.primary,lo.secondary]:['rifle','pistol'];
     let lethal=okGear(cp&&cp.lethal!==undefined?cp.lethal:lo.lethal,'lethal');const tactical=okGear(cp&&cp.tactical!==undefined?cp.tactical:lo.tactical,'tactical');
     for(let j=1;j<=stage;j++){const g=map.stages[j].enter?.grants;if(g?.lethal&&!lethal)lethal=g.lethal;}
-    s.mates=[];s.ai={};s.by='player';s.tdm=tdm?{limit,time:clamp(limit*14,180,900),score:[0,0],board:{},result:null,winner:null,support:options.support!==false,...bases(s)}:null;
+    s.mates=[];s.ai={};s.by='player';s.tdm=tdm?{limit,time:clamp(limit*14,180,900),score:[0,0],board:{},result:null,winner:null,support:options.support!==false,rules:VERSUS[options.rules]?options.rules:'tdm',...bases(s)}:null;
     const spawn=tdm?s.tdm.bases[0]:cp&&Number.isFinite(cp.x)&&Number.isFinite(cp.y)&&clearAt(s,cp.x,cp.y,17)?{x:cp.x,y:cp.y}:st.spawn||map.start;
     s.player={id:'player',x:spawn.x,y:spawn.y,vx:0,vy:0,angle:0,moveAngle:0,radius:16,health:100,armor:s.mods.armor,maxArmor:s.mods.maxArmor,stamina:100,staminaRegenAt:0,winded:false,chained:false,diveEnd:-10,buffer:{slide:0,interact:0},state:'idle',age:0,duration:0,actionDir:0,reload:0,cooldown:0,recoil:0,shotAge:10,meleeIndex:0,meleeAt:-10,meleeHit:false,meleeHold:0,heavyTriggered:false,heavy:false,heal:0,iframes:0,stepDistance:0,
       slot:0,slots,lethal,tactical,grenades:training?9:lethal?G[lethal].count+s.mods.charges:0,tacticals:training?9:tactical?G[tactical].count+s.mods.charges:0,stims:training?5:s.mods.stims,ammo:{},reserve:{}};
     for(const [k,w] of Object.entries(W)){s.player.ammo[k]=w.capacity;s.player.reserve[k]=reserveOf(s,k);}
     // Mutators (World.mutators), for an operation replayed or a seeded challenge. Not in team deathmatch.
-    s.mut={};if(!tdm&&!training)for(const k of Array.isArray(options.mutators)?options.mutators:[])if(World.mutators[k])s.mut[k]=true;
+    s.mut={};if(!training)for(const k of Array.isArray(options.mutators)?options.mutators:[])if(World.mutators[k]&&!(tdm&&k==='veterans'))s.mut[k]=true;
     if(s.mut.sidearms){const side=s.player.slots[1];s.player.slots=[side,side];}
     if(s.mut.scarcity)for(const k of Object.keys(W))s.player.reserve[k]=Math.floor(s.player.reserve[k]/2);
     // Veterans in an operation: its soldiers play by the rules holdout's later threat levels bring (cover, flanking,
@@ -115,11 +119,13 @@
       for(const [k,w] of Object.entries(W)){m.ammo[k]=w.capacity;m.reserve[k]=reserveOf(s,k);}
       s.mates.push(m);});
     if(s.mates.length)s.guest=s.mates[0];
-    if(tdm)muster(s,options);
+    if(tdm){muster(s,options);for(const op of s.roster){if(s.mut.sidearms){const side=op.slots[1];op.slots=[side,side];}if(s.mut.scarcity)for(const k of op.slots)op.reserve[k]=Math.floor(op.reserve[k]/2);}rulesOf(s).setup?.(s);}
     s.tags=[];s.station=s.mates.length&&!tdm?placeStation(s,spawn):null;s.order='auto';s.orderAt=null;s.spotted=0;s.jammed=false;s.boost=0;
     s.camp={x:spawn.x,y:spawn.y,t:0};
     const cleared=new Set();for(let j=0;j<stage;j++){const q=map.stages[j];if(['clear','hold','boss'].includes(q.kind))cleared.add(q.zone);}
     s.enemies=map.enemies.filter(e=>training||!cleared.has(e.zone)&&!s.killed.includes(e.id)).map(e=>makeEnemy(s,e));
+    if(extract)extractSetup(s);if(trialRun)trialSetup(s,Math.floor(options.trial.seed));
+    for(let j=0;j<=stage;j++){const e=map.stages[j]?.enter?.escort;if(e&&!s.mates.some(m=>m.vip))s.mates.push(escortMate(s,e,s.player));}
     reinforce(s,spawn);
     event(s,'radio',stage===0?{...map.intro}:{...(map.resume||map.intro)});
     return s;
@@ -172,17 +178,18 @@
     if(p.state==='roll'&&p.age>=.055&&p.age<=.25||p.state==='dive'&&p.age>=.07&&p.age<=.28){if(!p.chained&&amount>0&&!['','fire','laser'].includes(src)){p.chained=true;flow(s);event(s,'dodge',{x:p.x,y:p.y});}return false;}
     const D=diff(s);amount*=D.dmg*(s.perks.flak&&(src==='blast'||src==='fire')?.6:1);p.hurtAt=s.time;const hadArmor=p.armor>0,armor=Math.min(p.armor,amount*.65);p.armor-=armor;p.health=Math.max(0,p.health-amount+armor);s.stats.damage+=amount-armor;p.iframes=D.iframes;p.heal=0;s.director.rest=1.3;event(s,'damage',{x:p.x,y:p.y,amount,fromX:x,fromY:y,src,who:p.id});
     if(hadArmor&&p.armor<.5){p.armor=0;event(s,'armorbreak');}if(p.health<=0&&s.perks.secondwind&&!s.windUsed){s.windUsed=true;p.health=30;p.iframes=1.5;event(s,'secondwind',{x:p.x,y:p.y});}
-    if(p.health<=0){if(s.tdm)fallen(s,p);else if(s.mates.some(o=>!o.dead))down(s,p);else{s.dead=true;p.state='death';p.age=0;event(s,'death',{blame:s.blame||null,wave:s.director.wave});}}return true;
+    if(p.health<=0){if(s.tdm)fallen(s,p);else if(s.mates.some(o=>!o.dead&&!o.vip))down(s,p);else{s.dead=true;p.state='death';p.age=0;event(s,'death',{blame:s.blame||null,wave:s.director.wave});}}return true;
   }
   function down(s,op){const who=op.id;Object.assign(op,{dead:true,state:'death',age:0,health:0,vx:0,vy:0,reload:0,heal:0});s.tags.push({owner:who,x:op.x,y:op.y,carrier:null,progress:0});event(s,'down',{who,x:op.x,y:op.y});}
   // Team deathmatch has no tags and no station: a fallen operator costs the squad a point and is back in a few seconds.
-  function fallen(s,op,by){const T=s.tdm;Object.assign(op,{dead:true,state:'death',age:0,health:0,hp:0,vx:0,vy:0,reload:0,heal:0,burst:0,zip:0,stagger:0,respawn:TDM.respawn});T.score[1-op.team]++;if(T.board[op.id])T.board[op.id].d++;event(s,'down',{who:op.id,by,x:op.x,y:op.y,tdm:true});}
+  function fallen(s,op,by){const T=s.tdm;Object.assign(op,{dead:true,state:'death',age:0,health:0,hp:0,vx:0,vy:0,reload:0,heal:0,burst:0,zip:0,stagger:0,respawn:rulesOf(s).respawn?.(s,op)===false?Infinity:TDM.respawn});if(rulesOf(s)===VERSUS.tdm)T.score[1-op.team]++;if(T.board[op.id])T.board[op.id].d++;event(s,'down',{who:op.id,by,x:op.x,y:op.y,tdm:true});}
   // Back at their own team's base, whole, with full magazines and gadgets and a moment of protection. It runs in that
   // operator's own turn (see act), so the counts are theirs.
   function redeploy(s,op){const at=spawnSpot(s,op.team,op);Object.assign(op,{dead:false,x:at.x,y:at.y,vx:0,vy:0,health:100,hp:100,armor:s.mods.armor,stamina:100,winded:false,state:'idle',age:0,iframes:2.5,reload:0,heal:0,cooldown:.3,recoil:0,respawn:0,radius:16});
     for(const k of op.slots){op.ammo[k]=W[k].capacity;op.reserve[k]=reserveOf(s,k);}
+    if(s.mut.scarcity)for(const k of op.slots)op.reserve[k]=Math.floor(op.reserve[k]/2);
     s.windUsed=false;op.stims=s.mods.stims;if(op.lethal)op.grenades=Math.max(op.grenades,G[op.lethal].count);if(op.tactical)op.tacticals=Math.max(op.tacticals,G[op.tactical].count);
-    event(s,'respawn',{who:op.id,x:at.x,y:at.y});}
+    rulesOf(s).redeploy?.(s,op);event(s,'respawn',{who:op.id,x:at.x,y:at.y});}
   // Tags are picked up by walking over them. Reviving means standing on the station with them and holding interact:
   // progress builds over REVIVE_TIME, and drains twice as fast whenever the carrier lets go or steps off the pad. The
   // revived operator stands up beside the station with part of their health and a moment of protection.
@@ -201,10 +208,17 @@
   function damageMate(s,p,amount,x,y,src=''){if(!p||p.dead||s.cinematic>0||p.iframes>0)return false;
     // The middle of a roll or a dive carries a squadmate through an attack, as it does the player.
     if(p.state==='roll'&&p.age>=.055&&p.age<=.25||p.state==='dive'&&p.age>=.07&&p.age<=.28)return false;
-    const D=diff(s);amount*=D.dmg;const hadArmor=p.armor>0,armor=Math.min(p.armor,amount*.65);p.armor-=armor;p.health=Math.max(0,p.health-amount+armor);p.iframes=D.iframes;event(s,'damage',{x:p.x,y:p.y,amount,fromX:x,fromY:y,src,guest:true,who:p.id});
-    if(hadArmor&&p.armor<.5)p.armor=0;if(p.health<=0){if(s.tdm)fallen(s,p);else{down(s,p);if(!ops(s).some(o=>!o.dead)){s.dead=true;event(s,'death',{blame:s.blame||null,wave:s.director.wave});}}}return true;
+    // Someone under escort is kept behind cover and takes less of what comes their way than a squadmate would.
+    const D=diff(s);amount*=D.dmg*(p.vip?.6:1);const hadArmor=p.armor>0,armor=Math.min(p.armor,amount*.65);p.armor-=armor;p.health=Math.max(0,p.health-amount+armor);p.iframes=D.iframes;event(s,'damage',{x:p.x,y:p.y,amount,fromX:x,fromY:y,src,guest:true,who:p.id});
+    if(hadArmor&&p.armor<.5)p.armor=0;if(p.health<=0&&p.vip){p.dead=true;p.state='death';p.age=0;s.dead=true;event(s,'death',{blame:'vip',vip:p.name,x:p.x,y:p.y});return true;}
+    if(p.health<=0){if(s.tdm)fallen(s,p);else{down(s,p);if(!ops(s).some(o=>!o.dead)){s.dead=true;event(s,'death',{blame:s.blame||null,wave:s.director.wave});}}}return true;
   }
   const hurt=(s,op,amount,x,y,src)=>op===s.player?damagePlayer(s,amount,x,y,src):damageMate(s,op,amount,x,y,src);
+  // An escort (a stage's enter.escort): someone the squad has to bring through alive - Lark, in REDLINE. A squadmate
+  // run by the AI that keeps close (the follow order), carries a sidearm, and whose going down ends the operation.
+  function escortMate(s,cfg,near){const at=[[40,0],[-40,0],[0,40],[0,-40],[60,30],[-60,-30]].map(([dx,dy])=>({x:near.x+dx,y:near.y+dy})).find(q=>clearAt(s,q.x,q.y,17))||{x:near.x,y:near.y},gun=W[cfg.gun]?cfg.gun:'pistol';
+    return {id:cfg.id||'vip',name:cfg.name||'VIP',vip:true,bot:true,x:at.x,y:at.y,vx:0,vy:0,angle:0,moveAngle:0,radius:16,health:cfg.health||100,maxHealth:cfg.health||100,armor:cfg.armor||40,maxArmor:80,stamina:100,staminaRegenAt:0,winded:false,chained:false,diveEnd:-10,buffer:{slide:0,interact:0},state:'idle',age:0,duration:0,actionDir:0,reload:0,cooldown:0,recoil:0,shotAge:10,meleeIndex:0,meleeAt:-10,meleeHit:false,meleeHold:0,heavyTriggered:false,heavy:false,heal:0,iframes:1,stepDistance:0,
+      slot:0,slots:['machinepistol',gun].map(k=>W[k]?k:'pistol').slice(0,1).concat([gun]),lethal:null,tactical:null,grenades:0,tacticals:0,stims:2,ammo:{[gun]:W[gun].capacity,machinepistol:W.machinepistol.capacity},reserve:{[gun]:W[gun].reserve*3,machinepistol:W.machinepistol.reserve*3},dead:false};}
   function damageEnemy(s,e,amount,angle=0,stagger=.15,source='rifle',bypass=false,blast=false){if(e.dead||e.gone>0)return;if(e.ctx)return strike(s,e,amount,angle,source,blast);const t=A[e.type]||A.infantry;
     // What the round itself brings (world.js): "ap" gets that share of the way through armour and shield fronts,
     // "overload" (the XR-9) burns through barriers and shield fronts, "counter" hits harder on a hostile winding up an
@@ -229,7 +243,7 @@
     if(source!=='enemy'&&!e.active){e.active=true;e.woke=true;e.seen=Math.max(e.seen,2.5);e.lastX=lead(s).x;e.lastY=lead(s).y;}else if(source!=='enemy')e.woke=true;
     const ours=source!=='enemy',by=ours?s.by:undefined;
     event(s,'hit',{id:e.id,x:e.x,y:e.y,angle,amount,player:ours,by});s.stats.hits++;if(source==='melee'&&by==='player')s.hitstop=Math.max(s.hitstop,.025);
-    if(e.hp<=0){const bot=ours&&by!=='player'&&!!s.mates.find(o=>o.id===by)?.bot,endless=stageDef(s).kind==='endless';e.dead=true;e.deathAge=0;if(!bot)s.stats.kills++;let credits=0;const bounty=(t.bounty||15)*(e.pay||1)*(e.vet?1.3:1)*(e.revived?.5:1);if(s.ai[e.id])delete s.ai[e.id];
+    if(e.hp<=0){const bot=ours&&by!=='player'&&!!s.mates.find(o=>o.id===by)?.bot,endless=['endless','extraction'].includes(stageDef(s).kind);e.dead=true;e.deathAge=0;if(!bot)s.stats.kills++;let credits=0;const bounty=(t.bounty||15)*(e.pay||1)*(e.vet?1.3:1)*(e.revived?.5:1);if(s.ai[e.id])delete s.ai[e.id];
       if(ours&&!bot){s.mastery[source]=(s.mastery[source]||0)+1;s.combo=s.time-s.comboAt<3.5?s.combo+1:1;s.comboAt=s.time;s.stats.bestCombo=Math.max(s.stats.bestCombo,s.combo);const pl=s.player,sliding=pl.state==='slide'&&!pl.dead&&by==='player';
         // Holdout pays less per hostile than the campaign: there are far more of them and the chain rarely breaks.
         credits=Math.round(bounty*(1+.1*Math.min(s.combo-1,8))*(source==='melee'?1.5:1)*(sliding?1.25:1)*(endless?.6:s.tdm?TDM.bounty:1));s.stats.credits+=credits;
@@ -332,6 +346,7 @@
     if(g.health)p.health=Math.max(g.health,p.health);if(g.armor)p.armor=Math.max(p.armor,g.armor);if(g.stims)p.stims=Math.max(g.stims,p.stims);if(g.refill)for(const k of p.slots)p.reserve[k]=reserveOf(s,k);}
   function enterStage(s,index){const d=s.director;s.stage=index;const st=stageDef(s),en=st.enter||{};d.clock=0;d.wave=0;d.left=undefined;d.fired={};s.progress=0;s.boss=null;
     if(st.dark!==undefined)s.dark=st.dark;
+    if(en.escort&&!s.mates.some(m=>m.vip)){const v=escortMate(s,en.escort,en.escort.at||s.player);s.mates.push(v);event(s,'escort',{id:v.id,name:v.name,x:v.x,y:v.y});}
     for(const n of en.opens||[])for(const w of s.walls)if(w.gate===n&&!w.dead){w.dead=true;event(s,'gate',{x:w.x+w.w/2,y:w.y+w.h/2});}
     if(en.grants)grant(s,en.grants);if(en.checkpoint)checkpoint(s);if(en.unlock)event(s,'unlock',{items:[...en.unlock]});if(en.radio)event(s,'radio',{...en.radio});if(en.toast)event(s,'toast',{text:en.toast});
     event(s,'stage',{stage:index,name:st.name});}
@@ -400,7 +415,7 @@
     if(input.support)callSupport(s,input);
     if(s.perks.regen&&p.health<60&&p.heal<=0&&s.time-(p.hurtAt??-99)>6)p.health=Math.min(60,p.health+dt*7);
     // Timers settle at exactly zero: a negative remainder used to read as "still reloading/healing" and blocked sprint until an action reset it.
-    if(p.heal>0){p.heal-=dt;if(p.heal<=0){p.heal=0;p.stims--;p.health=Math.min(100,p.health+50);p.iframes=.25;event(s,'pickup',{kind:'health',x:p.x,y:p.y});}}
+    if(p.heal>0){p.heal-=dt;if(p.heal<=0){p.heal=0;p.stims--;p.health=Math.min(p.maxHealth||100,p.health+50);p.iframes=.25;event(s,'pickup',{kind:'health',x:p.x,y:p.y});}}
     const free=!['vault','roll','dive'].includes(p.state);
     if(input.grenade&&p.lethal&&free)useLethal(s,input);
     if(input.tactical&&p.tacticals>0&&p.tactical&&free)useTactical(s,input);
@@ -441,7 +456,7 @@
     // The rest of a teammate's kit, for whoever carries it (an AI teammate does; see create): a stim, and a lethal
     // and a tactical thrown at the aim point.
     if(input.gadget&&p.stims>0&&p.health<100&&!(p.heal>0)){p.heal=.85;p.healTotal=.85;event(s,'healstart',{...mine});}
-    if(p.heal>0){p.heal-=dt;if(p.heal<=0){p.heal=0;p.stims--;p.health=Math.min(100,p.health+50);p.iframes=.25;event(s,'pickup',{kind:'health',x:p.x,y:p.y,...mine});}}
+    if(p.heal>0){p.heal-=dt;if(p.heal<=0){p.heal=0;p.stims--;p.health=Math.min(p.maxHealth||100,p.health+50);p.iframes=.25;event(s,'pickup',{kind:'health',x:p.x,y:p.y,...mine});}}
     if(input.grenade&&p.lethal&&p.grenades>0){p.grenades--;mateThrow(s,p,p.lethal,input);}
     if(input.tactical&&p.tactical&&p.tacticals>0){p.tacticals--;mateThrow(s,p,p.tactical,input);}
     // An AI teammate's own field support: a sentry set down where it stands (see botInput for when it has earned one).
@@ -524,15 +539,15 @@
     else if(mode==='flash')lob(s,e,e.targetX,e.targetY,{kind:'flash',duration:.6,fuse:.85});
     else if(t.melee){if(dist<t.range+24&&canSee&&tgt!==s.decoy)hurt(s,tgt,t.damage*(s.map.threat||1)*(e.vet?1.2:1),e.x,e.y,'melee');event(s,'strike',{x:e.x,y:e.y});}
     else if(t.kamikaze){if(dist<95){e.detonated=true;explode(s,e.x,e.y,95,t.damage,true);e.hp=0;e.dead=true;e.deathAge=0;}}
-    else if(e.type==='commander'&&e.phase>=2&&e.clip%3===2)lob(s,e,e.targetX,e.targetY);
+    else if((e.type==='commander'||e.type==='voss')&&e.phase>=2&&e.clip%3===2)lob(s,e,e.targetX,e.targetY);
     else if(t.lob)lob(s,e,e.targetX,e.targetY,{duration:.9,fuse:1.25,radius:130,damage:t.damage});
     else if(t.shell){const k=s.spotted>0?.6:1;for(const [dx,dy] of SHELLS)lob(s,e,e.targetX+dx*k,e.targetY+dy*k,{duration:1.1,fuse:1.6,radius:110,damage:t.damage,shell:true});event(s,'mortar',{x:e.x,y:e.y});}
     else if(mode==='mortar'){for(const [dx,dy] of [[0,0],[110,-60],[-100,70]])lob(s,e,e.targetX+dx,e.targetY+dy,{duration:1,fuse:1.55,radius:120,damage:42});}
     else if(mode==='stomp'){event(s,'explosion',{x:e.x,y:e.y,radius:130});event(s,'stomp',{x:e.x,y:e.y});for(const o of ops(s))if(!o.dead&&distance(e,o)<135&&hurt(s,o,38*(s.map.threat||1),e.x,e.y,'stomp'))move(s,o,Math.cos(aim)*40,Math.sin(aim)*40);}
-    else{const a=t.turn?e.angle:t.locked?e.aim:leadAim(s,e,t,tgt);enemyFire(s,e,a);if(e.type==='commander'&&e.phase===3){enemyFire(s,e,a+.14);enemyFire(s,e,a-.14);}
+    else{const a=t.turn?e.angle:t.locked?e.aim:leadAim(s,e,t,tgt);enemyFire(s,e,a);if((e.type==='commander'||e.type==='voss')&&e.phase===3){enemyFire(s,e,a+.14);enemyFire(s,e,a-.14);}
       if(e.type==='mech'&&e.phase>=2&&e.clip%3===2){enemyFire(s,e,a+.25,{rocket:110,speed:560,damage:50});enemyFire(s,e,a-.25,{rocket:110,speed:560,damage:50});}
       const burst=(t.burst||1)+((t.burst||1)===1&&!t.locked&&!t.rocket&&!t.boss?diff(s).burst||0:0);if(burst>1){e.burst=burst-1;e.burstT=t.gap||.1;e.burstAim=a;}
-      if(t.blink)e.blinkAt=.55;}
+      if(t.blink&&(e.type!=='voss'||e.phase>=2))e.blinkAt=.55;}
   }
   // Holdout maps have no authored perches: there the Wraith blinks between open spots sampled once from the grid.
   function perchesOf(s){if(s.map.perches?.length)return s.map.perches;if(!s.perches){const n=grid(s);s.perches=[];for(let cy=2;cy<n.h-2;cy+=3)for(let cx=2;cx<n.w-2;cx+=3){const x=cx*CELL+20,y=cy*CELL+20;if(clearAt(s,x,y,28))s.perches.push({x,y});}}return s.perches;}
@@ -591,7 +606,7 @@
   function stepEnemies(s,dt){const p=lead(s),D=diff(s),open=arena(s);s.squad.nade=Math.max(0,s.squad.nade-dt);s.squad.flash=Math.max(0,(s.squad.flash||0)-dt);s.spotted=Math.max(0,(s.spotted||0)-dt);
     // A live jammer that has joined the fight shuts down field support (see charge and callSupport).
     s.jammed=open&&!s.tdm&&s.enemies.some(e=>!e.dead&&e.active&&A[e.type]?.jams);
-    for(const e of s.enemies){if(e.dead){e.deathAge=(e.deathAge||0)+dt;continue;}const type=A[e.type]||A.infantry;
+    for(const e of s.enemies){if(e.dead){e.deathAge=(e.deathAge||0)+dt;continue;}if(e.dummy){e.vx=e.vy=0;e.active=false;e.attack=0;continue;}const type=A[e.type]||A.infantry;
       e.vx=0;e.vy=0;e.shotAge=(e.shotAge||0)+dt;e.cooldown-=dt;e.stagger=Math.max(0,e.stagger-dt);e.reload=Math.max(0,e.reload-dt);e.shieldDown=Math.max(0,(e.shieldDown||0)-dt);e.disabled=Math.max(0,(e.disabled||0)-dt);e.flashed=Math.max(0,(e.flashed||0)-dt);if(e.suppressed>0)e.suppressed=Math.max(0,e.suppressed-dt);
       if(e.shieldMax&&e.shieldHp<=0&&!(e.shieldDown>0)){e.shieldHp=e.shieldMax;event(s,'shieldup',{id:e.id,x:e.x,y:e.y});}
       if(e.gone>0){e.gone-=dt;if(e.gone<=0)blink(s,e);continue;}
@@ -613,6 +628,7 @@
       if(type.spotter){e.marking=canSee&&dist<type.range&&!tgt.dead&&tgt!==decoy?tgt.id:null;if(e.marking){if(!(s.spotted>0))event(s,'marked',{who:tgt.id,x:tgt.x,y:tgt.y});s.spotted=Math.max(s.spotted,.6);}}
       if(type.medic&&medic(s,e,type,dist,dt))continue;
       if(type.builds&&canSee&&dist>200&&dist<type.range&&!e.built&&s.time>(e.buildAt??0)&&s.enemies.filter(o=>!o.dead&&o.type==='turret').length<3){e.building=2.2;e.buildAt=s.time+8;event(s,'telegraph',{x:e.x,y:e.y,enemy:e.type,mode:'build'});continue;}
+      if(e.type==='voss'){const phase=e.hp<e.maxHp*.33?3:e.hp<e.maxHp*.66?2:1;e.phase=e.phase||1;if(phase>e.phase){e.phase=phase;e.stagger=.2;e.cooldown=0;if(phase===2)lob(s,e,e.lastX,e.lastY);event(s,'radio',{speaker:'VOSS',text:phase===2?'You think that barrier was for my protection? It was for yours.':'Every name on that list chose a side. So did you.',duration:5});}}
       if(e.type==='commander'){const phase=e.hp<e.maxHp*.33?3:e.hp<e.maxHp*.66?2:1;if(phase>e.phase){e.phase=phase;e.stagger=.15;e.cooldown=0;if(phase===2)lob(s,e,e.lastX,e.lastY);event(s,'radio',{speaker:'HOSTILE COMMANDER',text:phase===2?'He’s alone. Flush him out.':'Cut off every exit. He does not leave this city.',duration:4});} }
       else if(type.boss){const phase=e.hp<e.maxHp*.33?3:e.hp<e.maxHp*.66?2:1;if(phase>e.phase){e.phase=phase;e.cooldown=Math.min(e.cooldown,.3);event(s,'bossphase',{id:e.id,phase});}}
       // A turret (a sentry gun, a vehicle's or the tank's) turns at its own pace; everyone else faces their aim at once.
@@ -676,7 +692,7 @@
     // Flow State: a kill while the flow boost is up keeps it going a second longer (never more than six seconds ahead).
     if(s.perks.flowstate&&s.time<s.flowBoost)s.flowBoost=Math.min(s.time+6,s.flowBoost+1);
     if(s.perks.scrounger&&W[source])p.reserve[source]=Math.min(reserveOf(s,source),p.reserve[source]+Math.ceil(W[source].capacity/4));
-    if(s.perks.executioner&&source==='melee'&&!p.dead)p.health=Math.min(100,p.health+20);}
+    if(s.perks.executioner&&source==='melee'&&!p.dead)p.health=Math.min(p.maxHealth||100,p.health+20);}
   // Calls in whatever Rook is carrying. The sentry and the hound are "allies": they act by themselves in stepAllies
   // until their time runs out, and hostiles pay them no attention. The airstrike is six heavy shells already on the
   // ground along the line of aim, starting at the aim point and walking away from Rook; their rings give a second's warning.
@@ -757,9 +773,14 @@
     if(!T&&s.station){const t=s.tags.find(q=>q.owner!==op.id&&(!q.carrier||q.carrier===op.id));if(t)return t.carrier?{x:s.station.x,y:s.station.y,run:true,revive:true,near:22}:{x:t.x,y:t.y,run:true,near:0};}
     if(!T)return mateGoal(s,op,m,i,foe);
     // Under fire, an AI operator in team deathmatch works a peek spot by a low wall, as a holdout teammate does.
-    if(foe){const gun=W[op.slots[op.slot]],d=distance(op,foe),pressed=s.time-(m.hurtAt??-99)<3||m.count>=2;
-      if(pressed&&d>160){const c=coverFor(s,op,foe,clamp(d*1.3,260,gun.range),m);if(c&&distance(op,c.hide)<260){if(s.time>(m.cvT??0)){m.cvHide=!m.cvHide;m.cvT=s.time+(m.cvHide?.6+rand(s)*.5:1.4+rand(s)*.8);}const q=op.reload>0||op.heal>0||m.cvHide?c.hide:c.peek;return {x:q.x,y:q.y,near:8};}}
+    // A breach attacker has a site to reach and a clock against it: it fights on the move instead of digging in.
+    if(foe){const gun=W[op.slots[op.slot]],d=distance(op,foe),pressed=s.time-(m.hurtAt??-99)<3||m.count>=2,pushing=T.rules==='breach'&&op.team===T.attack&&T.phase==='live';
+      if(pushing&&d>gun.range*.6){const aim=rulesOf(s).goal(s,op,m);if(aim)return aim;}
+      if(op.hunter)return rulesOf(s).goal(s,op,m);
+      if(pressed&&d>160&&!pushing){const c=coverFor(s,op,foe,clamp(d*1.3,260,gun.range),m);if(c&&distance(op,c.hide)<260){if(s.time>(m.cvT??0)){m.cvHide=!m.cvHide;m.cvT=s.time+(m.cvHide?.6+rand(s)*.5:1.4+rand(s)*.8);}const q=op.reload>0||op.heal>0||m.cvHide?c.hide:c.peek;return {x:q.x,y:q.y,near:8};}}
       return engage(s,op,m,foe);}
+    // The match's objective comes before hunting down the last thing it saw (team deathmatch has none).
+    const aim=rulesOf(s).goal?.(s,op,m);if(aim!==undefined&&rulesOf(s).goal)return aim;
     // Lost sight of them a moment ago: go and look where they were.
     if(m.last&&(s.time-m.last.at>5||distance(op,m.last)<=60))m.last=null;
     if(m.last)return {x:m.last.x,y:m.last.y,near:50};
@@ -780,7 +801,7 @@
   // fire it works a peek spot by a low wall (out to shoot, back in between bursts and to reload); hurt, it breaks
   // contact behind cover to heal; with nothing in view it goes after hostiles already in the fight - those closing on
   // Rook first; and with nothing left to fight it keeps a post off his back, watching the way he is not.
-  function mateGoal(s,op,m,i,foe){const boss=s.player,order=s.order||'auto',L=op===boss?Infinity:LEASH[order]||LEASH.auto,anchor=order==='hold'&&s.orderAt?s.orderAt:boss.dead?op:boss,gun=W[op.slots[op.slot]];
+  function mateGoal(s,op,m,i,foe){const boss=s.player,order=op.vip?'follow':s.order||'auto',L=op===boss?Infinity:LEASH[order]||LEASH.auto,anchor=order==='hold'&&s.orderAt?s.orderAt:boss.dead?op:boss,gun=W[op.slots[op.slot]];
     if(distance(op,anchor)>L)return {x:anchor.x,y:anchor.y,run:true,near:L*.5};
     if(foe){const d=distance(op,foe),a=Math.atan2(foe.y-op.y,foe.x-op.x),pressed=s.time-(m.hurtAt??-99)<4||m.count>=2||op.health<70;
       if(op.health<45){callout(s,op,m,'hurt','I’M HIT / FALLING BACK',12);const c=coverFor(s,op,foe,gun.range,m);if(c)return {x:c.hide.x,y:c.hide.y,run:true,near:10};
@@ -803,7 +824,7 @@
   // is heading. In holdout whatever is going for Rook, the dangerous few (PRIORITY) and the nearly dead come first.
   function botThink(s,op,m,i){let foe=null,best=Infinity,count=0;const rook=s.player,mate=!s.tdm&&op!==rook;
     if(op.health<(m.hp??op.health))m.hurtAt=s.time;m.hp=op.health;
-    for(const e of s.enemies){if(e.dead||e.gone>0)continue;const d=distance(op,e);if(d>BOT.sight*(e.ctx&&e.ctx.perks.lowprofile?.75:1)||A[e.type].cloak&&d>170&&!(e.attack>0)&&!(s.recon>0)||!sees(s,op,e))continue;count++;
+    for(const e of s.enemies){if(e.dead||e.gone>0||e.vanished)continue;const d=distance(op,e);if(d>BOT.sight*(e.ctx&&e.ctx.perks.lowprofile?.75:1)||A[e.type].cloak&&d>170&&!(e.attack>0)&&!(s.recon>0)||veiled(s,e,op)||!sees(s,op,e))continue;count++;
       let score=d*(e===m.foe?.75:1);if(mate){if(!rook.dead&&distance(e,rook)<260)score*=.55;if(PRIORITY.includes(e.type))score*=.7;if(e.hp<e.maxHp*.35)score*=.8;}if(score<best){best=score;foe=e;}}
     m.count=count;
     if(foe!==m.foe){m.foe=foe;if(foe){m.react=(BOT.react[0]+rand(s)*(BOT.react[1]-BOT.react[0]))*(s.tdm?skill(s).react:1);m.burst=Math.max(m.burst,.4);
@@ -841,6 +862,15 @@
       if(foe&&(m.support||0)>=BOT.support){m.support=0;input.support=true;callout(s,op,m,'sentry','SENTRY DOWN / COVERING THIS LANE',2);}}
     const g=m.goal,w=m.way;if(g&&w){const far=distance(op,g);if(far>(g.near??16)){const dx=w.x-op.x,dy=w.y-op.y,l=Math.hypot(dx,dy);if(l>8){input.mx=dx/l;input.my=dy/l;}else m.fresh=false;input.sprint=!!g.run&&!input.fire&&far>150;}
       if(g.revive&&distance(op,s.station)<56)input.interactDown=true;}
+    // At the breach site with nobody close: plant (or defuse). A hostile further off is left to the rest of the team.
+    if(s.tdm?.site&&s.tdm.phase==='live'&&(op.team===s.tdm.attack?!s.tdm.planted:s.tdm.planted)&&distance(op,s.tdm.site)<s.tdm.site.r*.8&&(!foe||d>300)){input.interactDown=true;input.fire=false;input.mx=input.my=0;}
+    // The hunter blinks now and then to close in or to get away when hurt.
+    if(op.hunter&&s.time>=op.blinkAt&&(foe&&(op.health<op.maxHealth*.4||d>500)||!foe&&rand(s)<.004)){input.roll=true;}
+    // Stuck: trying to move but going nowhere for a moment (a path squeezed past a corner it does not quite fit) - it
+    // steps off to one side for a beat and plans its way again.
+    if(input.mx||input.my){const moved=m.at?Math.hypot(op.x-m.at.x,op.y-m.at.y):99;if(moved>6||!m.at){m.at={x:op.x,y:op.y};m.atT=s.time;}
+      else if(s.time-m.atT>.8){m.route=null;m.fresh=false;m.slip=s.time+.45;m.slipA=Math.atan2(input.my,input.mx)+(rand(s)>.5?1:-1)*Math.PI/2;m.at=null;}}
+    if(m.slip>s.time){input.mx=Math.cos(m.slipA);input.my=Math.sin(m.slipA);}
     // A holdout teammate that sees a shot about to land on it rolls out of the line of fire, now and then.
     if(mate&&op.stamina>=30&&s.time>(m.rollAt??0)&&!input.grenade&&!input.tactical){const threat=s.enemies.find(e=>!e.dead&&e.attack>0&&e.attackAge>e.attack*.55&&!A[e.type].melee&&!A[e.type].kamikaze&&nearestOp(s,e)===op&&distance(e,op)<(A[e.type].range||500)&&lineOfSight(s,e,op));
       if(threat){const a=Math.atan2(op.y-threat.y,op.x-threat.x)+Math.PI/2*m.side;input.roll=true;input.sprint=false;input.mx=Math.cos(a);input.my=Math.sin(a);input.fire=false;m.rollAt=s.time+2.5+rand(s)*1.5;}}
@@ -994,7 +1024,8 @@
     s.spawnWarnings=s.spawnWarnings.filter(w=>!w.spawned);
     if(s.training){if(d.clock>9){d.clock=0;const returning=s.enemies.filter(e=>e.dead&&e.deathAge>4&&distance(e,p)>340).map(e=>s.map.enemies.find(a=>a.id===e.id));if(returning.length)warnSpawn(s,returning);if(p.health<25){p.health=65;event(s,'toast',{text:'TRAINING SAFETY / HEALTH RESTORED'});}}return;}
     const st=stageDef(s);s.goal={x:st.x,y:st.y};
-    if(st.kind==='reach'){if(distance(p,st)<(st.radius||110))advance(s);}
+    // A reach stage with someone under escort is only done when they are there too.
+    if(st.kind==='reach'){const vip=s.mates.find(m=>m.vip&&!m.dead),r=st.radius||110;if(distance(p,st)<r&&(!vip||distance(vip,st)<r+70))advance(s);else if(vip&&distance(p,st)<r&&!(d.waitNote>0)){d.waitNote=6;event(s,'toast',{text:vip.name+' HAS TO GET HERE TOO'});}d.waitNote=Math.max(0,(d.waitNote||0)-dt);}
     else if(st.kind==='destroy'){const left=s.walls.filter(w=>w.kind===st.targets&&!w.dead),total=s.walls.filter(w=>w.kind===st.targets).length;s.progress=total?1-left.length/total:1;
       if(d.left!==undefined&&left.length<d.left){event(s,'objective',{name:(total-left.length)+' / '+total+' DESTROYED',partial:true});if(left.length)checkpoint(s,{x:p.x,y:p.y});}d.left=left.length;
       if(!left.length)advance(s);else{const near=left.sort((a,b)=>distance(p,{x:a.x+a.w/2,y:a.y+a.h/2})-distance(p,{x:b.x+b.w/2,y:b.y+b.h/2}))[0];s.goal={x:near.x+near.w/2,y:near.y+near.h/2};}}
@@ -1005,18 +1036,163 @@
       if(boss){d.fired=d.fired||{};(st.waves||[]).forEach((w,i)=>{if(!d.fired[i]&&boss.hp<boss.maxHp*w.hp){d.fired[i]=true;warnSpawn(s,entriesFor(s,w.entries,st));}});if(boss.dead&&s.spawnWarnings.every(w=>w.id!==boss.id)){event(s,'toast',{text:A[boss.type].name+' DESTROYED'});rout(s);advance(s);}}}
     else if(st.kind==='endless')holdout(s,dt,d);
     else if(st.kind==='tdm')deathmatch(s,dt,d);
+    else if(st.kind==='extraction')extraction(s,dt,d);
+    else if(st.kind==='trial')trial(s,dt);
+    // How the escort is doing, for the run's record (REDLINE's operation challenge).
+    const vip=s.mates.find(m=>m.vip);if(vip)s.stats.escort=Math.round(vip.health);
   }
+  // Open ground on a map: a spot every 'step' units with room for a body, that can be walked to from the start.
+  function openGround(s,step=150){const n=grid(s),d=new Int16Array(n.w*n.h);flood(n,d,[cellOf(n,s.map.start)]);const out=[];
+    for(let y=step/2;y<s.map.height-40;y+=step)for(let x=step/2;x<s.map.width-40;x+=step)if(clearAt(s,x,y,26)&&d[cellOf(n,{x,y})]>=0)out.push({x,y});return out;}
+  // ---------- extraction ----------
+  // Five supply caches on a killhouse map and a landing zone at the far end. Patrols come in from the map's approaches,
+  // more and harder the longer the squad stays and the more it has taken. At the landing zone the squad calls the bird
+  // and has to hold the zone for 25 seconds while everything comes for it. What the caches were worth is paid only if
+  // the squad gets out: die, and only the bounties are kept.
+  const EXTRACT={caches:5,value:300,step:.25,lz:110,hold:25,heat:50,cap:16};
+  function extractSetup(s){const points=openGround(s),start=s.map.start,spread=(list,q,d)=>list.every(r=>distance(r,q)>d),far=[...points].sort((p,q)=>distance(q,start)-distance(p,start));
+    const lz=freeSpot(s,far[0].x,far[0].y,40),pool=points.filter(q=>distance(q,start)>420&&distance(q,lz)>260&&clearAt(s,q.x,q.y,20)),caches=[];
+    for(let tries=0;tries<200&&caches.length<EXTRACT.caches&&pool.length;tries++){const q=pool[Math.floor(rand(s)*pool.length)];if(spread(caches,q,320))caches.push(q);}
+    caches.forEach((q,i)=>s.pickups.push({id:'loot'+i,x:q.x,y:q.y,type:'loot',taken:false}));
+    s.extract={lz:{x:lz.x,y:lz.y,r:EXTRACT.lz},total:caches.length,found:0,loot:0,called:false,hold:0,need:EXTRACT.hold,next:14,boss:false,heat:1};}
+  function extraction(s,dt,d){const X=s.extract,squad=[s.player,...s.mates].filter(o=>!o.dead),live=s.enemies.filter(e=>!e.dead&&!e.built).length+s.spawnWarnings.length;
+    X.heat=1+Math.floor(d.clock/EXTRACT.heat)+X.found+(X.called?2:0);X.next-=dt;
+    if(X.next<=0&&live<EXTRACT.cap+2*s.mates.length){let list=composeWave(s,Math.min(30,X.heat*2));if(X.boss)list=list.filter(q=>!A[q.type].boss);else if(list.some(q=>A[q.type].boss)){if(X.heat<5)list=list.filter(q=>!A[q.type].boss);else X.boss=true;}
+      const n=clamp(2+X.heat,3,X.called?10:8),pick=list.filter(q=>A[q.type].boss).concat(list.filter(q=>!A[q.type].boss)).slice(0,n);warnSpawn(s,pick.map((q,i)=>({...q,id:'x'+s.tick+'_'+i,zone:0})),true);X.next=X.called?8:Math.max(11,26-X.heat*2);}
+    const inZone=squad.some(o=>distance(o,X.lz)<X.lz.r);
+    if(inZone&&!X.called){X.called=true;X.next=Math.min(X.next,2);event(s,'extractcall',{x:X.lz.x,y:X.lz.y});}
+    if(X.called&&inZone){X.hold+=dt;if(X.hold>=X.need){s.completed=true;rout(s);event(s,'complete',{extracted:true,loot:X.loot,found:X.found,...rating(s)});}}
+    s.progress=X.called?X.hold/X.need:X.found/Math.max(1,X.total);const left=s.pickups.filter(q=>q.type==='loot'&&!q.taken).sort((a,b)=>distance(a,s.player)-distance(b,s.player));s.goal=X.called||!left.length?{x:X.lz.x,y:X.lz.y}:{x:left[0].x,y:left[0].y};}
+  // ---------- flow trials ----------
+  // A timed run through a killhouse: gates to pass in order and practice targets beside the route to shoot on the move.
+  // The clock starts as you leave the first gate; every target left standing adds three seconds and every perfect flow
+  // takes half a second off. The course comes from a seed (one per map, and one a day), so a run can be raced again.
+  const TRIAL={gates:10,targets:7,miss:3,flow:.5,gate:60};
+  function trialSetup(s,seed){const points=openGround(s,130),start=s.map.start;let r=(seed>>>0)||1;const rnd=()=>{r=(Math.imul(r,1664525)+1013904223)>>>0;return (r>>>8)/16777216;};
+    const gates=[{x:start.x,y:start.y}],used=new Set();
+    for(let i=1;i<TRIAL.gates;i++){const last=gates[gates.length-1],options=points.filter((q,k)=>!used.has(k)&&distance(q,last)>320&&distance(q,last)<900&&gates.every(g=>distance(g,q)>220)&&clearAt(s,q.x,q.y,24));
+      if(!options.length)break;const pick=options[Math.floor(rnd()*options.length)];used.add(points.indexOf(pick));gates.push({x:pick.x,y:pick.y});}
+    const targets=[];for(let i=0;i<TRIAL.targets;i++){const g=gates[1+Math.floor(rnd()*Math.max(1,gates.length-1))]||gates[0],a=rnd()*Math.PI*2,q=freeSpot(s,g.x+Math.cos(a)*(120+rnd()*120),g.y+Math.sin(a)*(120+rnd()*120),18);
+      const e=makeEnemy(s,{id:'tgt'+i,type:'infantry',x:q.x,y:q.y,zone:0});Object.assign(e,{dummy:true,active:false,hp:1,maxHp:1,angle:rnd()*6.28,bounty:0});s.enemies.push(e);targets.push(e.id);}
+    s.trial={seed,gates:gates.map(g=>({...g,r:TRIAL.gate})),next:1,started:false,time:0,targets,hit:0,flows:0,done:false};}
+  function trial(s,dt){const T=s.trial,p=s.player;if(T.done)return;if(!T.started&&distance(p,T.gates[0])>T.gates[0].r){T.started=true;event(s,'trialstart',{});}
+    if(T.started)T.time+=dt;const g=T.gates[T.next];if(g&&distance(p,g)<g.r){event(s,'gate',{n:T.next,x:g.x,y:g.y,last:T.next===T.gates.length-1,split:T.time});T.next++;}
+    T.hit=T.targets.filter(id=>s.enemies.find(e=>e.id===id)?.dead).length;T.flows=s.stats.flows;s.progress=(T.next-1)/(T.gates.length-1);s.goal=g?{x:g.x,y:g.y}:null;
+    if(T.next>=T.gates.length){T.done=true;s.completed=true;T.score=trialScore(T);event(s,'complete',{trial:true,time:T.time,score:T.score,hit:T.hit,flows:T.flows,...rating(s)});}}
+  const trialScore=T=>Math.max(0,+(T.time+(T.targets.length-T.hit)*TRIAL.miss-T.flows*TRIAL.flow).toFixed(2));
+
   // Team deathmatch: the clock, the respawns and the result. A kill is a point for the killer's team (fallen); the
   // first team to the limit wins, or whoever is ahead when the clock runs out. "result" is how it ended for Alpha.
   function deathmatch(s,dt){const T=s.tdm,d=s.director;d.clock+=dt;T.left=Math.max(0,T.time-d.clock);s.progress=clamp(Math.max(T.score[0],T.score[1])/T.limit,0,1);
     for(const op of s.roster){if(!op.dead||op.vanished)continue;op.respawn-=dt;if(op.respawn<=0)act(s,op,()=>redeploy(s,op));}
-    if(T.score[0]>=T.limit||T.score[1]>=T.limit||T.left<=0){T.winner=T.score[0]>T.score[1]?0:T.score[1]>T.score[0]?1:-1;T.result=T.winner===0?'win':T.winner===1?'loss':'draw';s.completed=true;
-      event(s,'complete',{tdm:true,winner:T.winner,result:T.result,score:[...T.score],time:s.time});}}
+    rulesOf(s).tick(s,dt);}
+  // ---------- versus modes: one engine, several sets of rules ----------
+  // Every versus mode is team deathmatch's engine (the roster, act(), redeploys, the AI operators) with its own rules
+  // in VERSUS[s.tdm.rules]: how a match is set up, what a kill is worth, what happens every step (objectives, the
+  // clock, how it ends), whether a fallen operator comes back, and what an AI operator goes for when it has nothing in
+  // sight. 'tdm' is plain team deathmatch.
+  const ARMS_LADDER=['smg','rifle','shotgun','burst','battle','lmg','ricochet','marksman','autoshotgun','magnum','sawedoff','pistol'];
+  const RELAY={relays:3,radius:95,capture:4,target:150,tick:1},HUNTED={time:240,blink:{range:240,cooldown:4},sweep:20,hp:110,armour:.85,bite:1,reveal:2.5},
+    BREACH={setup:20,live:120,plant:4,defuse:5,fuse:30,toWin:4,swap:3,radius:80};
+  const ownTurn=(s,op,fn)=>s.acting===op.id?fn():act(s,op,fn);
+  // Arms race: a gun of the ladder in both hands (the knife is always there), refilled.
+  function armsEquip(s,op){const k=ARMS_LADDER[Math.min(op.arms,ARMS_LADDER.length-1)];op.slots=[k,k];op.slot=0;op.ammo[k]=W[k].capacity;op.reserve[k]=W[k].reserve;op.reload=0;op.grenades=0;}
+  const teamOps=(s,t,alive)=>s.roster.filter(o=>o.team===t&&(!alive||!o.dead&&!o.vanished));
+  function finish(s,winner){const T=s.tdm;if(T.result)return;T.winner=winner;T.result=winner===0?'win':winner===1?'loss':'draw';s.completed=true;event(s,'complete',{tdm:true,rules:T.rules,winner,result:T.result,score:[...T.score],time:s.time});}
+  const VERSUS={
+    // A death is a point for the other team however it came - a grenade of your own included (see fallen).
+    tdm:{kill(){},
+      tick(s){const T=s.tdm;if(T.score[0]>=T.limit||T.score[1]>=T.limit||T.left<=0)finish(s,T.score[0]>T.score[1]?0:T.score[1]>T.score[0]?1:-1);}},
+    // ARMS RACE: every kill moves you to the next gun on the ladder; the last step is the knife, and the first to make a
+    // kill with it wins for their team. A knife kill on anyone also sets them back a step. The team score is its best step.
+    arms:{setup(s){const T=s.tdm;T.limit=ARMS_LADDER.length+1;T.support=false;for(const op of s.roster){op.arms=0;armsEquip(s,op);op.lethal=null;}},
+      kill(s,me,e,source){const T=s.tdm,last=me.arms>=ARMS_LADDER.length;
+        if(source==='melee'&&e.arms>0){e.arms--;event(s,'armsdown',{who:e.id,step:e.arms});}
+        if(last){if(source==='melee'){me.arms++;finish(s,me.team);}return;}
+        me.arms++;if(me.arms>=ARMS_LADDER.length){me.slots=[ARMS_LADDER[ARMS_LADDER.length-1],ARMS_LADDER[ARMS_LADDER.length-1]];event(s,'armsknife',{who:me.id});}else armsEquip(s,me);event(s,'armsup',{who:me.id,step:me.arms,weapon:ARMS_LADDER[Math.min(me.arms,ARMS_LADDER.length-1)]});},
+      tick(s){const T=s.tdm;for(const t of [0,1])T.score[t]=Math.max(0,...teamOps(s,t).map(o=>o.arms||0));if(!T.result&&T.left<=0)finish(s,T.score[0]>T.score[1]?0:T.score[1]>T.score[0]?1:-1);},
+      redeploy(s,op){armsEquip(s,op);}},
+    // UPLINK: three relays. Standing in one with nobody from the other team in it turns it your way (faster with more of
+    // you); every second each relay you hold scores a point. First to the target, or ahead when the clock runs out.
+    uplink:{setup(s){const T=s.tdm,[a,b]=T.bases,mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2},span=distance(a,b);
+        // Good ground for a relay is about as far from either base and not far off the line between them.
+        const cost=q=>Math.abs(distance(q,a)-distance(q,b))+.6*Math.max(0,distance(q,a)+distance(q,b)-span*1.15);
+        const pool=[...T.points,...openGround(s,110)].filter(q=>clearAt(s,q.x,q.y,40)&&distance(q,a)>span*.28&&distance(q,b)>span*.28).sort((p,q)=>cost(p)-cost(q));
+        // Spread out as far as the map allows: the gap asked for shrinks until three fit.
+        let picks=[];for(let gap=Math.max(300,span*.24);gap>=150&&picks.length<RELAY.relays;gap-=30){picks=[];for(const q of [{x:mid.x,y:mid.y},...pool]){const at=freeSpot(s,q.x,q.y,40);if(picks.every(r=>distance(r,at)>gap))picks.push(at);if(picks.length>=RELAY.relays)break;}}
+        T.relays=picks.map((q,i)=>({id:'ABC'[i],x:q.x,y:q.y,r:RELAY.radius,owner:-1,progress:0}));T.limit=RELAY.target;T.time=Math.max(T.time,420);T.points=[...T.relays,...T.points];},
+      kill(){},
+      tick(s,dt){const T=s.tdm;for(const z of T.relays){const n=[0,1].map(t=>teamOps(s,t,true).filter(o=>distance(o,z)<z.r).length);z.contested=n[0]>0&&n[1]>0;
+          if(!z.contested&&(n[0]||n[1])){const t=n[0]?0:1,dir=t?-1:1,was=z.owner;z.progress=clamp(z.progress+dir*dt/RELAY.capture*Math.min(2,1+.5*(Math.max(n[0],n[1])-1)),-1,1);
+            if(Math.abs(z.progress)>=1&&z.owner!==t){z.owner=t;event(s,'relay',{id:z.id,team:t,x:z.x,y:z.y});}else if(was>=0&&was!==t&&Math.sign(z.progress)!==(was?-1:1)&&z.progress!==0){z.owner=-1;event(s,'relaylost',{id:z.id,team:was,x:z.x,y:z.y});}}}
+        T.acc=(T.acc||0)+dt;if(T.acc>=RELAY.tick){T.acc-=RELAY.tick;for(const z of T.relays)if(z.owner>=0)T.score[z.owner]++;}
+        if(T.score[0]>=T.limit||T.score[1]>=T.limit||T.left<=0)finish(s,T.score[0]>T.score[1]?0:T.score[1]>T.score[0]?1:-1);},
+      goal(s,op){const T=s.tdm,mine=z=>z.owner===op.team&&!z.contested,todo=T.relays.filter(z=>!mine(z)).sort((p,q)=>distance(op,p)-distance(op,q));
+        const z=todo[0]||T.relays[(op.id.length+Math.floor(s.time/20))%T.relays.length];return distance(op,z)>z.r*.5?{x:z.x,y:z.y,run:distance(op,z)>300,near:z.r*.35}:null;}},
+    // HUNTED: the first operator of Delta is the hunter - cloaked except when it fires, is hit or is right beside you,
+    // blinking a short way instead of rolling, with a marksman rifle, a hand cannon and health for the whole squad.
+    // Nobody comes back. The squad wins by killing it or by lasting out the clock; a sweep shows it to them every so often.
+    hunted:{setup(s){const T=s.tdm,hunter=teamOps(s,1)[0];for(const op of teamOps(s,1))if(op!==hunter){op.dead=true;op.vanished=true;}
+        const squad=teamOps(s,0).length;Object.assign(hunter,{hunter:true,cloak:true,slots:['precision','magnum'],slot:0,maxHealth:60+HUNTED.hp*squad,blinkAt:0});hunter.health=hunter.hp=hunter.maxHealth;hunter.maxHp=hunter.maxHealth;
+        for(const k of hunter.slots){hunter.ammo[k]=W[k].capacity;hunter.reserve[k]=W[k].reserve*2;}T.hunter=hunter.id;T.time=HUNTED.time;T.sweepAt=HUNTED.sweep;T.limit=squad;T.support=false;T.score=[squad,1];},
+      kill(s,me,e){},
+      respawn(){return false;},
+      tick(s){const T=s.tdm,h=s.roster.find(o=>o.id===T.hunter),squad=teamOps(s,0,true).length;T.score=[squad,h&&!h.dead?1:0];
+        if(s.director.clock>=T.sweepAt){T.sweepAt+=HUNTED.sweep;if(h&&!h.dead){h.revealed=s.time+2.5;event(s,'sweep',{x:h.x,y:h.y,who:h.id});}}
+        if(!h||h.dead)finish(s,0);else if(!squad)finish(s,1);else if(T.left<=0)finish(s,0);},
+      goal(s,op,m){const T=s.tdm;if(op.id===T.hunter){const prey=teamOps(s,0,true).sort((p,q)=>distance(op,p)-distance(op,q))[0];if(!prey)return null;
+          // Hit and fade: after a shot it breaks off to fresh ground before the squad can turn on it; otherwise it stalks
+          // to marksman range of the nearest of them.
+          if((op.shotAge??9)<1){if(!m.fade||s.time>m.fadeUntil){const a=Math.atan2(op.y-prey.y,op.x-prey.x)+(rand(s)-.5)*2.2;m.fade=freeSpot(s,op.x+Math.cos(a)*280,op.y+Math.sin(a)*280,18);m.fadeUntil=s.time+1.8;}return {x:m.fade.x,y:m.fade.y,near:30,run:true};}
+          return {x:prey.x,y:prey.y,near:sees(s,op,prey)?Math.min(W[op.slots[op.slot]].range*.75,720):60,run:distance(op,prey)>900};}
+        const pals=teamOps(s,0,true).filter(o=>o!==op);if(!pals.length)return null;const c={x:pals.reduce((n,o)=>n+o.x,0)/pals.length,y:pals.reduce((n,o)=>n+o.y,0)/pals.length};return distance(op,c)>140?{x:c.x,y:c.y,near:90}:null;}},
+    // BREACH: rounds. The defenders get a short setup with the attackers held at their base, then the attackers have to
+    // plant a charge at the site (hold interact there) or wipe the defenders out; the defenders win by wiping the attackers
+    // out, running the clock down, or defusing a planted charge. One life a round; first to four, sides swap after three.
+    breach:{setup(s){const T=s.tdm;T.limit=BREACH.toWin;T.round=1;T.attack=0;T.walls=s.walls.map(w=>({w,dead:!!w.dead,hp:w.hp}));breachRound(s,true);},
+      kill(){},
+      respawn(){return false;},
+      tick(s,dt){const T=s.tdm,att=T.attack,def=1-att;T.phaseLeft-=dt;
+        if(T.phase==='setup'){for(const op of teamOps(s,att,true)){const b=T.base[op.id];if(b&&distance(op,b)>70){op.x=b.x;op.y=b.y;op.vx=op.vy=0;}}if(T.phaseLeft<=0){T.phase='live';T.phaseLeft=BREACH.live;event(s,'breachlive',{});}return;}
+        if(T.phase==='over'){if(T.phaseLeft<=0){if(T.score[0]>=T.limit||T.score[1]>=T.limit)finish(s,T.score[0]>T.score[1]?0:1);else{T.round++;if(T.round===BREACH.swap+1)T.attack=1-T.attack;breachRound(s,false);}}return;}
+        const site=T.site,held=t=>teamOps(s,t,true).filter(o=>distance(o,site)<site.r&&o.lastInput?.interactDown);
+        if(!T.planted){const p=held(att);T.plant=p.length?Math.min(BREACH.plant,T.plant+dt):Math.max(0,T.plant-dt*2);if(T.plant>=BREACH.plant){T.planted=true;T.fuse=BREACH.fuse;T.defuse=0;event(s,'planted',{x:site.x,y:site.y,team:att});}}
+        else{T.fuse-=dt;const d=held(def);T.defuse=d.length?Math.min(BREACH.defuse,T.defuse+dt):Math.max(0,T.defuse-dt*2);
+          if(T.defuse>=BREACH.defuse){event(s,'defused',{x:site.x,y:site.y});return breachWon(s,def,'DEFUSED');}
+          if(T.fuse<=0){explode(s,site.x,site.y,220,0,true,'charge');event(s,'detonated',{x:site.x,y:site.y});return breachWon(s,att,'CHARGE DETONATED');}}
+        if(!teamOps(s,def,true).length)return breachWon(s,att,'DEFENDERS DOWN');
+        if(!teamOps(s,att,true).length&&!T.planted)return breachWon(s,def,'ATTACKERS DOWN');
+        if(T.phaseLeft<=0&&!T.planted)return breachWon(s,def,'TIME');},
+      goal(s,op){const T=s.tdm,site=T.site;if(T.phase!=='live')return null;
+        if(op.team===T.attack||T.planted)return {x:site.x,y:site.y,near:site.r*.4,run:distance(op,site)>260,plant:true};
+        const m=s.ai[op.id];if(!m.post||s.time>(m.postUntil??0)){const a=rand(s)*Math.PI*2,q=freeSpot(s,site.x+Math.cos(a)*(120+rand(s)*140),site.y+Math.sin(a)*(120+rand(s)*140),18);m.post=q;m.postUntil=s.time+10+rand(s)*8;}
+        return distance(op,m.post)>40?{x:m.post.x,y:m.post.y,near:24}:null;}}};
+  // A breach round: walls as they stood at the start of the match, the field cleared, everyone whole at their side's base.
+  function breachRound(s,first){const T=s.tdm,att=T.attack,def=1-att;
+    if(!first)for(const r of T.walls){r.w.dead=r.dead;if(r.hp!==undefined)r.w.hp=r.hp;}s.grenades=[];s.zones=[];s.mines=[];s.allies=[];for(const b of s.projectiles)b.active=false;
+    if(!T.site){const b=T.bases[1],a=T.bases[0],c=T.points.filter(q=>clearAt(s,q.x,q.y,40)).sort((p,q)=>Math.abs(distance(p,b)/distance(p,a)-.55)-Math.abs(distance(q,b)/distance(q,a)-.55))[0]||{x:(a.x+b.x)/2,y:(a.y+b.y)/2};T.siteFor=[c,null];}
+    // The site is near whichever base is defending: build its mirror once for the other side.
+    if(!T.siteFor[def]){const a=T.bases[def],b=T.bases[1-def],c=T.points.filter(q=>clearAt(s,q.x,q.y,40)).sort((p,q)=>Math.abs(distance(p,a)/distance(p,b)-.55)-Math.abs(distance(q,a)/distance(q,b)-.55))[0]||{x:(a.x+b.x)/2,y:(a.y+b.y)/2};T.siteFor[def]=c;}
+    const c=T.siteFor[def];T.site={x:c.x,y:c.y,r:BREACH.radius};T.phase='setup';T.phaseLeft=BREACH.setup;T.plant=0;T.planted=false;T.fuse=0;T.defuse=0;T.base={};
+    for(const op of s.roster){if(op.vanished)continue;act(s,op,()=>redeploy(s,op));T.base[op.id]={x:op.x,y:op.y};op.iframes=op.team===att?BREACH.setup+.5:0;}
+    event(s,'breachround',{round:T.round,attack:att});}
+  function breachWon(s,team,why){const T=s.tdm;T.score[team]++;T.phase='over';T.phaseLeft=4;event(s,'breachwon',{team,why,round:T.round,score:[...T.score]});}
+  const rulesOf=s=>VERSUS[s.tdm?.rules]||VERSUS.tdm;
+  // The hunter's blink: a short jump the way it is moving (or facing) to the furthest clear ground along it.
+  function hunterBlink(s,op,ctl){const len=Math.hypot(ctl.mx||0,ctl.my||0),a=len>.2?Math.atan2(ctl.my,ctl.mx):op.angle;let to=null;
+    for(let d=HUNTED.blink.range;d>=60;d-=30){const q={x:op.x+Math.cos(a)*d,y:op.y+Math.sin(a)*d};if(clearAt(s,q.x,q.y,18)&&q.x>30&&q.y>30&&q.x<s.map.width-30&&q.y<s.map.height-30){to=q;break;}}
+    if(!to)return;event(s,'blink',{from:{x:op.x,y:op.y},x:to.x,y:to.y,who:op.id});op.x=to.x;op.y=to.y;op.vx=op.vy=0;op.blinkAt=s.time+HUNTED.blink.cooldown;op.revealed=s.time+.6;}
+  // Whether one operator can make out a cloaked one: up close, while it fires, just after it is hit or blinks, or when
+  // a sweep or recon shows it.
+  const veiled=(s,e,from)=>!!e.cloak&&!e.dead&&!((e.revealed||0)>s.time)&&!((e.shotAge??9)<HUNTED.reveal)&&!(s.time-(e.hurtAt??-9)<1)&&!(s.recon>0)&&(!from||distance(from,e)>170);
+
   // How a finished match went for one operator: their team, the result, what it pays and whether it is kept in the
   // record. Pay is scaled down for a short match or a smaller team opposite; only a match to 20 or more against a
   // team at least the size of your own is "ranked".
   function verdict(s,id){const T=s.tdm,op=s.roster.find(o=>o.id===id)||s.player,mine=s.roster.filter(o=>o.team===op.team).length,theirs=s.roster.length-mine,result=T.winner<0?'draw':T.winner===op.team?'win':'loss';
-    return {team:op.team,result,match:Math.round(TDM.pay[result]*Math.min(1,T.limit/30)*Math.min(1,theirs/mine)),ranked:T.limit>=20&&theirs>=mine,ai:s.roster.some(o=>o.team!==op.team&&o.bot)};}
+    // The other versus modes are not measured in kills, so their length does not scale the pay; Hunted is one against many by design.
+    const plain=!T.rules||T.rules==='tdm',hunted=T.rules==='hunted';
+    return {team:op.team,result,match:Math.round(TDM.pay[result]*(plain?Math.min(1,T.limit/30):1)*(hunted?1:Math.min(1,theirs/mine))),ranked:hunted||(plain?T.limit>=20:true)&&theirs>=mine,ai:s.roster.some(o=>o.team!==op.team&&o.bot)};}
   // Ending a defence or killing a boss sends that fight's reinforcements running, so extraction reads as a win rather than a mop-up.
   function rout(s){let n=0;for(const e of s.enemies)if(!e.dead&&e.spawned){e.dead=true;e.vanished=true;e.deathAge=0;n++;}s.spawnWarnings=[];if(n)event(s,'toast',{text:'REMAINING HOSTILES ARE RETREATING'});}
   // The field rating. The score starts at 10,000: every perfect flow adds 200, every point of damage taken costs 14 and
@@ -1044,11 +1220,12 @@
       if(pick.type==='tactical'){if(distance(pick,p)>35||!p.tactical)continue;p.tacticals=Math.min(G[p.tactical].count+s.mods.charges+2,p.tacticals+1);pick.taken=true;event(s,'pickup',{kind:pick.type,x:pick.x,y:pick.y});continue;}
       // Health/ammo/armor/intel/cache go to whichever operator is actually closest, so a squadmate can self-sustain.
       let target=p;for(const gp of up)if(distance(pick,gp)<distance(pick,target))target=gp;if(distance(pick,target)>35)continue;
-      if(pick.type==='health'){if(target.health>=100)continue;target.health=Math.min(100,target.health+30);}
+      if(pick.type==='health'){const top=target.maxHealth||100;if(target.health>=top)continue;target.health=Math.min(top,target.health+30);}
       else if(pick.type==='armor')target.armor=Math.min(target.maxArmor,target.armor+30);
       else if(pick.type==='ammo'){if(target.slots.every(k=>target.reserve[k]>=reserveOf(s,k)*2))continue;for(const k of target.slots)target.reserve[k]=Math.min(reserveOf(s,k)*2,target.reserve[k]+Math.ceil(W[k].reserve/3));}
       else if(pick.type==='intel'){s.stats.intel++;event(s,'intel',{x:pick.x,y:pick.y});}
       else if(pick.type==='cache'){s.stats.credits+=120;event(s,'cache',{x:pick.x,y:pick.y,credits:120});}
+      else if(pick.type==='loot'&&s.extract){const X=s.extract,v=Math.round(EXTRACT.value*(1+EXTRACT.step*X.found));X.loot+=v;X.found++;event(s,'loot',{x:pick.x,y:pick.y,value:v,found:X.found,total:X.total});}
       pick.taken=true;event(s,'pickup',{kind:pick.type,x:pick.x,y:pick.y,guest:target!==p,who:target!==p?target.id:s.player.id});}
     if(s.tick%600===0&&s.pickups.length>40)s.pickups=s.pickups.filter(q=>!q.taken||q.base);}
   // ---------- team deathmatch: every operator the same ----------
@@ -1069,18 +1246,21 @@
     if(e.state==='roll'&&e.age>=.055&&e.age<=.25||e.state==='dive'&&e.age>=.07&&e.age<=.28)return;
     // Their flak vest against a blast; the attacker's Ambusher, which here means a hit from behind.
     // A knife is final, as it is in any deathmatch.
-    const theirs=e.ctx.perks;if(source==='melee')amount=Math.max(amount,400);amount*=TDM.dmg*(blast&&theirs.flak?.6:1)*(s.perks.ambusher&&!blast&&Math.abs(wrap(angle-e.angle))<1?1.35:1);
+    const theirs=e.ctx.perks;if(source==='melee')amount=Math.max(amount,400);amount*=TDM.dmg*(e.hunter?HUNTED.armour:1)*(me.hunter?HUNTED.bite:1)*(blast&&theirs.flak?.6:1)*(s.perks.ambusher&&!blast&&Math.abs(wrap(angle-e.angle))<1?1.35:1);
     const armor=Math.min(e.armor,amount*.65);e.armor-=armor;e.health=Math.max(0,e.health-amount+armor);e.hp=e.health;e.hurtAt=s.time;e.heal=0;s.stats.hits++;
     event(s,'hit',{id:e.id,x:e.x,y:e.y,angle,amount,player:true,by:me.id});event(s,'damage',{x:e.x,y:e.y,amount,fromX:me.x,fromY:me.y,src:source,who:e.id});
     if(e.health<=0&&theirs.secondwind&&!e.ctx.windUsed){e.ctx.windUsed=true;e.health=e.hp=30;e.iframes=1.2;event(s,'secondwind',{x:e.x,y:e.y,who:e.id});}
     if(e.health>0)return;
     fallen(s,e,me.id);s.stats.kills++;s.mastery[source]=(s.mastery[source]||0)+1;s.combo=s.time-s.comboAt<3.5?s.combo+1:1;s.comboAt=s.time;s.stats.bestCombo=Math.max(s.stats.bestCombo,s.combo);
     const t=A.operator,credits=me.bot?0:Math.round(t.bounty*(1+.1*Math.min(s.combo-1,8))*(source==='melee'?1.5:1)*TDM.bounty),row=T.board[me.id];s.stats.credits+=credits;row.k++;row.cr+=credits;
-    event(s,'kill',{x:e.x,y:e.y,enemy:'operator',id:e.id,victim:e.id,credits,combo:s.combo,boss:false,source,by:me.id,bot:me.bot});credit(s,source,t);
+    event(s,'kill',{x:e.x,y:e.y,enemy:'operator',id:e.id,victim:e.id,credits,combo:s.combo,boss:false,source,by:me.id,bot:me.bot});credit(s,source,t);rulesOf(s).kill(s,me,e,source);
     if(loose(s,'ammo')<3)s.pickups.push({id:'fall'+s.tick+e.id,x:e.x,y:e.y,type:'ammo',taken:false,until:s.time+DROPS.life});}
-  function stepVersus(s,input,dt){s.tick++;s.time+=dt;
+  function stepVersus(s,input,dt){s.tick++;s.time+=dt;if(s.mut.night&&s.dark<NIGHT)s.dark=NIGHT;const T=s.tdm;
     s.roster.forEach((op,i)=>act(s,op,()=>{s.flowTime=Math.max(0,s.flowTime-dt);op.stagger=Math.min(TDM.stun,Math.max(0,(op.stagger||0)-dt));
-      const raw=i?input.mates&&input.mates[i-1]||{}:input;stepPlayer(s,op.dead||op.vanished?{}:op.bot?botInput(s,op,i,dt):raw,dt);claim(s,op);
+      const raw=i?input.mates&&input.mates[i-1]||{}:input;let ctl=op.dead||op.vanished?{}:op.bot?botInput(s,op,i,dt):raw;
+      if(T.rules==='breach'&&T.phase==='setup'&&op.team===T.attack)ctl={aimX:ctl.aimX,aimY:ctl.aimY};
+      if(op.hunter&&ctl.roll){ctl={...ctl,roll:false};if(s.time>=op.blinkAt&&!op.dead)hunterBlink(s,op,ctl);}
+      op.lastInput=ctl;stepPlayer(s,ctl,dt);claim(s,op);
       stepAllies(s,dt,op.id);stepProjectiles(s,dt,op.id);stepThrown(s,dt,op.id);if(!op.dead)stepPickups(s,dt);claim(s,op);op.hp=op.health;}));
     deathmatch(s,dt);}
   // A fallen hostile that a wave or the director sent in lies where it fell for CORPSE.life seconds (the renderer fades
@@ -1104,5 +1284,5 @@
     if(s.mates.length){const inputs={player:input};s.mates.forEach((m,i)=>{const mi=m.dead?{}:m.bot?botInput(s,m,i,dt):input.mates&&input.mates[i]||i===0&&input.guest||{};inputs[m.id]=mi;stepMate(s,m,mi,dt);});stepRevive(s,inputs,dt);}
     stepEnemies(s,dt);stepAllies(s,dt);stepProjectiles(s,dt);stepThrown(s,dt);if(s.dead)return;stepPickups(s,dt);director(s,dt);prune(s);sight(s);
   }
-  return {DT,CELL,REVIVE_TIME,TDM,BOT,CORPSE,ORDERS,BOSSES,COUNTER,OFFERS,HORDE,bossesFor,pressureFor,composeWave,supplyDrop,orderSquad,coverFor,create,step,move,clearAt,lineOfSight,sees,circleBox,segmentBox,segmentCircle,distance,shoot,damagePlayer,damageEnemy,damageProp,explode,vault,interact,melee,checkpoint,resupply,rating,stageDef,arena,ops,botInput,act,verdict,callSupport,chargeSupport:charge,advance,enterStage,eligible,navField,nearbyWeapon,nearbyOffer,reserveOf,diff,MODIFIERS,STAMINA_SHORT,STAMINA_LONG,WINDED_UNTIL};
+  return {veiled,ARMS_LADDER,VERSUS,DT,CELL,REVIVE_TIME,TDM,BOT,CORPSE,ORDERS,BOSSES,COUNTER,OFFERS,HORDE,bossesFor,pressureFor,composeWave,supplyDrop,orderSquad,coverFor,create,step,move,clearAt,lineOfSight,sees,circleBox,segmentBox,segmentCircle,distance,shoot,damagePlayer,damageEnemy,damageProp,explode,vault,interact,melee,checkpoint,resupply,rating,stageDef,arena,ops,botInput,act,verdict,callSupport,chargeSupport:charge,advance,enterStage,eligible,navField,nearbyWeapon,nearbyOffer,reserveOf,diff,MODIFIERS,STAMINA_SHORT,STAMINA_LONG,WINDED_UNTIL};
 });

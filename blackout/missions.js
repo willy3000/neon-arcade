@@ -16,7 +16,7 @@
       mark(name,c,r){const p={x:c*CELL+CELL/2,y:r*CELL+CELL/2};if(['spawn','light','perch'].includes(name))(marks[name]=marks[name]||[]).push(p);else marks[name]=p;return api;},
       zone(z,c0,r0,c1,r1){zones.push([c0,r0,c1,r1,z]);return api;}};
     return api;}
-  const ENEMY={i:'infantry',r:'rusher',s:'sniper',h:'shield',d:'drone',b:'breacher',k:'scout',g:'grenadier',m:'gunner',q:'rocketeer',t:'turret',z:'ghost',e:'elite',x:'bomber'};
+  const ENEMY={i:'infantry',r:'rusher',s:'sniper',h:'shield',d:'drone',b:'breacher',k:'scout',g:'grenadier',m:'gunner',q:'rocketeer',t:'turret',z:'ghost',e:'elite',x:'bomber',A:'raider',P:'striker',D:'deadeye',y:'heavy'};
   const PICK={a:'ammo',p:'armor',f:'health',n:'lethal',u:'tactical',$:'cache','?':'intel'};
   const AREA={'#':['building'],X:['rock'],W:['weakwall',150],V:['vehicle',250],U:['fuel',200],'~':['water',Infinity,{pass:true}],F:['fence',Infinity,{pass:true}]};
   const SINGLE={C:['crate',44,44,50,true],O:['barrel',30,38,25,false],T:['console',44,44,55,true],J:['jammer',46,46,140,false],S:['generator',50,50,170,false]};
@@ -229,6 +229,118 @@
           start:radio('VOSS','You stole a list of names, Rook. I wrote that list. Come to the Citadel and I will add yours by hand.',7),cinematic:{duration:6.5,beats:[{at:3.2,radio:radio('LARK','He’s traced me — Rook, they’re at my door — ',5)}]}}],
       areas:[{x:400,y:1480,label:'LOADING DOCK'},{x:420,y:440,label:'SECURITY'},{x:1100,y:200,label:'LAB WING'},{x:2000,y:200,label:'CORE'}]});}
 
+  // ACT III / THE TRUTH. Operation 7: Halcyon has found Lark. Get to her safehouse before their breach team does, then
+  // walk her out across the canal to a car in the garage - she has a sidearm and no armour to speak of.
+  function redline(){const g=canvas(64,44,'#');
+    g.fill(1,36,62,40,',').fill(6,2,9,35,',').fill(42,2,45,35,',').fill(10,2,41,5,':');
+    g.fill(10,19,41,21,'~').fill(18,19,21,21,',').fill(32,19,33,21,':');
+    g.fill(10,22,41,35,':').fill(14,26,25,33,'#').fill(15,27,24,32,';').fill(19,33,20,33,';').fill(25,29,25,30,'W');
+    g.fill(10,6,41,18,':');
+    g.fill(46,2,61,17,';').fill(49,5,50,6,'#').fill(55,5,56,6,'#').fill(49,12,50,13,'#').fill(55,12,56,13,'#').down(46,2,'######').down(46,11,'####');
+    g.fill(46,18,61,18,'#').fill(52,18,54,18,';').fill(46,19,61,35,':');
+    // cover: the courtyard, the plaza across the canal, the yard and the garage
+    g.put(12,24,'===').put(30,24,'===').put(36,28,'C').put(11,30,'C').put(28,31,'V').put(32,33,'===').put(38,25,'O');
+    g.put(12,9,'===').put(22,9,'C').put(27,12,'===').put(35,9,'C').put(16,15,'|').down(16,15,'||').put(38,14,'===').put(24,16,'O').put(30,16,'C');
+    g.put(48,24,'VV').put(55,22,'C').put(50,29,'===').put(58,27,'VV').put(56,33,'C');
+    g.put(52,9,'VV').put(58,9,'C').put(48,15,'===');
+    g.put(3,38,'V').put(14,38,'C').put(26,38,'===').put(40,37,'O').put(52,38,'VV');
+    // the hostiles: the breach team at her door, the plaza across the canal, and the garage
+    g.put(13,38,'i').put(30,37,'i').put(37,38,'A');
+    g.put(12,25,'A').put(30,27,'A').put(38,31,'A').put(28,34,'P').put(17,24,'P').put(37,23,'g');
+    g.put(12,7,'D').put(40,8,'D').put(20,14,'P').put(30,10,'P').put(25,8,'A').put(36,15,'A').put(24,12,'d').put(8,10,'k').put(44,13,'m');
+    g.put(58,4,'A').put(58,15,'A').put(52,14,'P').put(48,7,'h');
+    g.put(4,37,'a').put(11,27,'f').put(23,24,'a').put(40,33,'n').put(10,17,'f').put(41,7,'a').put(33,13,'u').put(60,20,'f').put(47,4,'a').put(60,16,'p').put(23,31,'?');
+    g.mark('start',3,39).mark('door',19,34).mark('lark',20,30).mark('garage',47,9).mark('car',52,10).mark('cp1',19,35).mark('cp2',44,9);
+    for(const [c,r] of [[60,3],[60,16],[44,3],[53,25]])g.mark('spawn',c,r);
+    for(const [c,r] of [[8,37],[24,37],[40,37],[56,37],[8,20],[43,20],[19,20],[33,20],[25,10],[50,9],[57,9],[53,15],[20,28]])g.mark('light',c,r);
+    g.zone(1,10,22,41,35).zone(2,6,2,45,21).zone(3,46,2,61,17);
+    const m=parse(g),k=m.marks;
+    return finish({id:'redline',theme:'rain',...m,start:at(k.start),threat:1.35,dark:.38,lights:k.light,spawnPoints:k.spawn,
+      guns:{infantry:'battle',raider:'battle',striker:'smg',deadeye:'precision',scout:'smg',shield:'magnum',gunner:'lmg'},insane:['striker','raider'],
+      intro:radio('LARK','Rook — they’re in my building. Halcyon. Not soldiers, contractors. I can hear them on the stairs.',7),resume:radio('LARK','Still here. Still breathing. Hurry.',4),
+      stages:[
+        {kind:'clear',zone:1,...at(k.door),name:'Reach Lark’s safehouse',hint:'Halcyon’s breach team is at her door. Clear the courtyard, then get to her.',spawn:at(k.start)},
+        {kind:'reach',zone:2,...at(k.garage),radius:140,name:'Get Lark to the garage',hint:'Across the canal. She stays close; keep her out of the sharpshooters’ lanes.',spawn:at(k.cp1),
+          enter:{checkpoint:true,escort:{id:'lark',name:'LARK',gun:'pistol',health:150,armor:60,at:at(k.lark)},radio:radio('LARK','You came. Okay — okay. I’m right behind you. Don’t let me get shot.',6)}},
+        {kind:'clear',zone:3,...at(k.car),name:'Clear the garage',hint:'Halcyon got here first. Clear them out, then get Lark to the car.',spawn:at(k.cp2),enter:{checkpoint:true,radio:radio('LARK','The grey sedan. I can start it — I just need a minute nobody’s shooting at me.',6)}},
+        {kind:'survive',zone:3,...at(k.car),time:60,name:'Cover Lark at the car',hint:'She is hot-wiring it. Hold the garage for a minute.',spawn:at(k.car),
+          enter:{grants:{health:85,armor:45,refill:true},checkpoint:true,radio:radio('VOSS','Lieutenant Lark. You were the best analyst I ever had. Come home and nobody else has to die tonight.',7)},
+          waves:[{entries:[{type:'striker',at:0},{type:'raider',at:1},{type:'scout',at:2}]},{after:15,entries:[{type:'raider',at:3},{type:'grenadier',at:0,min:'intense'},{type:'drone',at:1},{type:'striker',at:2,min:'intense'}]},
+            {after:32,entries:[{type:'deadeye',at:2,min:'intense'},{type:'raider',at:0},{type:'striker',at:1},{type:'heavy',at:3,min:'insane'}]},{after:46,entries:[{type:'striker',at:3},{type:'raider',at:1}]}]},
+        {kind:'extract',zone:3,...at(k.car),name:'Drive',hint:'The engine’s running. Get in.',enter:{radio:radio('LARK','Got it! Get in, get in!',3)},
+          start:radio('LARK','He knows where we’ll go. The Citadel. He’s pulling everything he has back inside the walls.',7),
+          cinematic:{duration:6,beats:[{at:2.8,radio:radio('ROOK','Then that’s where we’re going.',4)}]}}],
+      areas:[{x:400,y:1560,label:'CANAL STREET'},{x:800,y:1230,label:'SAFEHOUSE'},{x:1040,y:820,label:'NORTH BRIDGE'},{x:1040,y:300,label:'MARKET PLAZA'},{x:2140,y:420,label:'PARKING GARAGE'}]});}
+  // Operation 8: the Citadel, Halcyon's fortress. Two ways in - the main gate under its guns, or the storm drain to the
+  // west - three shield pylons in the courtyard, the Havoc tank at the keep, and the lift to the top.
+  function citadel(){const g=canvas(66,46,'#');
+    g.fill(2,38,40,44,',').fill(10,30,13,37,',').fill(14,38,40,38,',');
+    g.fill(2,19,3,37,';').fill(2,38,3,39,';').put(2,30,'WW').fill(4,20,5,21,';');
+    g.fill(6,18,58,27,':').fill(10,28,13,29,',');
+    g.fill(18,4,46,15,';').fill(6,16,58,17,'#').fill(30,16,33,17,'1').fill(30,18,33,18,':');
+    g.fill(18,4,19,5,'#').fill(45,4,46,5,'#').fill(24,8,25,9,'#').fill(39,8,40,9,'#').fill(24,12,25,13,'#').fill(39,12,40,13,'#');
+    // cover: the approach, the courtyard (built for a tank to roam), the keep
+    g.put(5,40,'V').put(18,41,'===').put(26,39,'C').put(33,42,'VV').put(12,34,'C').put(8,33,'|').down(8,33,'||');
+    g.put(9,20,'===').put(20,22,'C').put(24,25,'===').put(28,19,'O').put(38,21,'C').put(42,25,'===').put(47,19,'C').put(52,24,'===').put(57,22,'O').put(14,25,'C').put(36,26,'O');
+    g.put(22,6,'===').put(42,6,'===').put(30,11,'C').put(28,14,'===').put(35,14,'===').put(21,11,'|').down(21,11,'||').put(43,11,'|').down(43,11,'||');
+    g.put(16,20,'S').put(34,24,'S').put(54,20,'S');
+    // the hostiles: the approach, the gate guns, the drain, the courtyard and the keep
+    g.put(20,40,'i').put(30,41,'A').put(8,41,'i');
+    g.put(10,27,'t').put(14,27,'t').put(9,24,'m').put(15,23,'A').put(2,33,'z').put(3,24,'z').put(5,21,'z');
+    g.put(22,20,'A').put(30,23,'P').put(40,19,'D').put(48,25,'A').put(56,21,'D').put(26,26,'h').put(44,22,'q').put(36,19,'P').put(18,26,'d').put(50,19,'P').put(32,20,'e');
+    g.put(26,6,'A').put(38,6,'i').put(32,9,'D').put(22,13,'P').put(42,13,'i').put(32,5,'h');
+    g.put(6,42,'a').put(36,40,'f').put(3,36,'u').put(7,19,'f').put(25,21,'a').put(46,26,'n').put(55,26,'f').put(58,18,'a').put(20,5,'f').put(44,5,'a').put(31,12,'?').put(57,25,'p').put(12,19,'p').put(40,26,'f').put(30,26,'n').put(33,7,'p').put(26,14,'f');
+    g.mark('start',4,43).mark('pylons',32,22).mark('tank',32,20).mark('keepgate',32,18).mark('lift',32,6).mark('cp1',12,33).mark('cp2',32,24).mark('cp3',32,19).mark('cp4',32,12);
+    for(const [c,r] of [[20,5],[44,5],[57,19],[7,26]])g.mark('spawn',c,r);
+    g.zone(1,2,18,58,29).zone(2,18,4,46,15);
+    const m=parse(g),k=m.marks;
+    return finish({id:'citadel',theme:'citadel',...m,start:at(k.start),threat:1.45,spawnPoints:k.spawn,
+      guns:{infantry:'battle',raider:'battle',striker:'smg',deadeye:'precision',elite:'pulse',shield:'magnum',gunner:'lmg',heavy:'minigun'},insane:['raider','deadeye'],
+      intro:radio('LARK','The Citadel. Main gate’s a gun line. There’s a storm drain on the west side — tight, dark, but it comes up inside the wall.',8),resume:radio('LARK','The pylons. Break the pylons and the shield over the keep drops.',5),
+      stages:[
+        {kind:'destroy',zone:1,targets:'generator',...at(k.pylons),name:'Break the three shield pylons',hint:'In by the gate’s guns or the west storm drain, then break the three courtyard pylons.',spawn:at(k.start)},
+        {kind:'boss',zone:1,...at(k.keepgate),name:'Stop the Havoc',hint:'Rifle rounds bounce off: hit the engine deck at the back, or use rockets.',spawn:at(k.cp2),boss:{id:'havoc',type:'tank',tough:.8,...k.tank},
+          enter:{checkpoint:true,radio:radio('VOSS','You brought her here. I was going to let her live, Rook.',5)},
+          waves:[{hp:.6,entries:[{type:'striker',at:3},{type:'raider',at:2,min:'intense'}]},{hp:.3,entries:[{type:'raider',at:3},{type:'deadeye',at:1,min:'intense'},{type:'striker',at:2,min:'intense'}]}]},
+        {kind:'clear',zone:2,...at(k.lift),name:'Take the keep',hint:'The keep’s garrison is dug in round the lift. Clear it, then work the lift controls.',spawn:at(k.cp3),
+          enter:{opens:[1],grants:{health:80,armor:40,refill:true},checkpoint:true,radio:radio('LARK','Keep’s open. Clear it and get me to the lift controls.',5)}},
+        {kind:'survive',zone:2,...at(k.lift),time:60,name:'Hold the lift',hint:'Lark is overriding the lift. Hold the keep for a minute.',spawn:at(k.cp4),
+          enter:{checkpoint:true,radio:radio('LARK','I’m in the lift controls — he’s locking me out floor by floor. Give me a minute.',6)},
+          waves:[{entries:[{type:'raider',at:0},{type:'striker',at:1},{type:'drone',at:2}]},{after:14,entries:[{type:'deadeye',at:0},{type:'raider',at:1},{type:'elite',at:2,min:'intense'}]},
+            {after:30,entries:[{type:'heavy',at:3,min:'intense'},{type:'striker',at:0},{type:'striker',at:1,min:'intense'}]},{after:44,entries:[{type:'raider',at:2},{type:'raider',at:1},{type:'deadeye',at:3,min:'insane'}]}]},
+        {kind:'extract',zone:2,...at(k.lift),name:'Ride the lift',hint:'The lift is yours. Interact to go up.',enter:{radio:radio('LARK','Done. Top floor. That’s him up there.',4)},
+          start:radio('VOSS','Come up, then. I’ll turn the lights out myself.',5),cinematic:{duration:5.5,beats:[{at:2.6,radio:radio('ROOK','Lark — whatever happens up there, you get that list out.',5)}]}}],
+      areas:[{x:840,y:1660,label:'APPROACH'},{x:100,y:1100,label:'STORM DRAIN'},{x:480,y:1150,label:'MAIN GATE'},{x:1280,y:880,label:'COURTYARD'},{x:1280,y:400,label:'THE KEEP'}]});}
+  // Operation 9: the top of the Citadel. The command deck, the reactor that powers the Blackout servers, and Voss.
+  function blackout(){const g=canvas(60,44,'#');
+    g.fill(27,40,32,42,';').fill(10,30,50,39,':').fill(28,28,31,29,'1').fill(6,16,54,27,';').fill(28,14,31,15,'2').fill(8,3,52,13,':');
+    // the command deck: consoles and glass; the reactor hall: catwalk cover and lasers; the summit: pillars and generators
+    g.put(14,33,'T').put(20,33,'T').put(38,33,'T').put(44,33,'T').down(25,31,'GGGG').down(34,31,'GGGG').put(14,37,'===').put(42,37,'===').put(29,35,'C').put(12,31,'O').put(47,31,'O');
+    g.put(10,22,'===').put(20,18,'C').put(24,25,'===').put(36,25,'===').put(40,18,'C').put(48,22,'===').put(30,20,'|').down(30,20,'||').put(16,26,'O').put(44,26,'O');
+    g.put(12,20,'J').put(30,24,'J').put(48,20,'J');
+    g.fill(15,6,16,7,'#').fill(43,6,44,7,'#').fill(15,10,16,11,'#').fill(43,10,44,11,'#').put(22,9,'===').put(36,9,'===').put(29,6,'C').put(10,12,'===').put(48,12,'===');
+    g.put(12,5,'S').put(48,5,'S').put(30,12,'S');
+    // the hostiles
+    g.put(16,35,'A').put(44,35,'A').put(22,32,'P').put(38,32,'P').put(30,32,'e').put(12,38,'i').put(48,38,'i');
+    g.put(10,18,'D').put(50,18,'D').put(22,20,'A').put(38,20,'A').put(30,17,'y').put(18,24,'P').put(42,24,'P').put(26,18,'d').put(34,18,'d').put(14,24,'h');
+    g.put(28,41,'a').put(31,41,'f').put(11,34,'a').put(49,34,'f').put(29,37,'u').put(8,17,'f').put(52,17,'a').put(30,26,'n').put(9,26,'p').put(51,26,'a').put(10,4,'a').put(50,4,'f').put(20,12,'f').put(40,12,'a').put(30,38,'?');
+    g.mark('start',29,41).mark('door',30,30).mark('reactor',30,22).mark('voss',30,7).mark('terminal',30,4).mark('cp1',30,30).mark('cp2',30,16);
+    for(const [c,r] of [[9,4],[51,4],[9,12],[51,12]])g.mark('spawn',c,r);
+    for(const [c,r] of [[12,5],[48,5],[30,12],[20,8],[40,8],[30,4]])g.mark('light',c,r);
+    g.zone(1,6,16,54,27).zone(2,8,3,52,13);
+    const m=parse(g),k=m.marks;
+    return finish({id:'blackout',theme:'citadel',...m,start:at(k.start),threat:1.55,spawnPoints:k.spawn,lights:k.light,
+      guns:{infantry:'battle',raider:'battle',striker:'smg',deadeye:'precision',elite:'pulse',shield:'magnum',heavy:'minigun'},insane:['raider','striker'],
+      intro:radio('VOSS','Top floor, Rook. Everything below us runs on the reactor behind this deck. Including the Blackout servers. Including me.',8),resume:radio('LARK','Reactor couplings. Three of them. Cut them and his servers go dark.',5),
+      stages:[
+        {kind:'clear',zone:0,...at(k.door),name:'Take the command deck',hint:'Clear the deck, then work the blast door.',spawn:at(k.start)},
+        {kind:'destroy',zone:1,targets:'jammer',...at(k.reactor),name:'Cut the reactor couplings',hint:'Three couplings feed the Blackout servers. Break all three.',spawn:at(k.cp1),enter:{opens:[1],checkpoint:true,radio:radio('LARK','Reactor hall. Three couplings — when the last one goes, so do the lights.',6)}},
+        {kind:'boss',zone:2,...at(k.terminal),name:'End Voss',hint:'Break his generators or EMP him to drop the barrier. Once hurt, he blinks.',spawn:at(k.cp2),dark:.62,boss:{id:'voss',type:'voss',...k.voss},
+          enter:{opens:[2],grants:{health:90,armor:50,refill:true},checkpoint:true,radio:radio('VOSS','There. Now it is dark enough for what you are, Rook. A deniable man. My best work.',7)},
+          waves:[{hp:.66,entries:[{type:'raider',at:0},{type:'striker',at:1},{type:'deadeye',at:2,min:'intense'}]},{hp:.33,entries:[{type:'striker',at:2},{type:'raider',at:3},{type:'elite',at:0},{type:'heavy',at:1,min:'insane'}]}]},
+        {kind:'extract',zone:2,...at(k.terminal),name:'Broadcast the truth',hint:'Voss is down. Interact with his terminal and send everything.',enter:{radio:radio('LARK','Rook. His terminal. Send it — everything, to everyone.',5)},
+          start:radio('ROOK','Sending.',3),cinematic:{duration:9,beats:[{at:2.2,radio:radio('LARK','It’s out. Every name, every order, every signature. He can’t bury it now.',6)},{at:5.6,radio:radio('ROOK','Then I can stop running.',4)}]}}],
+      areas:[{x:1200,y:1640,label:'LIFT'},{x:1200,y:1380,label:'COMMAND DECK'},{x:1200,y:880,label:'REACTOR HALL'},{x:1200,y:300,label:'SUMMIT'}]});}
   function holdout(){const g=canvas(44,32,'#');
     g.fill(1,1,42,30,'.').fill(1,14,42,17,',').fill(19,1,22,30,',').fill(6,5,10,8,'#').fill(33,5,37,8,'#').fill(6,23,10,26,'#').fill(33,23,37,26,'#');
     g.put(15,10,'===').put(26,10,'===').put(15,21,'===').put(26,21,'===').down(13,13,'||').down(30,17,'||').put(20,6,'C').put(21,25,'C').put(3,15,'C').put(40,16,'C').put(12,4,'O').put(31,27,'O').put(16,15,'VV').put(25,16,'VV');
@@ -258,9 +370,9 @@
     return finish({...base,id:'holdout-'+baseId,enemies:[],walls:base.walls.filter(w=>w.kind!=='gate'),
       stages:[{kind:'endless',zone:0,x:start.x,y:start.y,name:'Survive the waves',hint:'Supplies drop between waves. Every fifth wave is a red wave, with a boss.',spawn:start}],
       intro:radio('LARK','Killhouse simulation, overlaid on a live operation zone. They keep coming until you stop.',6)});}
-  const builders={crash,ruins,kestrel,underground,convoy,meridian,holdout,range,
+  const builders={crash,ruins,kestrel,underground,convoy,meridian,redline,citadel,blackout,holdout,range,
     'holdout-crash':()=>endlessVariant(crash,'crash'),'holdout-ruins':()=>endlessVariant(ruins,'ruins'),'holdout-kestrel':()=>endlessVariant(kestrel,'kestrel'),
-    'holdout-underground':()=>endlessVariant(underground,'underground'),'holdout-convoy':()=>endlessVariant(convoy,'convoy'),'holdout-meridian':()=>endlessVariant(meridian,'meridian')};
+    'holdout-underground':()=>endlessVariant(underground,'underground'),'holdout-redline':()=>endlessVariant(redline,'redline'),'holdout-citadel':()=>endlessVariant(citadel,'citadel'),'holdout-blackout':()=>endlessVariant(blackout,'blackout'),'holdout-convoy':()=>endlessVariant(convoy,'convoy'),'holdout-meridian':()=>endlessVariant(meridian,'meridian')};
   // Campaign order, briefing copy and recommended equipment. "rec" items are what the mission is tuned around; the briefing offers to buy them.
   const list=[
     {id:'crash',outro:'Your extraction burns over Vesper City. The missile came from your own side. Rook disappears into the ruins with one question: who gave the order?',n:1,act:'ACT I / THE FALL',title:'THE CRASH',sector:'VESPER CITY / SECTOR 07',terrain:'URBAN STREETS / MIXED RANGE',brief:'Recover your radio. Find a way out. Trust no one on the other end.',threats:['infantry','rusher','sniper','grenadier','shield','commander'],rec:{weapons:['rifle'],gear:[],note:'A forgiving first night. Learn to slide, vault and break line of sight.'},par:240,reward:400},
@@ -268,7 +380,10 @@
     {id:'kestrel',outro:"The launch log names CONTROL ACTUAL: Colonel Marek Voss. Lark's commanding officer signed your death warrant, and now he knows she helped you.",n:3,act:'ACT I / THE FALL',title:'DEAD FREQUENCY',sector:'KESTREL HIGHLANDS / RELAY',terrain:'OPEN SNOWFIELD / LONG SIGHTLINES',brief:'Cross a frozen valley under marksman fire and steal the launch log from the relay dish.',threats:['sniper','scout','drone','bomber','wraith'],rec:{weapons:['marksman','precision'],gear:['smoke'],note:'Almost no cover on the approach. Smoke and a long rifle turn a shooting gallery into a fair fight.'},par:420,reward:700},
     {id:'underground',outro:'Line Six carries you under the cordon. Somewhere above, Voss is loading something into an armoured convoy and running for the border.',n:4,act:'ACT II / THE HUNT',title:'UNDERGROUND',sector:'LINE 6 / BENEATH THE CORDON',terrain:'BLACKED-OUT TUNNELS / POINT BLANK',brief:'No power, no light, no signal. Restore the substation and ride Line Six under the cordon.',threats:['ghost','rusher','breacher','gunner','shield'],rec:{weapons:['shotgun','autoshotgun'],gear:['flash'],note:'You fight inside your flashlight. Flashbangs stop ghosts cold; a shotgun finishes them.'},par:400,reward:850},
     {id:'convoy',outro:'The Bulwark burns on Highway Nine. Inside the hauler is not a server but a key — the only way into Site Meridian, where the Blackout Protocol lives.',n:5,act:'ACT II / THE HUNT',title:'IRON CONVOY',sector:'HIGHWAY 9 / SALT FLATS',terrain:'OPEN DESERT / ARMOUR',brief:'Stop the Blackout convoy on Highway Nine and take its cargo from a Bulwark armoured carrier.',threats:['gunner','rocketeer','sniper','breacher','apc'],rec:{weapons:['thumper','rocket'],gear:['mine'],note:'The Bulwark shrugs off bullets. Bring explosives — a launcher, rockets or mines — or you will not dent it.'},par:480,reward:1000},
-    {id:'meridian',outro:'Every name on the Blackout list is now public. Voss has traced Lark. ACT III / THE TRUTH — the assault on the Citadel — is in development. Your record, gear and rank carry over.',n:6,act:'ACT II / THE HUNT',title:'GHOST SIGNAL',sector:'SITE MERIDIAN / BLACK SITE',terrain:'LAB CORRIDORS / SENTRIES / LASERS',brief:'Break into the Halcyon black site, crack the core and upload every name on the Blackout list.',threats:['turret','elite','shield','drone','mech'],rec:{weapons:['pulse','rail'],gear:['emp'],note:'Armoured sentries and a shielded Warden. An EMP opens every lock in this building.'},par:540,reward:1250}];
+    {id:'meridian',outro:'Every name on the Blackout list is public — and Voss has traced the upload to Lark. Her line goes dead mid-sentence. Rook is already moving.',n:6,act:'ACT II / THE HUNT',title:'GHOST SIGNAL',sector:'SITE MERIDIAN / BLACK SITE',terrain:'LAB CORRIDORS / SENTRIES / LASERS',brief:'Break into the Halcyon black site, crack the core and upload every name on the Blackout list.',threats:['turret','elite','shield','drone','mech'],rec:{weapons:['pulse','rail'],gear:['emp'],note:'Armoured sentries and a shielded Warden. An EMP opens every lock in this building.'},par:540,reward:1250},
+    {id:'redline',outro:'Lark is alive, and the car is pointed at the Citadel. Voss has pulled every Halcyon team he has back inside its walls. He is not running any more.',n:7,act:'ACT III / THE TRUTH',title:'REDLINE',sector:'VESPER CITY / CANAL DISTRICT',terrain:'NIGHT STREETS / RAIN / ESCORT',brief:"Halcyon has found Lark. Reach her safehouse before their breach team does, then get her across the canal alive.",threats:['raider','striker','deadeye','grenadier','drone'],rec:{weapons:['smg','battle'],gear:['smoke'],note:'Halcyon special forces wear plates and lead their shots. Keep Lark out of the sharpshooters\' lanes - smoke breaks them.'},par:480,reward:1100},
+    {id:'citadel',outro:'The Havoc burns in the courtyard and the lift is climbing. At the top: the reactor, the Blackout servers, and the man who signed your death warrant.',n:8,act:'ACT III / THE TRUTH',title:'CITADEL',sector:'THE CITADEL / OUTER WORKS',terrain:'FORTRESS / TWO ROUTES / ARMOUR',brief:'Get inside the Citadel - through its main gate or its storm drain - break the shield pylons and take the keep.',threats:['turret','gunner','ghost','raider','tank'],rec:{weapons:['launcher','rocket'],gear:['emp'],note:'The gate is a gun line and the keep has a tank. Rockets for its back, an EMP for the sentry guns - or take the drain and skip the guns.'},par:600,reward:1200},
+    {id:'blackout',outro:'The Blackout Protocol is public: every name, every order, every signature. Colonel Marek Voss is dead. Rook is not, and for the first time since the crash, nobody is hunting him.',n:9,act:'ACT III / THE TRUTH',title:'BLACKOUT',sector:'THE CITADEL / SUMMIT',terrain:'COMMAND DECK / REACTOR / DARKNESS',brief:'The top of the Citadel. Cut the reactor that feeds the Blackout servers, then finish what Voss started.',threats:['raider','striker','deadeye','heavy','voss'],rec:{weapons:['pulse','rail'],gear:['emp','flash'],note:'Voss fights behind a barrier fed by three generators, and the lights go out. An EMP drops the barrier; a pulse rifle burns through it.'},par:660,reward:1300}];
   function build(id){return (builders[id]||builders.crash)();}
   // Holdout map picker metadata. The Killhouse is always unlocked; every other killhouse is a campaign map,
   // locked until that operation is marked done, and pays a little more the later in the campaign it comes ("pay").

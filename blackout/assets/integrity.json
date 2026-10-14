@@ -876,6 +876,21 @@
       "sha256": "f98ef90345e9eb9241611c866035e2974ff4f031b25f3410e85118de866dbc76"
     },
     {
+      "file": "menu/campaign-blackout.jpg",
+      "bytes": 7646,
+      "sha256": "4b16d9e3d54ae9b95e99448bbd8b27228b45e12482224b870af694edc44f435b"
+    },
+    {
+      "file": "menu/campaign-citadel.jpg",
+      "bytes": 10164,
+      "sha256": "18e90dbc6e0dd318d2438147efee5b6fe5469370d3897ef41790f3b047f03e64"
+    },
+    {
+      "file": "menu/campaign-redline.jpg",
+      "bytes": 8340,
+      "sha256": "fcec7d7213169aee2f3d7080c0656832256e1f5aa3970e295719b82df3a4a8c6"
+    },
+    {
       "file": "menu/campaign-ruins.jpg",
       "bytes": 15902,
       "sha256": "2658fea2da958f0c771fa86c06fac346239f3684efbb76475a6004a74230cd6c"
@@ -911,6 +926,21 @@
       "sha256": "e418b97fe878e28e1e3f67c47fafc05775f77567da3b30b0d41248f8a701eda2"
     },
     {
+      "file": "menu/killhouse-holdout-blackout.jpg",
+      "bytes": 6055,
+      "sha256": "2f51e84716e9f7b58f1383fa07822b8b6b6939be104728fbc5063df0c2503ba8"
+    },
+    {
+      "file": "menu/killhouse-holdout-citadel.jpg",
+      "bytes": 7744,
+      "sha256": "3730f685b7ca9f7ebb8ed5d4fb3d8a9c36ba9705cd5ab9020eff8cd2c7bf84ff"
+    },
+    {
+      "file": "menu/killhouse-holdout-redline.jpg",
+      "bytes": 7473,
+      "sha256": "a4c4eeed381977f5645d49d4302a0afd5e9a51f88eb1ce28537207c17cf43582"
+    },
+    {
       "file": "menu/killhouse-holdout-ruins.jpg",
       "bytes": 11023,
       "sha256": "f50a89135482643e51ec64ebf0d161e53397b6f91db8fffac4bed0957a839db5"
@@ -934,6 +964,36 @@
       "file": "menu/mode-tdm.jpg",
       "bytes": 8030,
       "sha256": "da8c1ef69d1d585db29e80e6d371088a7bbb3350c89bcf7b5ab05e5462175166"
+    },
+    {
+      "file": "menu/mode-trials.jpg",
+      "bytes": 6069,
+      "sha256": "b21b23d065cc457ec32383077019af0fe5546f4d518dd256dfa9838c09dd1109"
+    },
+    {
+      "file": "menu/mode-extract.jpg",
+      "bytes": 7698,
+      "sha256": "c2ff7ecaa7d0ae9150e7a37e1b1186672386158175832078c4bf174e24953dec"
+    },
+    {
+      "file": "menu/mode-breach.jpg",
+      "bytes": 8552,
+      "sha256": "151ccd68d63a017b6c4c648ae07747feba0c28f5d3c5ee6f7a4a08f584e313bb"
+    },
+    {
+      "file": "menu/mode-hunted.jpg",
+      "bytes": 8078,
+      "sha256": "2721fffaafa3562de787569d94a79a5f35cc1ab49ad6f755b35a109b0e1e4652"
+    },
+    {
+      "file": "menu/mode-uplink.jpg",
+      "bytes": 8824,
+      "sha256": "c61dc874b1b906588b996969f970197b0b4590dbb561eb51d974afc37a98f99d"
+    },
+    {
+      "file": "menu/mode-arms.jpg",
+      "bytes": 7234,
+      "sha256": "0a911e9e792bbe4bc827d73f0ed1dd4c0e7d17c2a25e4b03f48b81139570568f"
     },
     {
       "file": "menu/training.jpg",

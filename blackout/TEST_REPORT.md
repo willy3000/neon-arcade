@@ -1,3 +1,29 @@
+# QA report — 14 October 2026 (new modes and Act III)
+
+| Suite | Result |
+|---|---|
+| `npm test` | **pass**: core 45, progression 26, **all nine campaign operations replayed**, co-op 15, squad 19, support 21, arsenal 19, holdout 22, quality 31, intel 7, **modes 11 (new)**, net 8 |
+| `npm run test:browser` | **22/22** |
+| `npm run test:resilience` | **3/3** |
+| `npm run test:e2e` / `test:e2e:squad` | **pass** |
+| `npm run verify` | **pass** |
+
+**Real-browser checks:**
+- **Lobby:** the lobby fits at 1280×800, 1366×768 and 1920×1080 with the new mode switch.
+- **Each new versus mode:** launches with its rules and HUD.
+- **Extraction:** caches, the landing-zone hold and the payout.
+- **Flow trials:** a best run saved as a ghost and raced on the next attempt.
+- **REDLINE:** Lark joins as the escort.
+- **BLACKOUT:** Voss's barrier fight in the dark.
+- **Intel:** files for the new hostiles.
+- **Errors:** no console errors anywhere.
+
+**Not verified:**
+- the new versus modes and Extraction over a real LAN;
+- human balance of Hunted, Breach and Act III. Bots measured them; people have not.
+
+---
+
 # QA report — 14 October 2026 (improvement pass)
 
 After the changes in `docs/BLACKOUT_IMPROVEMENT_REPORT.md`. All runs on Windows 11, Node 24.18, on the working tree.

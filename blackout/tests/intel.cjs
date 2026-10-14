@@ -36,7 +36,7 @@ test('sightings and kills fill a file step by step, and a completed file pays on
   const c0=save.credits;let paid=0;for(let i=1;i<goal+5;i++)paid+=Meta.intelKill(save,k).pay;assert.equal(paid,Meta.INTEL_PAY[I[k].tier]);assert.equal(save.credits-c0,paid);assert.equal(Meta.intelOf(save,k).level,3);
   const boss=Save.defaults();Meta.intelKill(boss,'tank');const r=Meta.intelKill(boss,'tank');assert.equal(r.complete,true,'two kills complete a boss file');assert.equal(r.pay,750);
   assert.equal(Meta.intelKill(save,'operator'),null,'team deathmatch operators have no file');
-  assert.deepEqual(Meta.intelSummary(save),{total:25,seen:1,studied:1,complete:1});});
+  assert.deepEqual(Meta.intelSummary(save),{total:29,seen:1,studied:1,complete:1});});
 
 test('intel survives a save round trip, and a hand-edited file cannot be paid twice',()=>{
   const save=Save.defaults();for(let i=0;i<10;i++)Meta.intelKill(save,'grenadier');Meta.intelSight(save,'tank');save.intelInit=1;

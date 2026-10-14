@@ -120,7 +120,9 @@
  function voice(cue,opts){const lines=VOICE[cue];voiceTurn[cue]=((voiceTurn[cue]??-1)+1)%lines.length;return scene.audio.say(lines[voiceTurn[cue]],opts);}
  // Opening a mode announces it every time, with one of that mode's lines picked at random and never the same one twice
  // running. It cuts off whatever the commander was saying, so stepping from one mode to another never overlaps.
- function voiceAny(cue){if(!scene)return false;const lines=VOICE[cue];let i;do i=Math.floor(Math.random()*lines.length);while(lines.length>1&&i===voiceLast[cue]);
+ // The newer modes have no lines of their own (no new voice is recorded for them): a versus mode uses team
+ // deathmatch's, a co-op mode holdout's, and a cue with no lines at all is simply skipped.
+ function voiceAny(cue){if(!scene)return false;if(!VOICE[cue]&&MODES[cue])cue=MODES[cue].versus?'tdm':'holdout';const lines=VOICE[cue];if(!lines?.length)return false;let i;do i=Math.floor(Math.random()*lines.length);while(lines.length>1&&i===voiceLast[cue]);
   const said=scene.audio.say(lines[i],{cut:true,rest:0});if(said)voiceLast[cue]=i;return said;}
  // The commander's word on a gun or gadget as it is bought or equipped: what it is and how to use it in the field.
  // ...and on a map as the lobby leader picks it: what the ground is like and what to bring (vo-map-<map>.ogg, where
@@ -199,7 +201,7 @@
  function loadoutChanged(){if(mode==='lobby'){renderLobby();lobbySync();}else renderOps();}
  // The picker for any loadout slot: a gun, a gadget, the field support, or the perk for one of the three perk slots ("perk0".."perk2").
  function openPicker(slot){const list=$('picker-list'),gun=slot==='primary'||slot==='secondary',pi=slot.startsWith('perk')?Number(slot[4]):-1,kind=gun?'weapon':slot==='support'?'support':pi>=0?'perk':'gear',table=itemTable(kind);
-  list.replaceChildren();list.classList.remove('maps');$('picker-eyebrow').textContent=kind==='support'?'FIELD SUPPORT':pi>=0?SLOTN[pi]+' PERK':slot.toUpperCase();$('picker-title').textContent=gun?'CHOOSE A WEAPON.':kind==='support'?'CHOOSE FIELD SUPPORT.':pi>=0?'CHOOSE A PERK.':'CHOOSE A GADGET.';
+  list.replaceChildren();list.classList.remove('maps','modes');$('picker-eyebrow').textContent=kind==='support'?'FIELD SUPPORT':pi>=0?SLOTN[pi]+' PERK':slot.toUpperCase();$('picker-title').textContent=gun?'CHOOSE A WEAPON.':kind==='support'?'CHOOSE FIELD SUPPORT.':pi>=0?'CHOOSE A PERK.':'CHOOSE A GADGET.';
   const keys=gun?Object.keys(W).filter(k=>W[k].slot===(slot==='primary'?0:1)):[null,...Object.keys(table).filter(k=>kind==='support'||table[k].slot===(pi>=0?pi:slot))],current=pi>=0?save.loadout.perks[pi]:save.loadout[slot];
   for(const key of keys){const have=key===null||Meta.owns(save,kind,key),item=key&&table[key],b=document.createElement('button');b.type='button';b.className='pick'+(current===key?' on':'')+(have?'':' locked')+(key&&sealed(kind,key)?' sealed':'');b.dataset.rar=RAR(kind,key);
    const lvl=gun?Meta.masteryLevel(save.mastery[key]||0):0;b.innerHTML=key===null?'<div class="pick-art"></div><div><b>NONE</b><span>Leave this slot empty.</span></div>':`<div class="pick-art">${ICON(kind,key)}</div><div><small class="pick-grade">${RAR_TAG(kind,key)}</small><b>${esc(item.name)}${gun&&lvl?' <em>'+'★'.repeat(lvl)+'</em>':''}</b><span>${have?esc(item.desc):'LOCKED · '+lockNote(kind,key)}</span></div>`;
@@ -322,11 +324,11 @@
  // ---------- runs ----------
  function launch(o){if(!scene)return;if(!o.drill){drill=null;$('skip-drill').hidden=true;}scene.audio.unlock();scene.audio.stopAmbient();for(const t of debriefTimers)clearTimeout(t);debriefTimers=[];
   // A seeded challenge is played on level terms: its fixed kit only, and none of the armory's permanent upgrades.
-  scene.sim=BPCore.create({training:o.mode==='training',mission:o.mission,difficulty:o.difficulty,checkpoint:o.checkpoint||null,loadout:o.loadout,owned:o.fair?Object.values(o.loadout).filter(k=>W[k]):[...save.owned.weapons],profile:o.fair?null:Meta.profile(save),mutators:o.mutators,seed:o.seed||1701,mode:o.mode,guest:o.guest||undefined,mates:o.mates||undefined,squad:o.squad,limit:o.limit,support:o.support});$('retry').hidden=false;scene.names=o.names||null;scene.selfId='player';$('hud-name').textContent=lobby||o.names?callsign():'ROOK';
-  const meta=missionMeta(o.mission),training=o.mode==='training',tdm=o.mode==='tdm',hold=o.mode==='holdout'||tdm,hm=hold?holdoutMap(o.mission):null;padGadget=scene.sim.player.lethal||!scene.sim.player.tactical?'lethal':'tactical';
+  const coop=o.mode==='extract'||o.mode==='trials';scene.record=o.mode==='trials'?[]:null;scene.ghost=o.mode==='trials'?makeGhost(o):null;scene.sim=BPCore.create({training:o.mode==='training',mission:o.mission,difficulty:o.difficulty,checkpoint:o.checkpoint||null,loadout:o.loadout,owned:o.fair?Object.values(o.loadout).filter(k=>W[k]):[...save.owned.weapons],profile:o.fair?null:Meta.profile(save),mutators:o.mutators,seed:o.seed||1701,mode:coop?'holdout':o.mode,rules:o.rules,extraction:o.mode==='extract',trial:o.mode==='trials'?o.trial:undefined,guest:o.guest||undefined,mates:o.mates||undefined,squad:o.squad,limit:o.limit,support:o.support});$('retry').hidden=false;scene.names=o.names||null;for(const m of scene.sim.mates)if(m.vip)scene.names={...(scene.names||{}),[m.id]:m.name};scene.selfId='player';$('hud-name').textContent=lobby||o.names?callsign():'ROOK';
+  const meta=missionMeta(o.mission),training=o.mode==='training',tdm=o.mode==='tdm',hold=o.mode==='holdout'||tdm||coop,hm=hold?holdoutMap(o.mission):null,label=tdm?MODES[o.rules]?.label||'TEAM DEATHMATCH':coop?MODES[o.mode].label:'HOLDOUT';padGadget=scene.sim.player.lethal||!scene.sim.player.tactical?'lethal':'tactical';
   scene.renderer.build(scene.sim);scene.accumulator=0;padAngle=padTarget=scene.sim.player.angle||0;padAimIdle=0;padReach=PAD_REACH;timeScale=1;scene.audio.startAmbient(scene.sim.map.theme);
-  $('training-equipment').hidden=!training;$('range-weapon').value='rifle';$('chapter').textContent=training?'LIVE FIRE / ALL EQUIPMENT':hold?(tdm?'TEAM DEATHMATCH':'HOLDOUT')+' / '+DL[o.difficulty].label:meta.act+' · '+DL[o.difficulty].label;$('mission-title').textContent=training?'TRAINING RANGE':hold?hm.title:meta.title;$('sector').textContent=training?'FIELD LAB / SECTOR 00':hold?'SIMULATION / '+hm.sector:meta.sector;
-  $('pause-copy').textContent=training?'The range waits. Nothing here changes your campaign.':tdm?'The match holds while you are paused. Leave now and it does not count.':hold?'Waves resume when you do. Dying ends the run and banks its credits.':'Your checkpoint is secure. The city can wait.';$('retry').textContent=training?'RESET THE RANGE':tdm?'RESTART MATCH':hold?'RESTART HOLDOUT':'RETRY CHECKPOINT';
+  $('training-equipment').hidden=!training;$('range-weapon').value='rifle';$('chapter').textContent=training?'LIVE FIRE / ALL EQUIPMENT':hold?label+' / '+DL[o.difficulty].label:meta.act+' · '+DL[o.difficulty].label;$('mission-title').textContent=training?'TRAINING RANGE':hold?hm.title:meta.title;$('sector').textContent=training?'FIELD LAB / SECTOR 00':hold?'SIMULATION / '+hm.sector:meta.sector;
+  $('pause-copy').textContent=training?'The range waits. Nothing here changes your campaign.':tdm?'The match holds while you are paused. Leave now and it does not count.':o.mode==='extract'?'The patrols hold while you are paused. Leave now and the loot is lost.':o.mode==='trials'?'The clock stops while you are paused.':hold?'Waves resume when you do. Dying ends the run and banks its credits.':'Your checkpoint is secure. The city can wait.';$('retry').textContent=training?'RESET THE RANGE':tdm?'RESTART MATCH':o.mode==='trials'?'RESTART THE COURSE':o.mode==='extract'?'RESTART THE RUN':hold?'RESTART HOLDOUT':'RETRY CHECKPOINT';
   $('radio').hidden=true;radioUntil=0;$('banner').className='banner';setMode('playing');$('status').textContent=training?'TRAINING ACTIVE':'ROOK / SIGNAL ACTIVE';scene.scale.refresh();scene.game.canvas.focus();lastHud=0;hud();drain();
   if(!training&&!hold&&!o.checkpoint?.stage)banner(meta.act,meta.title,meta.sector,3.4);if(hold&&!o.fair)banner(tdm?'TEAM DEATHMATCH':'HOLDOUT',hm.title,tdm?'TEAM '+(scene.sim.player.team?'DELTA':'ALPHA')+' · FIRST TO '+scene.sim.tdm.limit+' KILLS':'SURVIVE AS LONG AS YOU CAN',3);feedRows=[];
   // The commander's order for this kind of run. It cuts in over anything else he was saying; a quick retry does not repeat it.
@@ -337,10 +339,13 @@
   const mutators=save.missions[id]?.done?[...opsMutators]:[];run={mode:'campaign',mission:id,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0,mutators};save.run={...run,checkpoint:freshCheckpoint()};persist();launch({mode:'campaign',mission:id,difficulty:run.difficulty,loadout:lo,mutators});}
  // A lobby run played on this machine alone: holdout (with an AI teammate if the open slot was filled), or a team
  // deathmatch against AI operators, whose teams and rules ("vs") were set in the lobby.
- function startArena(kind='holdout',mapId='holdout',fill=false,vs=null){netRole='solo';const crew=botCrew(kind==='holdout'&&fill?1:0);
-  run={mode:kind,mission:mapId,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0,fill,vs};const seed=1701+Math.floor(Math.random()*1e6);
-  if(kind==='tdm')launch({mode:kind,mission:mapId,difficulty:run.difficulty,loadout:Meta.loadout(save),seed,...(vs||{})});
-  else launch({mode:kind,mission:mapId,difficulty:run.difficulty,loadout:Meta.loadout(save),seed,mates:crew.length?crew.map(c=>({loadout:c.loadout,bot:true})):undefined,names:crew.length?crewNames(crew):null});}
+ function startArena(kind='holdout',mapId='holdout',fill=false,vs=null){netRole='solo';
+  if(kind==='trials'){const daily=!!settings.trialDaily,seed=trialSeed(mapId,daily);run={mode:'trials',mission:mapId,difficulty:'standard',floor:'standard',deaths:0,trial:{seed,daily}};
+   launch({mode:'trials',mission:mapId,difficulty:'standard',loadout:Meta.loadout(save),seed:1701,trial:{seed}});return;}
+  const crew=botCrew((kind==='holdout'||kind==='extract')&&fill?1:0);
+  const vsMode=isVs(kind);run={mode:vsMode?'tdm':kind,rules:vsMode?kind:undefined,mission:mapId,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0,fill,vs};const seed=1701+Math.floor(Math.random()*1e6);
+  if(vsMode)launch({mode:'tdm',rules:kind,mission:mapId,difficulty:run.difficulty,loadout:Meta.loadout(save),seed,mutators:vsMutators(),...(vs||{})});
+  else launch({mode:kind,mission:mapId,difficulty:run.difficulty,loadout:Meta.loadout(save),seed,mutators:kind==='extract'?vsMutators():undefined,mates:crew.length?crew.map(c=>({loadout:c.loadout,bot:true})):undefined,names:crew.length?crewNames(crew):null});}
  function startHoldout(mapId='holdout'){startArena('holdout',mapId,false);}
  // A seeded challenge (Meta.challengeFor): today's daily or this week's weekly, on its own map, pressure, kit and
  // mutator, from its own seed. The attempt is counted as it starts; whether it can set a record rides with the run.
@@ -367,12 +372,20 @@
     <h4>LOCAL BOARD <small>THIS MACHINE ONLY</small></h4><div class="ch-board">${rows.length?rows.map((e,i)=>`<div class="board-row${e.period===cur?' current':''}"><span class="br-rank">#${i+1}</span><b>${fmt(e.score)}</b><span>WAVE ${e.wave} · ×${e.combo}</span><span>${e.period===cur?(kind==='daily'?'TODAY':'THIS WEEK'):new Date(e.at).toISOString().slice(0,10)}</span></div>`).join(''):'<p class="board-empty">No recorded runs yet.</p>'}</div></section>`;}
  function openChallenges(){const p=$('challenges');setHtml($('challenges-list'),challengePanel('daily')+challengePanel('weekly'));p.classList.remove('closing');if(!p.open)p.showModal();p.querySelector('.ch-play')?.focus();}
  function closeChallenges(){const p=$('challenges');if(!p.open||p.classList.contains('closing'))return;p.classList.add('closing');setTimeout(()=>{p.classList.remove('closing');p.close();},200);}
+ // The mode picker: co-op modes and versus modes, each with its picture, what it is and how many can play. A mode
+ // that cannot be played over an online lobby (the versus ones, for now) says so and is not offered.
+ function openModePicker(){const l=lobby;if(!l||l.role==='guest')return;const list=$('picker-list');list.replaceChildren();list.classList.add('maps','modes');$('picker-eyebrow').textContent='COMBAT MODES';$('picker-title').textContent='CHOOSE A MODE.';
+  for(const [head,keys] of [['CO-OP · AGAINST THE AI',Object.keys(MODES).filter(k=>!isVs(k))],['VERSUS · TEAM AGAINST TEAM',Object.keys(MODES).filter(isVs)]]){const h=document.createElement('h4');h.className='pick-head';h.textContent=head;list.append(h);
+   for(const k of keys){const M=MODES[k],off=l.link==='online'&&isVs(k)||l.role==='host'&&l.peers.length>=M.seats,b=document.createElement('button');b.type='button';b.className='pick'+(l.mode===k?' on':'')+(off?' locked':'');b.dataset.pickMode=k;
+    b.innerHTML=`<div class="pick-art" style="background-image:url('blackout/assets/menu/mode-${M.art||k}.jpg')"></div><div><b>${M.label}</b><span>${esc(M.sub)}</span><small>${off?(l.link==='online'?'LAN OR SOLO ONLY FOR NOW':'TOO MANY PLAYERS IN THE LOBBY'):esc(M.note)}</small></div>`;
+    b.addEventListener('click',()=>{if(off){scene.audio.ui('deny');return;}$('picker').close();lobbySetMode(k);});list.append(b);}}
+  if(!$('picker').open)$('picker').showModal();(list.querySelector('.on')||list.querySelector('button:not(.locked)'))?.focus();}
  // The map picker, for either lobby mode: team deathmatch is fought over the same killhouses holdout uses.
  function openHoldoutPicker(role='solo'){
-  const list=$('picker-list');list.replaceChildren();list.classList.add('maps');$('picker-eyebrow').textContent=lobby?MODES[lobby.mode].label:'HOLDOUT';$('picker-title').textContent=lobby?.mode==='tdm'?'CHOOSE A MAP.':'CHOOSE A KILLHOUSE.';
+  const list=$('picker-list');list.replaceChildren();list.classList.remove('modes');list.classList.add('maps');$('picker-eyebrow').textContent=lobby?MODES[lobby.mode].label:'HOLDOUT';$('picker-title').textContent=isVs(lobby?.mode)?'CHOOSE A MAP.':'CHOOSE A KILLHOUSE.';
   // Each killhouse is shown by a screenshot of it in play (blackout/qa/killhouse-shots.cjs captures them).
   for(const h of HOLD){const open=holdoutOpen(h),b=document.createElement('button');b.type='button';b.className='pick'+(open?'':' locked')+(role==='lobby'&&lobby?.map===h.id?' on':'');
-   b.innerHTML=`<div class="pick-art" style="background-image:url('blackout/assets/menu/killhouse-${h.id}.jpg')"></div><div><b>${esc(h.title)}</b><span>${open?esc(h.sector)+(lobby?.mode==='tdm'?' · '+(h.size==='small'?'SMALL · 1V1–2V2':'LARGE · 3V3–4V4'):'')+(h.pay>1?' · PAYS ×'+h.pay:''):'LOCKED · COMPLETE '+esc(missionMeta(h.locks)?.title||'')+' TO UNLOCK'}</span></div>`;
+   b.innerHTML=`<div class="pick-art" style="background-image:url('blackout/assets/menu/killhouse-${h.id}.jpg')"></div><div><b>${esc(h.title)}</b><span>${open?esc(h.sector)+(isVs(lobby?.mode)?' · '+(h.size==='small'?'SMALL · 1V1–2V2':'LARGE · 3V3–4V4'):'')+(h.pay>1?' · PAYS ×'+h.pay:''):'LOCKED · COMPLETE '+esc(missionMeta(h.locks)?.title||'')+' TO UNLOCK'}</span></div>`;
    b.addEventListener('click',()=>{if(!open){scene.audio.ui('deny');return;}$('picker').close();scene.audio.ui('select');if(role==='lobby')lobbySetMap(h.id);else startHoldout(h.id);});list.append(b);}
   if(!$('picker').open)$('picker').showModal();(list.querySelector('.on')||list.querySelector('button:not(.locked)'))?.focus();}
  // ---------- the lobby ----------
@@ -384,7 +397,18 @@
  // (for a guest) ready state. Guest -> host: hello, profile, chat, input. Host -> guest: lobby, chat, countdown,
  // countdownCancel, start, snapshot, events, full. Everything received is re-validated.
  const CALLSIGNS=['VIPER','GHOST','RAVEN','MAKO','ONYX','HAVOC','EMBER','NOMAD'];
- const MODES={holdout:{label:'HOLDOUT',sub:'ENDLESS WAVES',note:'ONE OR TWO OPERATORS',seats:2},tdm:{label:'TEAM DEATHMATCH',sub:'ALPHA V DELTA · UP TO 4 V 4',note:'UP TO EIGHT PLAYERS · AI OPTIONAL',seats:8}};
+ // The combat modes. A versus mode is team deathmatch's engine with rules of its own (BPCore VERSUS): it is launched as
+ // mode 'tdm' with rules set to the mode's key, so seats, AI, LAN play, the scoreboard and the pay all carry over.
+ const MODES={holdout:{label:'HOLDOUT',sub:'ENDLESS WAVES',note:'ONE OR TWO OPERATORS',seats:2},tdm:{label:'TEAM DEATHMATCH',sub:'ALPHA V DELTA · UP TO 4 V 4',note:'UP TO EIGHT PLAYERS · AI OPTIONAL',seats:8,versus:true},
+  arms:{label:'ARMS RACE',sub:'A NEW GUN FOR EVERY KILL',note:'TWELVE GUNS, THEN THE KNIFE · UP TO EIGHT PLAYERS',seats:8,versus:true},
+  uplink:{label:'UPLINK',sub:'TAKE AND HOLD THE RELAYS',note:'THREE RELAYS · A POINT A SECOND FOR EACH ONE HELD',seats:8,versus:true},
+  hunted:{label:'HUNTED',sub:'ONE HUNTER V THE SQUAD',note:"DELTA'S FIRST SEAT IS THE HUNTER · ONE LIFE",seats:5,versus:true},
+  breach:{label:'BREACH',sub:'PLANT OR DEFEND · ROUNDS',note:'ONE LIFE A ROUND · FIRST TO FOUR',seats:8,versus:true},
+  extract:{label:'EXTRACTION',sub:'TAKE THE LOOT · GET OUT',note:'ONE OR TWO OPERATORS · DIE AND THE LOOT IS LOST',seats:2},
+  trials:{label:'FLOW TRIALS',sub:'RACE THE CLOCK',note:'SOLO · GATES, TARGETS, PERFECT FLOWS',seats:1}};
+ // A flow-trial course: the map's own (the same every time) or today's (the same for everyone today).
+ const trialSeed=(map,daily)=>daily?(today()*7919+[...map].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,7))%1e9:[...map].reduce((a,c)=>a*31+c.charCodeAt(0)>>>0,17)%1e9;
+ const isVs=k=>!!MODES[k]?.versus;
  const BOT_KITS=[{primary:'rifle',secondary:'pistol'},{primary:'smg',secondary:'machinepistol'},{primary:'shotgun',secondary:'pistol'}];
  function callsign(){if(!settings.callsign){settings.callsign=CALLSIGNS[Math.floor(Math.random()*CALLSIGNS.length)];persist();}return settings.callsign;}
  // AI teammates: each gets a callsign nobody in the squad is using and one of three standard kits.
@@ -407,7 +431,7 @@
  // anyone can move to a seat with no player in it, and an AI in that seat changes places with them.
  const teamOf=n=>n<4?0:1,humans=(l,t)=>l.seats.filter((q,n)=>teamOf(n)===t&&q&&q!=='bot').length,teamsOk=l=>l.role==='guest'||[0,1].every(t=>l.seats.some((q,n)=>teamOf(n)===t&&q));
  let lastSeats=null;
- function seatsInit(l){if(l.role==='guest')return;if(!l.seats)l.seats=lastSeats?lastSeats.map(q=>q&&q.peer?'bot':q):['host','bot','bot','bot','bot','bot','bot','bot'];l.limit=BPCore.TDM.limits.includes(settings.tdmLimit)?settings.tdmLimit:BPCore.TDM.limit;l.support=settings.tdmSupport!==false;
+ function seatsInit(l){if(l.role==='guest')return;if(l.seats&&l.mode==='hunted')for(let n=5;n<8;n++)if(l.seats[n]==='bot')l.seats[n]=null;if(!l.seats)l.seats=lastSeats?lastSeats.map(q=>q&&q.peer?'bot':q):['host','bot','bot','bot','bot','bot','bot','bot'];l.limit=BPCore.TDM.limits.includes(settings.tdmLimit)?settings.tdmLimit:BPCore.TDM.limit;l.support=settings.tdmSupport!==false;
   for(const p of l.peers)if(!l.seats.some(q=>q&&q.peer===p.id))seatPeer(l,p);}
  // A player who joins takes an empty seat on the team with fewer players, or an AI's seat if none is empty.
  function seatPeer(l,p){const t=humans(l,0)<=humans(l,1)?0:1,find=(x,what)=>l.seats.findIndex((q,n)=>teamOf(n)===x&&q===what),n=[find(t,null),find(t,'bot'),find(1-t,null),find(1-t,'bot')].find(i=>i>=0);
@@ -421,7 +445,7 @@
  // The roster a match is built from: the lobby leader first, then every other filled seat in order.
  function rosterOf(l){const view=seatsView(l).map((q,n)=>q&&{...q,seat:n,team:teamOf(n)}).filter(Boolean),at=view.findIndex(q=>q.host);return at<0?view:[view[at],...view.filter((q,i)=>i!==at)];}
  // What a match needs from the lobby: every operator in roster order, their callsigns, and the rules.
- function matchOf(l){const roster=rosterOf(l),names={self:'player'};roster.forEach((r,i)=>{names[i?MATE_IDS[i-1]:'player']=r.name;});
+ function matchOf(l){const all=rosterOf(l),hunter=all.find(r=>r.team===1),roster=l.mode==='hunted'?all.filter(r=>r.team===0||r===hunter):all,names={self:'player'};roster.forEach((r,i)=>{names[i?MATE_IDS[i-1]:'player']=r.name;});
   return {roster,vs:{squad:roster.map(r=>({team:r.team,loadout:r.loadout,bot:!!r.bot})),names,limit:l.limit,support:l.support}};}
  function renderTeams(l){const lead=l.role!=='guest',view=seatsView(l),mine=lead?l.seats.indexOf('host'):l.mySeat,linked=lobbyLinked();
   const tools=l.role==='solo'&&NET?`<span class="team-tools"><em>PLAY WITH FRIENDS OVER LAN</em><button type="button" class="secondary" data-link="lan" data-role="host">HOST A MATCH</button><button type="button" class="secondary" data-link="lan" data-role="guest">JOIN A MATCH</button></span>`:'';
@@ -437,20 +461,32 @@
    return `<div class="team ${t?'delta':'alpha'}"><h4>TEAM ${name} <small>${pl} PLAYER${pl===1?'':'S'} · ${ai} AI</small></h4>${four.map((q,i)=>row(q,t*4+i)).join('')}</div>`;};
   setHtml($('teams'),tools+team(0,'ALPHA')+team(1,'DELTA'));}
  // The rules of the match, under the teams: the kills needed to win and whether field support can be called.
- function renderRules(l){const lead=l.role!=='guest',rec=save.tdm[settings.difficulty],off=lead?'':' disabled';
-  setHtml($('lobby-records'),`<h4>MATCH RULES <small>${lead?'YOURS TO SET':'SET BY THE HOST'}${rec?' · YOUR RECORD AT THIS AI SKILL: '+rec.wins+' WON OF '+rec.played:''}</small></h4><div class="rules"><span class="rule"><em>KILLS TO WIN</em>${BPCore.TDM.limits.map(n=>`<button type="button" class="chip-button${n===l.limit?' on':''}" data-limit="${n}"${off}>${n}</button>`).join('')}</span><span class="rule"><em>FIELD SUPPORT</em><button type="button" class="chip-button${l.support?' on':''}" data-support="1"${off}>${l.support?'ON':'OFF'}</button></span></div>`);}
+ // Mutators a match can carry (Veterans is about hostile soldiers, so it has no place against people).
+ const VS_MUTATORS=['night','sidearms','scarcity'];
+ const vsMutators=()=>(Array.isArray(settings.vsMutators)?settings.vsMutators:[]).filter(k=>VS_MUTATORS.includes(k));
+ // What each versus mode asks, in a line, for the rules panel.
+ const VS_RULE={arms:'TWELVE GUNS, A STEP UP FOR EVERY KILL · THE FIRST KNIFE KILL ON THE LAST STEP WINS · A KNIFE KILL SETS THE VICTIM BACK A STEP',
+  uplink:'THREE RELAYS · STAND IN ONE UNCONTESTED TO TAKE IT · A POINT A SECOND FOR EACH HELD · FIRST TO 150',
+  hunted:"DELTA'S FIRST SEAT IS THE HUNTER: CLOAKED, BLINKS INSTEAD OF ROLLING · NOBODY REDEPLOYS · THE SQUAD WINS BY KILLING IT OR LASTING FOUR MINUTES",
+  breach:'ONE LIFE A ROUND · 20 S SETUP FOR THE DEFENDERS · PLANT THE CHARGE (HOLD INTERACT AT THE SITE) OR WIPE THE OTHER SIDE · FIRST TO FOUR, SIDES SWAP AFTER THREE'};
+ function renderRules(l){const lead=l.role!=='guest',rec=save.tdm[settings.difficulty],off=lead?'':' disabled',muts=lead?vsMutators():l.mutators||[],plain=l.mode==='tdm',noSupport=['arms','hunted'].includes(l.mode);
+  setHtml($('lobby-records'),`<h4>MATCH RULES <small>${lead?'YOURS TO SET':'SET BY THE HOST'}${rec&&plain?' · YOUR RECORD AT THIS AI SKILL: '+rec.wins+' WON OF '+rec.played:''}</small></h4><div class="rules">`
+   +(plain?`<span class="rule"><em>KILLS TO WIN</em>${BPCore.TDM.limits.map(n=>`<button type="button" class="chip-button${n===l.limit?' on':''}" data-limit="${n}"${off}>${n}</button>`).join('')}</span>`:`<p class="rule-text">${VS_RULE[l.mode]}</p>`)
+   +(noSupport?'':`<span class="rule"><em>FIELD SUPPORT</em><button type="button" class="chip-button${l.support?' on':''}" data-support="1"${off}>${l.support?'ON':'OFF'}</button></span>`)
+   +`<span class="rule"><em>MUTATORS</em>${VS_MUTATORS.map(k=>`<button type="button" class="chip-button${muts.includes(k)?' on':''}" data-vsmut="${k}"${off} title="${esc(BPWorld.mutators[k].desc)}">${esc(BPWorld.mutators[k].short||BPWorld.mutators[k].name)}</button>`).join('')}</span></div>`);}
  // What a click in the teams panel or the rules does. A guest asks the host for a seat; everything else is the leader's.
- function teamClick(e){const l=lobby,seat=e.target.closest('[data-seat]'),ai=e.target.closest('[data-ai]'),lim=e.target.closest('[data-limit]'),sup=e.target.closest('[data-support]'),link=e.target.closest('[data-link]');if(!l||l.mode!=='tdm')return;
-  if(link&&l.role==='solo'){scene.audio.ui('select');openLobby(link.dataset.role,l.map,link.dataset.link,'tdm');return;}
+ function teamClick(e){const l=lobby,seat=e.target.closest('[data-seat]'),ai=e.target.closest('[data-ai]'),lim=e.target.closest('[data-limit]'),sup=e.target.closest('[data-support]'),vm=e.target.closest('[data-vsmut]'),link=e.target.closest('[data-link]');if(!l||!isVs(l.mode))return;
+  if(link&&l.role==='solo'){scene.audio.ui('select');openLobby(link.dataset.role,l.map,link.dataset.link,l.mode);return;}
   if(seat){const n=Number(seat.dataset.seat);if(l.role==='guest'){if(lobbyLinked())LINK.guestSend({type:'seat',seat:n});}else if(seatMove(l,'host',n))lobbyChanged();scene.audio.ui('select');return;}
   if(l.role==='guest')return;
-  if(ai){const n=Number(ai.dataset.ai);if(l.seats[n]===null)l.seats[n]='bot';else if(l.seats[n]==='bot')l.seats[n]=null;scene.audio.ui('tick');lobbyChanged();}
+  if(vm){const k=vm.dataset.vsmut,cur=vsMutators();settings.vsMutators=cur.includes(k)?cur.filter(x=>x!==k):[...cur,k];persist();scene.audio.ui('tick');lobbyChanged();return;}
+  if(ai){const n=Number(ai.dataset.ai);if(l.mode==='hunted'&&n>4){scene.audio.ui('deny');return;}if(l.seats[n]===null)l.seats[n]='bot';else if(l.seats[n]==='bot')l.seats[n]=null;scene.audio.ui('tick');lobbyChanged();}
   else if(lim){l.limit=settings.tdmLimit=Number(lim.dataset.limit);scene.audio.ui('tick');lobbyChanged();}
   else if(sup){l.support=settings.tdmSupport=!l.support;scene.audio.ui('tick');lobbyChanged();}}
  // Each guest is sent the lobby as it stands: in team deathmatch all eight seats and which is theirs, in holdout the squad.
  function lobbySync(){const l=lobby;if(!lobbyLinked())return;if(l.role!=='host'){LINK.guestSend({type:'profile',...myProfile()});return;}
-  if(l.mode==='tdm'){const seats=seatsView(l).map(q=>q&&{name:q.name,rank:q.rank,loadout:q.loadout,ready:q.ready,bot:!!q.bot,host:!!q.host});
-   for(const p of l.peers)LINK.hostSend({type:'lobby',host:myProfile(),mode:l.mode,map:l.map,difficulty:settings.difficulty,seats,you:l.seats.findIndex(q=>q&&q.peer===p.id),limit:l.limit,support:l.support},p.id);return;}
+  if(isVs(l.mode)){const seats=seatsView(l).map(q=>q&&{name:q.name,rank:q.rank,loadout:q.loadout,ready:q.ready,bot:!!q.bot,host:!!q.host});
+   for(const p of l.peers)LINK.hostSend({type:'lobby',host:myProfile(),mode:l.mode,map:l.map,difficulty:settings.difficulty,seats,you:l.seats.findIndex(q=>q&&q.peer===p.id),limit:l.limit,support:l.support,mutators:vsMutators()},p.id);return;}
   const squad=lobbySquad(l).filter(Boolean).map(q=>({name:q.name,rank:q.rank,loadout:q.loadout,ready:q.ready,bot:!!q.bot}));
   l.peers.forEach((p,i)=>LINK.hostSend({type:'lobby',host:myProfile(),mode:l.mode,map:l.map,difficulty:settings.difficulty,squad,seat:i},p.id));}
  function feed(text,who=''){if(!lobby)return;lobby.feed.push({who,text:String(text).slice(0,120)});if(lobby.feed.length>40)lobby.feed.shift();renderFeed();}
@@ -487,7 +523,7 @@
   el.hidden=false;el.className='operator'+(!q?' empty':q.bot?' ai ready':q.ready||o.leader?' ready':'');
   setHtml(el,!q?`${top(o.tag||tag,o.state)}<div class="op-figure">${BPIcons.soldier('rifle',o.tag?0:1)}</div><div class="op-plate"><label>${o.label}</label><b class="op-name">${o.name}</b><small>${o.note}</small></div>${kit(o.invite||'')}`
    :`${top(o.leader?'HOST':tag,q.bot?'AI TEAMMATE':o.leader?'LOBBY LEADER':q.ready?'READY':'NOT READY')}<div class="op-figure">${BPIcons.soldier(q.loadout.primary,o.leader?0:1)}</div><div class="op-plate"><label>${q.bot?'AI':'SQUADMATE'}</label><b class="op-name">${esc(q.name)}</b><small>${q.bot?o.note:'RANK '+q.rank+' · '+esc(q.title)}</small></div>${kit(o.invite||operatorKit(q.loadout,!!o.leader))}`);}
- function renderLobby(){const l=lobby;if(!l)return;const host=l.role==='host',solo=l.role==='solo',online=l.link==='online',lead=host||solo,linked=lobbyLinked(),mine=myProfile(),r=rank(),p=l.peer,tdm=l.mode==='tdm',M=MODES[l.mode],counting=l.countdown>0,left=Math.max(1,Math.ceil((l.countdown-performance.now())/1000));
+ function renderLobby(){const l=lobby;if(!l)return;const host=l.role==='host',solo=l.role==='solo',online=l.link==='online',lead=host||solo,linked=lobbyLinked(),mine=myProfile(),r=rank(),p=l.peer,tdm=isVs(l.mode),M=MODES[l.mode],counting=l.countdown>0,left=Math.max(1,Math.ceil((l.countdown-performance.now())/1000));
   if(mode==='lobby')$('status').textContent=solo?M.label+' LOBBY':host?'SQUAD LOBBY / HOSTING':'SQUAD LOBBY';
   $('lobby-eyebrow').innerHTML=`${M.label} <span>—</span> ${solo?M.sub:online?'ONLINE CO-OP':tdm?'LAN SQUAD':'LAN CO-OP'}`;$('lobby-title').textContent=solo?(tdm?'DEATHMATCH LOBBY.':'HOLDOUT LOBBY.'):host?'YOUR SQUAD LOBBY.':p?p.name+"'S LOBBY.":'JOIN A SQUAD.';
   // What the other players need to find this lobby: a room code online, an address on a LAN. Once linked it also shows the delay between the two.
@@ -513,17 +549,24 @@
   $('lobby-comms').hidden=solo;$('lobby-records').hidden=!solo&&!tdm;$('lobby-records').classList.toggle('lobby-rules',tdm);
   // Each killhouse keeps its own records. The default one also shows records set before killhouses were tracked apart.
   if(tdm)renderRules(l);
+  else if(l.mode==='extract'){const here=holdoutMap(l.map),x=save.extract?.[l.map];setHtml($('lobby-records'),`<h4>EXTRACTION / ${esc(here.title)} <small>${here.pay>1?'PAYS ×'+here.pay+' CREDITS · ':''}DIE AND THE LOOT IS LOST</small></h4><div class="rec-tiles"><span class="rec-tile"><small>RUNS</small><b>${x?.runs||0}</b></span><span class="rec-tile"><small>EXTRACTED</small><b>${x?.out||0}</b></span><span class="rec-tile on"><small>BEST HAUL</small><b>${x?.best?fmt(x.best)+' CR':'—'}</b></span></div>`);}
+  else if(l.mode==='trials'){const here=holdoutMap(l.map),key=c=>l.map+':'+trialSeed(l.map,c),rec=c=>save.trials?.[key(c)],cell=(c,label)=>{const q=rec(c);return `<button type="button" class="rec-tile course${!!settings.trialDaily===c?' on':''}" data-course="${c?1:0}"><small>${label}</small><b>${q?q.best.toFixed(2)+' S':'NOT RUN'}</b>${q?`<small>${q.hit}/${q.targets} TARGETS · ${q.flows} FLOWS${save.ghosts?.[key(c)]?' · GHOST SAVED':''}</small>`:''}</button>`;};
+   setHtml($('lobby-records'),`<h4>FLOW TRIALS / ${esc(here.title)} <small>TIME + 3 S A MISSED TARGET − 0.5 S A PERFECT FLOW · RACE YOUR BEST RUN'S GHOST</small></h4><div class="rec-tiles">${cell(false,'THIS MAP\'S COURSE')}${cell(true,"TODAY'S COURSE")}</div>`);}
   else if(solo){const here=holdoutMap(l.map),rec=save.killhouse[l.map]||{},best=d=>rec[d]||(l.map==='holdout'?save.holdout[d]:0);
    setHtml($('lobby-records'),`<h4>YOUR BEST RUNS / ${esc(here.title)} <small>${here.pay>1?'PAYS ×'+here.pay+' CREDITS · ':''}ONE RECORD PER ENEMY PRESSURE</small></h4><div class="rec-tiles">${DIFFS.map(d=>`<span class="rec-tile${d===settings.difficulty?' on':''}"><small>${DL[d].label}</small><b>${best(d)?'WAVE '+best(d):'—'}</b></span>`).join('')}</div>`);}
   $('lobby-join').hidden=lead||linked;$('lobby-brief').hidden=!lead&&!linked;$('lobby-join-status').textContent=lead?'':l.status;$('lobby-join-copy').textContent=online?'Ask the host for the five-character room code shown at the top of their lobby.':'Ask the host for the address shown at the top of their lobby.';$('lobby-ip').placeholder=online?'ROOM CODE':'192.168.1.23';$('lobby-ip').maxLength=online?5:64;$('lobby-connect').disabled=l.phase==='connecting';$('lobby-connect').textContent=l.phase==='connecting'?'CONNECTING…':'CONNECT';
   // The mode switch, under the loadout: one tile per mode over a still of that mode in play (blackout/qa/mode-shots.cjs
   // captures them). Like the pressure buttons, it is rebuilt only when it changes, so a squadmate's update never steals keyboard or controller focus.
   $('lobby-modes').hidden=!lead&&!linked;
-  const mp=$('lobby-mode'),msig=l.mode+'|'+lead+'|'+online;if(mp.dataset.sig!==msig){mp.dataset.sig=msig;mp.replaceChildren();for(const k of Object.keys(MODES)){const b=document.createElement('button');b.type='button';b.className='mode-tile'+(l.mode===k?' active':'');b.dataset.mode=k;b.disabled=!lead||online&&k==='tdm';b.innerHTML=`<i style="background-image:url('blackout/assets/menu/mode-${k}.jpg')"></i><b>${MODES[k].label}</b><small>${MODES[k].sub}</small>`;b.addEventListener('click',()=>lobbySetMode(k));mp.append(b);}}
+  const mp=$('lobby-mode'),msig=l.mode+'|'+lead+'|'+online;if(mp.dataset.sig!==msig){mp.dataset.sig=msig;mp.replaceChildren();
+   // The switch shows the mode in force and a way to all of them: the modes themselves are chosen in a picker.
+   const cur=document.createElement('button');cur.type='button';cur.className='mode-tile active';cur.dataset.mode=l.mode;cur.disabled=!lead;cur.innerHTML=`<i style="background-image:url('blackout/assets/menu/mode-${MODES[l.mode].art||l.mode}.jpg')"></i><b>${MODES[l.mode].label}</b><small>${MODES[l.mode].sub}</small>`;
+   const all=document.createElement('button');all.type='button';all.className='mode-tile all-modes';all.dataset.modes='1';all.disabled=!lead;all.innerHTML=`<b>ALL MODES ↗</b><small>${Object.keys(MODES).length} MODES · CO-OP AND VERSUS</small>`;
+   for(const b of [cur,all]){b.addEventListener('click',()=>{scene.audio.ui('select');openModePicker();});mp.append(b);}}
   $('lobby-mode-note').textContent=!lead?'SET BY THE HOST':online?'DEATHMATCH IS SOLO OR LAN FOR NOW':M.note;$('lobby-map-label').textContent=tdm?'MAP':'KILLHOUSE';
   const hm=holdoutMap(l.map),diff=lead?settings.difficulty:l.difficulty;$('lobby-map-title').textContent=hm.title;$('lobby-map-sector').textContent=hm.sector;$('lobby-map-art').style.backgroundImage='url("blackout/assets/menu/killhouse-'+l.map+'.jpg")';$('lobby-map').disabled=!lead;$('lobby-map-note').textContent=$('lobby-diff-note').textContent=lead?'':'SET BY THE HOST';
   // Team deathmatch: say whether the map suits the number of operators - a small map with eight is fast and chaotic.
-  if(l.mode==='tdm'&&lead){const n=(l.seats||[]).filter(Boolean).length;$('lobby-map-note').textContent=hm.size==='small'?(n>4?'SMALL MAP · FAST AND CLOSE WITH '+n+' · A LARGE MAP SUITS 4V4':'SMALL MAP · FAST AND CLOSE'):'LARGE MAP · ROOM TO MANOEUVRE';}
+  if(isVs(l.mode)&&lead){const n=(l.seats||[]).filter(Boolean).length;$('lobby-map-note').textContent=hm.size==='small'?(n>4?'SMALL MAP · FAST AND CLOSE WITH '+n+' · A LARGE MAP SUITS 4V4':'SMALL MAP · FAST AND CLOSE'):'LARGE MAP · ROOM TO MANOEUVRE';}
   const dp=$('lobby-difficulty'),dsig=diff+'|'+lead;if(dp.dataset.sig!==dsig){dp.dataset.sig=dsig;dp.replaceChildren();for(const d of DIFFS){const b=document.createElement('button');b.type='button';b.className=(diff===d?'active ':'')+d;b.disabled=!lead;b.innerHTML=`<i class="pressure-art">${BPIcons.pressure(d)}</i><span>${DL[d].label}</span><small>×${DL[d].reward} CR</small>`;
     b.addEventListener('click',()=>{if(settings.difficulty===d)return;settings.difficulty=lobby.difficulty=d;persist();feed('ENEMY PRESSURE SET TO '+DL[d].label.toUpperCase());lobbyChanged();dp.querySelector('.active')?.focus({preventScroll:true});});dp.append(b);}}
   const box=$('lobby-loadout'),lsig=JSON.stringify([mine.loadout,lead||tdm,save.upgrades.bandolier||0,save.preset,Meta.perkSlots(save)]);if(box.dataset.sig!==lsig){box.dataset.sig=lsig;loadoutSlots(box,lead||tdm?{}:{lethal:'HOST ONLY IN CO-OP',tactical:'HOST ONLY IN CO-OP',extras:'FIELD SUPPORT AND PERKS ARE THE HOST\'S ONLY IN CO-OP'});}
@@ -541,17 +584,17 @@
   $('lobby-leave').innerHTML='<span>‹</span> '+(solo?'MAIN MENU':'LEAVE LOBBY');}
  // Whoever leads the lobby has its mode, map and AI choice remembered for next time.
  function lobbyChanged(){const l=lobby;if(!l)return;if(l.role==='host')cancelCountdown();if(l.seats&&l.role!=='guest')lastSeats=[...l.seats];if(l.role!=='guest'){if(l.link!=='online')settings.lobbyMode=l.mode;settings.lobbyMap=l.map;settings.fill=l.fill;persist();}renderLobby();lobbySync();}
- function lobbySetMap(id){if(!lobby||lobby.role==='guest'||lobby.map===id)return;lobby.map=id;feed((lobby.mode==='tdm'?'MAP':'KILLHOUSE')+' SET TO '+holdoutMap(id).title);lobbyChanged();mapVoice(id);}
+ function lobbySetMap(id){if(!lobby||lobby.role==='guest'||lobby.map===id)return;lobby.map=id;feed((isVs(lobby.mode)?'MAP':'KILLHOUSE')+' SET TO '+holdoutMap(id).title);lobbyChanged();mapVoice(id);}
  // Changing mode changes how many seats the lobby has. Going down to two-player holdout keeps the first player who
  // joined; anyone else is told why and dropped.
- function lobbySetMode(k){const l=lobby;if(!l||l.role==='guest'||!MODES[k]||l.mode===k||l.link==='online'&&k==='tdm')return;l.mode=k;if(k==='tdm')seatsInit(l);feed('MODE SET TO '+MODES[k].label);scene.audio.ui('select');voiceAny(k);
+ function lobbySetMode(k){const l=lobby;if(!l||l.role==='guest'||!MODES[k]||l.mode===k||l.link==='online'&&isVs(k))return;l.mode=k;if(isVs(k))seatsInit(l);feed('MODE SET TO '+MODES[k].label);scene.audio.ui('select');voiceAny(k);
   if(l.role==='host'){const seats=MODES[k].seats-1;for(const p of l.peers.slice(seats)){LINK.hostSend({type:'full',reason:'mode'},p.id);LINK.hostKick?.(p.id);}LINK.hostLimit?.(seats);}
   lobbyChanged();$('lobby-mode').querySelector('.active')?.focus({preventScroll:true});}
- function lobbyFill(){const l=lobby;if(!l||l.role!=='solo'||l.mode!=='holdout')return;l.fill=!l.fill;scene.audio.ui('select');lobbyChanged();$('op-peer').querySelector('[data-fill]')?.focus({preventScroll:true});}
+ function lobbyFill(){const l=lobby;if(!l||l.role!=='solo'||!['holdout','extract'].includes(l.mode))return;l.fill=!l.fill;scene.audio.ui('select');lobbyChanged();$('op-peer').querySelector('[data-fill]')?.focus({preventScroll:true});}
  // A team deathmatch starts once both teams have someone in them and every player who has joined is ready; holdout waits for its one squadmate.
- const squadReady=l=>l.mode==='tdm'?teamsOk(l)&&l.peers.every(p=>p.ready):!!l.peer?.ready;
+ const squadReady=l=>isVs(l.mode)?teamsOk(l)&&l.peers.every(p=>p.ready):!!l.peer?.ready;
  function lobbyGo(){const l=lobby;if(!l)return;
-  if(l.role==='solo'){if(l.mode==='tdm'&&!teamsOk(l)){scene.audio.ui('deny');return;}lobby=null;startArena(l.mode,l.map,l.fill,l.mode==='tdm'?matchOf(l).vs:null);}
+  if(l.role==='solo'){if(isVs(l.mode)&&!teamsOk(l)){scene.audio.ui('deny');return;}lobby=null;startArena(l.mode,l.map,l.fill,isVs(l.mode)?matchOf(l).vs:null);}
   else if(l.role==='host'){if(l.countdown){cancelCountdown();return;}if(!squadReady(l))return;if(!l.peers.length){beginHostedRun(l.map);return;}LINK.hostSend({type:'countdown',seconds:3});feed('DEPLOYING THE SQUAD');startCountdown(3);}
   else if(l.phase==='linked'&&!l.countdown){l.ready=!l.ready;scene.audio.ui('select');renderLobby();lobbySync();}}
  // Runs on both sides so each shows the same count; only the host's reaching zero starts the run (the guest waits for "start").
@@ -590,7 +633,7 @@
   if(msg.type==='guestJoined'){if(peer)return;
    // The transport already turns callers away at the limit; this covers one who connected just as the mode changed.
    if(l.peers.length>=MODES[l.mode].seats-1){LINK.hostSend({type:'full'},msg.from);LINK.hostKick?.(msg.from);return;}
-   const joined={id:msg.from,...cleanProfile(msg)};if(l.mode==='tdm'&&!seatPeer(l,joined)){LINK.hostSend({type:'full'},msg.from);LINK.hostKick?.(msg.from);return;}l.peers.push(joined);l.peer=l.peers[0];netConnected=true;cancelCountdown();feed(joined.name+' JOINED THE SQUAD');scene.audio.ui('select');scene.audio.say('vo-squad',{rest:60});renderLobby();lobbySync();}
+   const joined={id:msg.from,...cleanProfile(msg)};if(isVs(l.mode)&&!seatPeer(l,joined)){LINK.hostSend({type:'full'},msg.from);LINK.hostKick?.(msg.from);return;}l.peers.push(joined);l.peer=l.peers[0];netConnected=true;cancelCountdown();feed(joined.name+' JOINED THE SQUAD');scene.audio.ui('select');scene.audio.say('vo-squad',{rest:60});renderLobby();lobbySync();}
   else if(msg.type==='guestLeft'){if(!peer)return;l.peers=l.peers.filter(q=>q!==peer);l.peer=l.peers[0]||null;netConnected=l.peers.length>0;if(l.seats){const n=l.seats.findIndex(q=>q&&q.peer===peer.id);if(n>=0)l.seats[n]='bot';}cancelCountdown();feed(peer.name+' LEFT THE SQUAD');
    if(l.inRun&&['playing','paused'].includes(mode)){const sim=scene.sim,seat=netSeats.get(from),m=seat===undefined?null:sim.mates[seat];netSeats.delete(from);if(seat!==undefined)netInputs[seat]=null;
     // In team deathmatch an AI teammate takes over the seat. In holdout a squadmate who leaves takes the revive
@@ -600,9 +643,9 @@
     else if(m){m.dead=true;m.vanished=true;sim.tags=[];if(sim.player.dead&&!sim.dead){sim.dead=true;sim.events.push({type:'death'});}else toast('PLAYER DISCONNECTED / CONTINUING SOLO');}}
    renderLobby();lobbySync();}
   else if(!peer)return;
-  else if(msg.type==='profile'){const was=peer.ready;Object.assign(peer,cleanProfile(msg));if(was!==peer.ready){feed(peer.name+(peer.ready?' IS READY':' STOOD DOWN'));if(mode==='lobby')scene.audio.ui(peer.ready?'select':'tick');if(!peer.ready)cancelCountdown();}renderLobby();if(l.peers.length>1||l.mode==='tdm')lobbySync();}
+  else if(msg.type==='profile'){const was=peer.ready;Object.assign(peer,cleanProfile(msg));if(was!==peer.ready){feed(peer.name+(peer.ready?' IS READY':' STOOD DOWN'));if(mode==='lobby')scene.audio.ui(peer.ready?'select':'tick');if(!peer.ready)cancelCountdown();}renderLobby();if(l.peers.length>1||isVs(l.mode))lobbySync();}
   // A guest asking for another seat in team deathmatch.
-  else if(msg.type==='seat'){if(l.mode==='tdm'&&!l.inRun&&seatMove(l,peer.id,msg.seat))lobbyChanged();}
+  else if(msg.type==='seat'){if(isVs(l.mode)&&!l.inRun&&seatMove(l,peer.id,msg.seat))lobbyChanged();}
   // A line of chat is shown here and passed on to everyone else in the squad under the sender's name.
   else if(msg.type==='chat'){lobbyHeard(msg,peer);const text=typeof msg.text==='string'?msg.text.trim().slice(0,120):'';if(text)for(const q of l.peers)if(q!==peer)LINK.hostSend({type:'chat',text,name:peer.name},q.id);}
   else if(msg.type==='input'&&msg.input&&typeof msg.input==='object'){const slot=netInputs[netSeats.get(from)];if(slot){slot.input=cleanInput(msg.input);if(Number.isInteger(msg.seq))slot.seq=msg.seq;slot.fresh=true;slot.at=performance.now();}}}
@@ -610,10 +653,10 @@
  // which seat is theirs along with everything needed to build the same battlefield.
  function beginHostedRun(mapId){const l=lobby;if(!l||l.role!=='host')return;clearInterval(l.timer);l.timer=null;l.countdown=0;l.inRun=true;netRole='host';netBroadcastAt=0;wallsSent=new Map();
   // Team deathmatch: every filled seat, the host first. Each player is told which operator on the roster is theirs.
-  if(l.mode==='tdm'){const {roster,vs}=matchOf(l),at=performance.now(),seed=1701+Math.floor(Math.random()*1e6);
+  if(isVs(l.mode)){const {roster,vs}=matchOf(l),at=performance.now(),seed=1701+Math.floor(Math.random()*1e6);
    netSeats=new Map();netInputs=roster.slice(1).map((r,i)=>{if(r.bot)return null;netSeats.set(r.id??0,i);return {input:{},seq:0,fresh:false,at};});
-   run={mode:'tdm',mission:mapId,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0,vs};launch({mode:'tdm',mission:mapId,difficulty:run.difficulty,loadout:Meta.loadout(save),seed,...vs});
-   for(const [,seat] of netSeats)LINK.hostSend({type:'start',mode:'tdm',mission:mapId,difficulty:run.difficulty,seed,squad:vs.squad,names:vs.names,seat,limit:vs.limit,support:vs.support},roster[seat+1].id);return;}
+   const muts=vsMutators();run={mode:'tdm',rules:l.mode,mission:mapId,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0,vs};launch({mode:'tdm',rules:l.mode,mission:mapId,difficulty:run.difficulty,loadout:Meta.loadout(save),seed,mutators:muts,...vs});
+   for(const [,seat] of netSeats)LINK.hostSend({type:'start',mode:'tdm',rules:l.mode,mutators:muts,mission:mapId,difficulty:run.difficulty,seed,squad:vs.squad,names:vs.names,seat,limit:vs.limit,support:vs.support},roster[seat+1].id);return;}
   const crew=lobbySquad(l).filter(Boolean),mates=crew.map(c=>({loadout:c.loadout,bot:!!c.bot})),names=crewNames(crew),now=performance.now();
   netSeats=new Map();netInputs=crew.map((c,i)=>{if(c.bot)return null;netSeats.set(c.id??0,i);return {input:{},seq:0,fresh:false,at:now};});
   run={mode:l.mode,mission:mapId,difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};const seed=1701+Math.floor(Math.random()*1e6);
@@ -638,7 +681,7 @@
   for(const w of s.walls){const sig=(w.dead?'x':'')+(Number.isFinite(w.hp)?Math.round(w.hp):''),known=wallsSent.get(w.id);if(known===sig)continue;wallsSent.set(w.id,sig);
    if(known===undefined&&!w.deployed&&!w.dead&&!(w.hp<w.maxHp))continue;walls.push(known===undefined&&w.deployed?w:Number.isFinite(w.hp)?{id:w.id,dead:w.dead,hp:w.hp}:{id:w.id,dead:w.dead});}
   // One update goes to every guest, so it carries each seat's own "which of your inputs this includes" (acks).
-  return {player:leanOp(s.player),mates:s.mates.map(leanOp),tdm:s.tdm&&{score:s.tdm.score,board:s.tdm.board,left:s.tdm.left,result:s.tdm.result,winner:s.tdm.winner},acks:Object.fromEntries(netInputs.flatMap((q,i)=>q?[[MATE_IDS[i],q.seq]]:[])),enemies:s.enemies.map(e=>{const o={...e};for(const k of SIM_ONLY)delete o[k];return o;}),walls,
+  return {player:leanOp(s.player),mates:s.mates.map(leanOp),tdm:s.tdm&&{score:s.tdm.score,board:s.tdm.board,left:s.tdm.left,result:s.tdm.result,winner:s.tdm.winner,relays:s.tdm.relays,site:s.tdm.site,phase:s.tdm.phase,phaseLeft:s.tdm.phaseLeft,planted:s.tdm.planted,plant:s.tdm.plant,fuse:s.tdm.fuse,defuse:s.tdm.defuse,round:s.tdm.round,attack:s.tdm.attack,hunter:s.tdm.hunter,limit:s.tdm.limit},acks:Object.fromEntries(netInputs.flatMap((q,i)=>q?[[MATE_IDS[i],q.seq]]:[])),enemies:s.enemies.map(e=>{const o={...e};for(const k of SIM_ONLY)delete o[k];return o;}),walls,
    projectiles:s.projectiles.filter(b=>b.active).map(b=>({active:true,x:b.x,y:b.y,vx:b.vx,vy:b.vy,enemy:b.enemy,owner:b.owner,weapon:b.weapon,explosive:b.explosive})),
    allies:s.allies,recon:s.recon,grenades:s.grenades,zones:s.zones,mines:s.mines,hazards:s.hazards,spawnWarnings:s.spawnWarnings,pickups:s.pickups,decoy:s.decoy,director:s.director,goal:s.goal,progress:s.progress,stage:s.stage,stats:s.stats,dark:s.dark,dead:s.dead,completed:s.completed,time:s.time,boss:s.boss,tags:s.tags,station:s.station,spotted:s.spotted,jammed:s.jammed,order:s.order,orderAt:s.orderAt};}
  // Guest input arrives from another machine, so it is rebuilt field by field before the simulation ever sees it.
@@ -686,8 +729,8 @@
    // seats, which one is ours ("you"), and the match rules.
    l.squad=(Array.isArray(msg.squad)?msg.squad:[]).slice(0,MATE_IDS.length).filter(isThing).map(q=>q.bot===true?{...cleanProfile(q),bot:true,ready:true,title:'AI TEAMMATE'}:cleanProfile(q));l.seat=Number.isInteger(msg.seat)&&msg.seat>=0&&msg.seat<MATE_IDS.length?msg.seat:0;
    l.seats8=Array.from({length:8},(_,n)=>{const q=Array.isArray(msg.seats)?msg.seats[n]:null;if(!isThing(q))return null;const c=cleanProfile(q),bot=q.bot===true,host=q.host===true;return {...c,bot,host,ready:bot||host||c.ready,title:bot?'AI OPERATOR':c.title};});
-   l.mySeat=Number.isInteger(msg.you)&&msg.you>=0&&msg.you<8?msg.you:-1;l.limit=BPCore.TDM.limits.includes(msg.limit)?msg.limit:BPCore.TDM.limit;l.support=msg.support!==false;
-   if(first){feed('JOINED '+l.peer.name+"'S SQUAD");scene.audio.say('vo-squad',{rest:60});}else{if(kind!==l.mode)feed('MODE SET TO '+MODES[kind].label);if(map!==l.map)feed((kind==='tdm'?'MAP':'KILLHOUSE')+' SET TO '+holdoutMap(map).title);if(diff!==l.difficulty)feed((kind==='tdm'?'AI SKILL':'ENEMY PRESSURE')+' SET TO '+DL[diff].label.toUpperCase());}
+   l.mySeat=Number.isInteger(msg.you)&&msg.you>=0&&msg.you<8?msg.you:-1;l.limit=BPCore.TDM.limits.includes(msg.limit)?msg.limit:BPCore.TDM.limit;l.support=msg.support!==false;l.mutators=(Array.isArray(msg.mutators)?msg.mutators:[]).filter(k=>VS_MUTATORS.includes(k));
+   if(first){feed('JOINED '+l.peer.name+"'S SQUAD");scene.audio.say('vo-squad',{rest:60});}else{if(kind!==l.mode)feed('MODE SET TO '+MODES[kind].label);if(map!==l.map)feed((isVs(kind)?'MAP':'KILLHOUSE')+' SET TO '+holdoutMap(map).title);if(diff!==l.difficulty)feed((isVs(kind)?'AI SKILL':'ENEMY PRESSURE')+' SET TO '+DL[diff].label.toUpperCase());}
    l.mode=kind;l.map=map;l.difficulty=diff;renderLobby();break;}
   // Sent just before the host drops us: its lobby has no seat for another player.
   case 'full':l.kicked=msg.reason==='mode'?'THE HOST SWITCHED TO A TWO-PLAYER MODE / NO SEAT LEFT IN THAT LOBBY':'THAT LOBBY IS FULL';break;
@@ -709,6 +752,9 @@
   // The squad never changes size mid-run, so a list of any other length is not this run's.
   for(const k of SNAP_KEYS)if(k in payload&&SNAP_SHAPE[k](payload[k])&&(k!=='mates'||payload[k].length===sim.mates.length))sim[k]=payload[k];sim.guest=sim.mates[0];
   const T=payload.tdm;if(sim.tdm&&isThing(T)&&Array.isArray(T.score)&&T.score.length===2&&T.score.every(Number.isFinite)&&isThing(T.board))Object.assign(sim.tdm,{score:[T.score[0],T.score[1]],board:T.board,left:Number.isFinite(T.left)?T.left:sim.tdm.left,result:['win','loss','draw'].includes(T.result)?T.result:null,winner:[-1,0,1].includes(T.winner)?T.winner:null});
+  // The versus modes' objectives: relays, the breach site and its round, who is the hunter. Numbers and points only.
+  if(sim.tdm&&isThing(T)){const n=v=>Number.isFinite(v)?v:0;if(Array.isArray(T.relays))sim.tdm.relays=T.relays.slice(0,3).filter(z=>isPoint(z)&&typeof z.id==='string').map(z=>({id:z.id.slice(0,1),x:z.x,y:z.y,r:n(z.r)||95,owner:[-1,0,1].includes(z.owner)?z.owner:-1,progress:Math.max(-1,Math.min(1,n(z.progress))),contested:!!z.contested}));
+   if(isPoint(T.site))sim.tdm.site={x:T.site.x,y:T.site.y,r:n(T.site.r)||80};if(['setup','live','over'].includes(T.phase))sim.tdm.phase=T.phase;for(const k of ['phaseLeft','plant','fuse','defuse','round','limit'])if(Number.isFinite(T[k]))sim.tdm[k]=T[k];sim.tdm.planted=!!T.planted;if([0,1].includes(T.attack))sim.tdm.attack=T.attack;if(typeof T.hunter==='string')sim.tdm.hunter=T.hunter.slice(0,12);}
   // The roster is the same operators in the same order; each needs at least an empty context for the HUD to read.
   if(sim.tdm){sim.roster=[sim.player,...sim.mates];for(const o of sim.roster){const c=o.ctx=isThing(o.ctx)?o.ctx:{};for(const k of ['perks','stats','mastery'])if(!isThing(c[k]))c[k]={};if(!isThing(c.support))c.support=null;o.team=o.team===1?1:0;}}}
  function beginGuestRun(o){const l=lobby,kind=MODES[o.mode]?o.mode:'holdout',tdm=kind==='tdm';if(!l||!HOLD.some(h=>h.id===o.mission)||!DIFFS.includes(o.difficulty))return;
@@ -720,7 +766,8 @@
   clearInterval(l.timer);l.timer=null;l.countdown=0;l.inRun=true;l.runId++;netRole='guest';netSeat=seat;netSeq=0;netSendIn=0;netTaps={};netHist=[];pred={ready:false};feedRows=[];
   for(const d of [$('picker'),$('settings'),$('challenges')])if(d.open)d.close();scene.audio.unlock();scene.audio.stopAmbient();for(const t of debriefTimers)clearTimeout(t);debriefTimers=[];
   run={mode:kind,mission:o.mission,difficulty:o.difficulty,floor:o.difficulty,deaths:0};
-  scene.sim=BPCore.create(tdm?{mode:'tdm',mission:o.mission,difficulty:o.difficulty,seed:o.seed||1701,squad,limit:o.limit,support:o.support!==false}:{mode:kind,mission:o.mission,difficulty:o.difficulty,loadout:l.peer?.loadout||Meta.loadout(save),seed:o.seed||1701,mates});scene.names=names;scene.selfId=MATE_IDS[seat];
+  const rules=isVs(o.rules)?o.rules:'tdm',muts=(Array.isArray(o.mutators)?o.mutators:[]).filter(k=>VS_MUTATORS.includes(k));if(tdm)run.rules=rules;
+  scene.sim=BPCore.create(tdm?{mode:'tdm',rules,mutators:muts,mission:o.mission,difficulty:o.difficulty,seed:o.seed||1701,squad,limit:o.limit,support:o.support!==false}:{mode:kind==='extract'?'holdout':kind,extraction:kind==='extract',mission:o.mission,difficulty:o.difficulty,loadout:l.peer?.loadout||Meta.loadout(save),seed:o.seed||1701,mates});scene.names=names;scene.selfId=MATE_IDS[seat];
   const hm=holdoutMap(o.mission),T=scene.sim.tdm;scene.renderer.build(scene.sim,me(scene.sim));scene.accumulator=0;timeScale=1;scene.audio.startAmbient(scene.sim.map.theme);padGadget=me(scene.sim).lethal||!me(scene.sim).tactical?'lethal':'tactical';
   $('training-equipment').hidden=true;$('chapter').textContent=(tdm?'TEAM DEATHMATCH':'HOLDOUT')+' / '+DL[o.difficulty].label;$('mission-title').textContent=hm.title;$('sector').textContent='SIMULATION / '+hm.sector;
   // The simulation lives on the host, so a guest can step away but cannot pause or restart it.
@@ -729,7 +776,7 @@
   banner(tdm?'TEAM DEATHMATCH':'HOLDOUT',hm.title,tdm?'TEAM '+(me(scene.sim).team?'DELTA':'ALPHA')+' · FIRST TO '+T.limit+' KILLS':'SURVIVE AS LONG AS YOU CAN',3);scene.audio.say(tdm?'vo-move-out':'vo-mission',{cut:true,rest:25});tdmCalls={ahead:false,behind:false,close:false};}
  function startTraining(){run={mode:'training',mission:'range',difficulty:settings.difficulty,floor:settings.difficulty,deaths:0};launch({mode:'training',mission:'range',difficulty:settings.difficulty});}
  // Hosting a squad: restarting from the pause menu restarts for both players; after a finished run it leads back to the lobby.
- function retry(){if(!run)return;if(lobby?.role==='host'&&lobby.inRun){if(mode==='paused')beginHostedRun(run.mission);else showLobby();return;}if(lobby?.role==='guest'){showLobby();return;}if(run.mode==='training'){if(run.drill&&!save.drill)startDrill();else startTraining();}else if(run.challenge)startChallenge(run.challenge.kind);else if(run.mode==='holdout'||run.mode==='tdm')startArena(run.mode,run.mission,run.fill,run.vs);else startMission(run.mission,!!save.run);}
+ function retry(){if(!run)return;if(lobby?.role==='host'&&lobby.inRun){if(mode==='paused')beginHostedRun(run.mission);else showLobby();return;}if(lobby?.role==='guest'){showLobby();return;}if(run.mode==='training'){if(run.drill&&!save.drill)startDrill();else startTraining();}else if(run.challenge)startChallenge(run.challenge.kind);else if(['holdout','tdm','extract','trials'].includes(run.mode))startArena(run.rules||run.mode,run.mission,run.fill,run.vs);else startMission(run.mission,!!save.run);}
  // A host's pause holds the match for everyone in it, so they are told.
  // While other players are in a match this copy is hosting, looking away from the window must not stop it for them.
  const hosting=()=>netRole==='host'&&netConnected;
@@ -738,6 +785,35 @@
  function menu(){drill=null;$('skip-drill').hidden=true;netLeave();scene?.audio.stopAmbient();scene?.audio.vitals(100,false);for(const t of debriefTimers)clearTimeout(t);debriefTimers=[];setMode('menu');updateContinue();$('continue').focus();}
  function payDifficulty(){return DIFFS[Math.min(DIFFS.indexOf(run.difficulty),DIFFS.indexOf(run.floor||run.difficulty))];}
  // Both teams' tables on a team deathmatch debrief, your own first: every operator's kills and deaths, best first.
+ // The objective line and the scoreboard's caption for the versus modes other than team deathmatch.
+ function versusHud(s,T,p,t){const obj=$('objective'),hint=$('objective-hint'),lim=$('score-limit'),down=p.dead&&Number.isFinite(p.respawn)?'Redeploying in '+Math.max(1,Math.ceil(p.respawn||0))+'s. ':'';
+  if(T.rules==='arms'){const step=Math.min(p.arms||0,BPCore.ARMS_LADDER.length),last=step>=BPCore.ARMS_LADDER.length;lim.textContent='LADDER · '+T.limit+' STEPS';
+   obj.textContent=p.dead?'You are down':'ARMS RACE · STEP '+(step+1)+' / '+T.limit+' · '+(last?'KNIFE KILL TO WIN':W[BPCore.ARMS_LADDER[step]].short);hint.textContent=down+(last?'One knife kill wins it for your team.':'Every kill moves you up a gun. A knife kill sets the victim back a step.');}
+  else if(T.rules==='uplink'){lim.textContent='FIRST TO '+T.limit;const mark=z=>z.contested?'⚔':z.owner<0?'○':z.owner===t?'●':'◆';obj.textContent=(p.dead?'You are down · ':'')+'RELAYS  '+T.relays.map(z=>z.id+' '+mark(z)).join('   ');
+   hint.textContent=down+'● yours · ◆ theirs · ○ nobody\'s · ⚔ contested. Stand in a relay with nobody from the other side to take it; each one held scores a point a second.';}
+  else if(T.rules==='hunted'){const h=s.roster.find(o=>o.id===T.hunter),me2=p.id===T.hunter,squad=s.roster.filter(o=>o.team===0&&!o.dead&&!o.vanished).length;$('score-us-name').textContent=t?'HUNTER':'SQUAD';$('score-them-name').textContent=t?'SQUAD':'HUNTER';lim.textContent='SQUAD LEFT · HUNTER';
+   obj.textContent=me2?'HUNT THE SQUAD · '+squad+' LEFT':p.dead?'You are down · '+squad+' of the squad left':'SURVIVE, OR KILL THE HUNTER';
+   hint.textContent=me2?'You are cloaked until you fire, are hit or come close. Roll to blink. A sweep shows you to them every 20 s.':'The hunter is cloaked: watch for its shimmer and its muzzle flash. A sweep shows it every 20 s.'+(h&&!h.dead&&(h.revealed||0)>s.time?' Hunter at '+Math.round(h.health/h.maxHealth*100)+'%.':'');}
+  else if(T.rules==='breach'){const att=p.team===T.attack,left=Math.max(0,Math.ceil(T.phaseLeft||0));$('score-time').textContent=formatTime(T.phase==='live'&&T.planted?Math.ceil(T.fuse):left);lim.textContent='ROUND '+T.round+' · FIRST TO '+T.limit;
+   const pct=v=>Math.round(v*100)+'%';
+   obj.textContent=T.phase==='setup'?(att?'ATTACKING · DEFENDERS ARE SETTING UP':'DEFENDING · SET UP AT THE SITE'):T.phase==='over'?'ROUND OVER':att?(T.planted?'CHARGE PLANTED · DEFEND IT':T.plant>0?'PLANTING · '+pct(T.plant/4):'PLANT THE CHARGE AT THE SITE'):(T.planted?(T.defuse>0?'DEFUSING · '+pct(T.defuse/5):'DEFUSE THE CHARGE'):'DEFEND THE SITE');
+   hint.textContent=(p.dead?'You are down until the next round. ':'')+(att?'Hold interact at the site for 4 s to plant. Wipe the defenders out and the round is yours too.':'Hold interact on a planted charge for 5 s to defuse. Run the clock down or wipe the attackers out.');}}
+
+ // ---------- flow-trial ghosts ----------
+ // A run is recorded one simulation step at a time: movement, the aim as an angle from the operator, and the buttons.
+ // Steps that repeat are counted, not stored twice. Because the simulation is deterministic, replaying the record in a
+ // second copy of the same course redraws the run exactly; that copy is drawn beside the player as the ghost.
+ const GHOST_KEYS=['sprint','roll','slide','fire','aiming','reload','melee','meleeDown','interact','interactDown','swap','gadget','grenade','tactical'];
+ function ghostFrame(sim,i){const p=sim.player,a=Number.isFinite(i.aimX)?Math.round(Math.atan2(i.aimY-p.y,i.aimX-p.x)*50):'',bits=GHOST_KEYS.reduce((n,k,j)=>i[k]?n|1<<j:n,0);
+  return [Math.round((i.mx||0)*1000),Math.round((i.my||0)*1000),a,bits.toString(36),i.slot===undefined?'':i.slot].join(',');}
+ function packGhost(frames){const out=[];let last=null,n=0;for(const f of frames){if(f===last){n++;continue;}if(last!==null)out.push(n>1?n+'*'+last:last);last=f;n=1;}if(last!==null)out.push(n>1?n+'*'+last:last);return out.join('|');}
+ function unpackGhost(text){const frames=[];for(const part of String(text).split('|')){const star=part.indexOf('*'),n=star>0?Number(part.slice(0,star)):1,f=star>0?part.slice(star+1):part;if(!(n>0&&n<1e5))return null;for(let k=0;k<n;k++)frames.push(f);if(frames.length>120*900)return null;}return frames;}
+ function ghostInput(sim,f){const [mx,my,a,bits,slot]=f.split(','),p=sim.player,b=parseInt(bits||'0',36)||0,i={mx:Number(mx)/1000||0,my:Number(my)/1000||0};
+  if(a!==''){const ang=Number(a)/50;i.aimX=p.x+Math.cos(ang)*300;i.aimY=p.y+Math.sin(ang)*300;}GHOST_KEYS.forEach((k,j)=>{if(b&1<<j)i[k]=true;});if(slot!=='')i.slot=Number(slot);return i;}
+ // The ghost for a course, if a best run has been saved for it: a second simulation of the same course.
+ function makeGhost(o){const text=save.ghosts?.[o.mission+':'+o.trial.seed],frames=text&&unpackGhost(text);if(!frames)return null;
+  return {sim:BPCore.create({mission:o.mission,difficulty:'standard',loadout:o.loadout,owned:[...save.owned.weapons],profile:Meta.profile(save),seed:o.seed||1701,mode:'holdout',trial:o.trial}),frames,at:0};}
+ function stepGhost(){const g=scene.ghost;if(!g||g.at>=g.frames.length||g.sim.completed)return;BPCore.step(g.sim,ghostInput(g.sim,g.frames[g.at++]));g.sim.events.length=0;}
  function scoreboard(s){const T=s.tdm,self=myId(),my=me(s).team,rows=t=>s.roster.filter(o=>o.team===t).map(o=>({o,b:T.board[o.id]||{k:0,d:0}})).sort((a,b)=>b.b.k-a.b.k||a.b.d-b.b.d)
    .map(({o,b})=>`<div class="${o.id===self?'self':''}"><span><b>${esc(scene.names?.[o.id]||'OPERATOR')}</b>${o.bot?'<em>AI</em>':''}</span><span><b>${b.k}</b></span><span><b>${b.d}</b></span></div>`).join('');
   $('scoreboard').hidden=false;$('scoreboard').className='scoreboard teams2';$('scoreboard').innerHTML=[my,1-my].map(t=>`<div class="head ${t===my?'us':'them'}"><span>TEAM ${t?'DELTA':'ALPHA'} · ${T.score[t]}</span><span title="Kills">K</span><span title="Deaths">D</span></div>`+rows(t)).join('');}
@@ -747,8 +823,21 @@
   feedRows.push({until:performance.now()+5500,html:`<b class="${cls(e.by)}">${esc(n[e.by]||'OPERATOR')}</b><i>${esc(W[e.source]?.short||FEED_SOURCE[e.source]||'KILL')}</i><b class="${cls(e.victim)}">${esc(n[e.victim]||'OPERATOR')}</b>`});if(feedRows.length>5)feedRows.shift();}
  function end(e){const s=scene.sim;if(s.tdm&&e.tdm){if([-1,0,1].includes(e.winner))s.tdm.winner=e.winner;if(Array.isArray(e.score)&&e.score.length===2&&e.score.every(Number.isFinite))s.tdm.score=[e.score[0],e.score[1]];}
   scene.audio.say(e.type==='complete'&&(s.tdm?BPCore.verdict(s,myId()).result:e.result)!=='loss'?'vo-complete':'vo-failed',{cut:true,rest:6});scene.audio.stopAmbient();scene.audio.vitals(100,false);$('debrief').hidden=true;$('scoreboard').hidden=true;$('ending').classList.remove('tally');$('ending-next').hidden=true;$('ending-armory').hidden=run.mode==='training';
+  // Extraction: out with the loot, or down without it.
+  if(run.mode==='extract'){const X=s.extract,summary=Meta.summarize(s,{difficulty:payDifficulty()}),report=Meta.settle(save,summary,today());if(e.type!=='complete')save.stats.deaths++;persist();setMode(e.type==='complete'?'complete':'dead');
+   $('ending-eyebrow').textContent='EXTRACTION / '+holdoutMap(run.mission).title+' / '+DL[run.difficulty].label;$('ending-title').innerHTML=e.type==='complete'?'WHEELS<br>UP.':'LOOT<br>LOST.';
+   $('ending-copy').textContent=e.type==='complete'?(X.found?X.found+' of '+X.total+' caches out with you: '+fmt(X.loot)+' CR on top of your bounties.':'Out clean, empty-handed. The caches pay more the more you take.'):(X.loot?fmt(X.loot)+' CR of loot went down with you. Your bounties are paid; the caches are not.':'Down before the first cache. Your bounties are paid.');
+   $('run-stats').innerHTML=`<span>CACHES<b>${X.found} / ${X.total}</b></span><span>LOOT<b>${fmt(X.loot)}</b></span><span>HOSTILES<b>${s.stats.kills}</b></span><span>TIME<b>${formatTime(s.time)}</b></span>`;
+   $('ending-retry').textContent=lobby?'BACK TO THE LOBBY ↗':'GO AGAIN ↗';debrief(report);$('ending-retry').focus();return;}
+  // Flow trials: the time, what it is made of, and whether it is a new best (whose inputs are kept as the ghost).
+  if(run.mode==='trials'){const T=s.trial,key=run.mission+':'+run.trial.seed,before=save.trials?.[key]?.best,summary=Meta.summarize(s,{difficulty:'standard'}),report=Meta.settle(save,summary,today());
+   const best=e.type==='complete'&&(before===undefined||T.score<before);if(best&&scene.record)save.ghosts[key]=packGhost(scene.record);persist();setMode(e.type==='complete'?'complete':'dead');
+   $('ending-eyebrow').textContent='FLOW TRIALS / '+holdoutMap(run.mission).title+' / '+(run.trial.daily?"TODAY'S COURSE":"THIS MAP'S COURSE");$('ending-title').innerHTML=e.type!=='complete'?'COURSE<br>FAILED.':best?'NEW<br>BEST.':(T.score.toFixed(2)+'<br>SECONDS.');
+   $('ending-copy').textContent=e.type!=='complete'?'Back to the start gate.':`${T.time.toFixed(2)} s on the clock, +${((T.targets.length-T.hit)*3).toFixed(0)} s for missed targets, −${(T.flows*.5).toFixed(1)} s for perfect flows.`+(best?' Your run is saved as the ghost to race next time.':before!==undefined?' Your best is '+before.toFixed(2)+' s.':'');
+   $('run-stats').innerHTML=`<span>SCORE<b>${e.type==='complete'?T.score.toFixed(2):'—'}</b></span><span>TIME<b>${T.time.toFixed(2)}</b></span><span>TARGETS<b>${T.hit} / ${T.targets.length}</b></span><span>FLOWS<b>${T.flows}</b></span>`;
+   $('ending-retry').textContent='RUN IT AGAIN ↗';debrief(report);$('ending-retry').focus();return;}
   if(e.type==='complete'&&run.mode==='campaign'){const meta=missionMeta(run.mission),summary=Meta.summarize(s,{rating:e.rating,score:e.score,deaths:run.deaths||0,difficulty:payDifficulty()}),report=Meta.settle(save,summary,today());save.run=null;persist();setMode('complete');
-   $('ending-eyebrow').textContent='CHAPTER '+meta.n+' / '+meta.title+' / COMPLETE';$('ending-title').innerHTML=['NO ONE IS<br>COMING.','THE QUARTER<br>FALLS SILENT.','THE LOG<br>NAMES HIM.','UNDER THE<br>CORDON.','THE KEY<br>TURNS.','EVERY NAME<br>BURNS.'][meta.n-1];$('ending-copy').textContent=meta.outro;
+   $('ending-eyebrow').textContent='CHAPTER '+meta.n+' / '+meta.title+' / COMPLETE';$('ending-title').innerHTML=['NO ONE IS<br>COMING.','THE QUARTER<br>FALLS SILENT.','THE LOG<br>NAMES HIM.','UNDER THE<br>CORDON.','THE KEY<br>TURNS.','EVERY NAME<br>BURNS.','SHE IS<br>ALIVE.','THE WALLS<br>ARE DOWN.','LIGHTS<br>OUT.'][meta.n-1]||'COMPLETE.';$('ending-copy').textContent=meta.outro;
    // A rating short of S says what it would have taken: S needs a perfect flow on top of a clean, quick run.
    const ratingNote=e.rating==='S'?'':e.score>=9800&&!s.stats.flows?'S NEEDS A PERFECT FLOW · SLIDE INTO A VAULT':'S: TAKE LESS DAMAGE, BEAT PAR, CHAIN FLOWS';
    $('run-stats').innerHTML=`<span title="${ratingNote}">FIELD RATING<b>${e.rating}</b>${ratingNote?`<small class="rating-note">${ratingNote}</small>`:''}</span><span>HOSTILES<b>${s.stats.kills}</b></span><span>BEST COMBO<b>×${s.stats.bestCombo}</b></span><span>TIME<b>${formatTime(e.time)}</b></span>`;
@@ -757,9 +846,14 @@
   // kills and a bonus for how their team did. The AI skill multiplier only applies if there was AI on the other team.
   if(run.mode==='tdm'){const T=s.tdm,op=me(s),v=BPCore.verdict(s,op.id),mine=T.board[op.id]||{k:0,d:0},us=T.score[v.team],them=T.score[1-v.team],res=v.result,name=t=>t?'DELTA':'ALPHA';
    const summary={...Meta.summarize(s,{difficulty:v.ai?(netRole==='guest'?run.difficulty:payDifficulty()):'standard'}),stats:{...op.ctx.stats,match:v.match},mastery:{...op.ctx.mastery},result:res,ranked:v.ranked,score:[us,them]},report=Meta.settle(save,summary,today());persist();setMode('complete');
-   $('ending-eyebrow').textContent='TEAM DEATHMATCH / TEAM '+name(v.team)+' / '+holdoutMap(run.mission).title;$('ending-title').innerHTML=res==='win'?'VICTORY.':res==='draw'?'DEAD<br>LEVEL.':'DEFEAT.';
-   $('ending-copy').textContent=(res==='win'?'Team '+name(v.team)+' reached the mark first.':res==='draw'?'Nothing between the two teams when the clock ran out.':'Team '+name(1-v.team)+' got there first.')+' Your bounties'+(v.match?' and the match bonus':'')+' are paid.'+(v.ranked?'':' A match to fewer than 20 kills, or against a smaller team, is not kept in your record.');
-   $('run-stats').innerHTML=`<span>SCORE<b>${us} – ${them}</b></span><span>YOUR KILLS<b>${mine.k}</b></span><span>YOUR DEATHS<b>${mine.d}</b></span><span>TIME<b>${formatTime(s.time)}</b></span>`;
+   const R=T.rules||'tdm',label=MODES[R]?.label||'TEAM DEATHMATCH',side=R==='hunted'?(v.team?'THE HUNTER':'THE SQUAD'):'TEAM '+name(v.team);
+   $('ending-eyebrow').textContent=label+' / '+side+' / '+holdoutMap(run.mission).title;$('ending-title').innerHTML=res==='win'?'VICTORY.':res==='draw'?'DEAD<br>LEVEL.':'DEFEAT.';
+   const how={arms:res==='win'?'Your team climbed the whole ladder and made the knife kill first.':res==='draw'?'Nobody reached the knife before the clock ran out.':'The other team made the knife kill first.',
+    uplink:res==='win'?'Your team held the relays long enough to reach '+T.limit+'.':res==='draw'?'Level on points when the clock ran out.':'The other team held the relays longer.',
+    hunted:v.team?(res==='win'?'The whole squad is down.':'The squad '+(s.roster.find(o=>o.id===T.hunter)?.dead?'brought you down.':'held out until the clock ran out.')):(res==='win'?(s.roster.find(o=>o.id===T.hunter)?.dead?'The squad brought the hunter down.':'The squad held out until the clock ran out.'):'The hunter took the whole squad.'),
+    breach:(res==='win'?'Your team':'The other team')+' took '+Math.max(us,them)+' rounds of '+T.round+'.'}[R];
+   $('ending-copy').textContent=(how||(res==='win'?'Team '+name(v.team)+' reached the mark first.':res==='draw'?'Nothing between the two teams when the clock ran out.':'Team '+name(1-v.team)+' got there first.'))+' Your bounties'+(v.match?' and the match bonus':'')+' are paid.'+(v.ranked?'':R==='tdm'?' A match to fewer than 20 kills, or against a smaller team, is not kept in your record.':' A match against a smaller team is not kept in your record.');
+   $('run-stats').innerHTML=`<span>${R==='breach'?'ROUNDS':R==='arms'?'BEST STEP':R==='uplink'?'POINTS':R==='hunted'?'LEFT STANDING':'SCORE'}<b>${us} – ${them}</b></span><span>YOUR KILLS<b>${mine.k}</b></span><span>YOUR DEATHS<b>${mine.d}</b></span><span>TIME<b>${formatTime(s.time)}</b></span>`;
    scoreboard(s);$('ending-retry').textContent=lobby?'BACK TO THE LOBBY ↗':'PLAY AGAIN ↗';debrief(report);$('ending-retry').focus();return;}
   if(run.mode==='holdout'){const summary=Meta.summarize(s,{difficulty:payDifficulty(),challenge:!!run.challenge}),report=Meta.settle(save,summary,today());save.stats.deaths++;
    // A seeded challenge files its score (a practice run is scored, not recorded).
@@ -819,6 +913,16 @@
   case 'objective':banner(e.partial?'OBJECTIVE':'OBJECTIVE COMPLETE',e.partial?e.name:e.name.toUpperCase(),'',2.4);break;
   case 'stage':if(e.stage>0){voice('stage',{rest:30});const st=s.map.stages[e.stage];setTimeout(()=>{if(mode==='playing')banner('NEW OBJECTIVE',st.name.toUpperCase(),st.hint,3);},2500);}break;
   case 'sighted':intelNote('sight',e);break;
+  case 'escort':scene.names={...(scene.names||{}),[e.id]:e.name};break;
+  case 'armsup':if(e.who===myId())toast('STEP '+(e.step+1)+' · '+W[e.weapon].name,1.6);break;
+  case 'armsknife':if(e.who===myId())banner('ARMS RACE','KNIFE','ONE KNIFE KILL WINS IT',2,'gold');else if(s.roster?.find(o=>o.id===e.who)?.team!==me(s).team)toast('THE OTHER TEAM HAS SOMEONE ON THE KNIFE',2.2);break;
+  case 'armsdown':if(e.who===myId())toast('KNIFED · BACK A STEP',1.6);break;
+  case 'relay':toast('RELAY '+e.id+(e.team===me(s).team?' TAKEN':' LOST TO THE OTHER TEAM'),1.8);break;
+  case 'sweep':toast(s.tdm&&me(s).id===s.tdm.hunter?'SWEEP · THEY CAN SEE YOU':'SWEEP · THE HUNTER IS SHOWN',2);break;
+  case 'breachround':banner('ROUND '+e.round,me(s).team===e.attack?'ATTACK':'DEFEND',me(s).team===e.attack?'THE DEFENDERS ARE SETTING UP':'SET UP AT THE SITE · 20 SECONDS',2.4,me(s).team===e.attack?'danger':'');break;
+  case 'breachlive':toast(me(s).team===s.tdm.attack?'GO · PLANT THE CHARGE':'THEY ARE COMING',1.8);break;
+  case 'planted':banner('BREACH','CHARGE PLANTED',me(s).team===s.tdm.attack?'DEFEND IT FOR 30 SECONDS':'DEFUSE IT · HOLD INTERACT ON IT',2.2,'danger');break;
+  case 'breachwon':banner(e.team===me(s).team?'ROUND WON':'ROUND LOST',e.why,e.score[me(s).team]+' – '+e.score[1-me(s).team],2.4,e.team===me(s).team?'gold':'danger');break;
   case 'kill':intelNote('kill',e);if(s.tdm)killFeed(e);if(!e.bot&&(!s.tdm||e.by===myId()))comboUntil=performance.now()+3500;if(!e.bot&&(e.by||'player')===myId())streakVoice(e);if(e.combo>=2&&(!s.tdm||e.by===myId())){const name={2:'DOUBLE KILL',3:'TRIPLE KILL',5:'RAMPAGE',8:'UNSTOPPABLE',12:'BLACKOUT'}[e.combo];if(name)banner('×'+e.combo+' COMBO',name,'',1.4,'combo');}
    if(e.boss){slowUntil=performance.now()+1100;banner('TARGET DOWN',A[e.enemy].name+' DESTROYED','',3,'gold');}break;
   // Holdout waves. A clean wave (little damage taken) pays a little extra; the wave before a red one says what is
@@ -903,7 +1007,9 @@
   grenadier:'Grenadiers lob from behind cover. Watch the red rings and keep moving.',shield:'Shields stop rounds from the front. Flank them, or EMP the shield.',sniper:'Marksmen telegraph with a red line. Break line of sight before it fires.',medic:'Medics bring the fallen back. Kill the medic first.',bomber:'Bomb drones dive in and explode. Shoot them before they arrive.',
   gunner:'Machine gunners own a lane. Do not trade fire in the open: flank them, or use explosives.',mortar:'Mortar teams punish standing still. Keep moving, and hunt them down.',spotter:'A spotter drone marks you for everyone, walls or no walls. Shoot it down first.',heavy:'Juggernauts shrug off small arms and stagger. Use explosives, or keep moving and chip away.',elite:'Halcyon elites shoot fast and true. Fight them from cover.',
   engineer:'Engineers set up sentry guns. Stop them while they build.',rocketeer:'Rocketeers fire slow, heavy rockets. Sidestep, then punish the reload.',ghost:'Ghosts are near invisible until they strike. Keep your back covered.',jammer:'While a jammer lives your field support is offline. Find it and kill it.',turret:'Sentry guns cover a lane. Go round them, or EMP them.',
-  commander:'The commander throws grenades and gets nastier as he bleeds. Explosives stagger him.',mech:'The Warden\'s barrier breaks under sustained fire: then pour it on. Rail slugs pass straight through it. Stay out of stomping range.',tank:'The tank\'s plating stops rifle rounds. Hit it from behind or with rockets, and get out of the line of its main gun when it glows.',wraith:'The Wraith blinks away after every shot. Watch for the red line and stay mobile.',apc:'The Bulwark is armoured: explosives, or an EMP for full damage.'};
+  commander:'The commander throws grenades and gets nastier as he bleeds. Explosives stagger him.',mech:'The Warden\'s barrier breaks under sustained fire: then pour it on. Rail slugs pass straight through it. Stay out of stomping range.',tank:'The tank\'s plating stops rifle rounds. Hit it from behind or with rockets, and get out of the line of its main gun when it glows.',wraith:'The Wraith blinks away after every shot. Watch for the red line and stay mobile.',apc:'The Bulwark is armoured: explosives, or an EMP for full damage.',
+  raider:'Halcyon assault troopers lead their shots and wear plates. Break their aim with a flashbang, or come at them from two sides.',striker:'Pointmen push into your cover with SMGs. Hold a corner and meet them with a shotgun, or a knife out of a dive.',
+  deadeye:'Sharpshooters laser before they fire. Smoke the lane, then close the distance: they cannot shoot on the move.',voss:'Voss hides behind a barrier fed by his generators. Break them, or EMP him, then keep moving when he starts to blink.'};
  const ORDER_TEXT={auto:'PARTNER / FREE TO ENGAGE',follow:'PARTNER / ON YOUR SHOULDER',hold:'PARTNER / HOLDING THIS POSITION'};let reviveToast=0;
  // Drawn over the battlefield every frame: an arrow at the screen edge for each hostile winding up an attack from
  // outside the view, and HUD panels that turn see-through while a hostile or the aim point is underneath them.
@@ -965,17 +1071,22 @@
    el.querySelector('kbd').textContent=padActive&&slot?keyLabel(picked?'grenade':'cycle'):keyLabel(action);el.classList.toggle('selected',picked);
    if(cnt.textContent!==txt){if(cnt.textContent){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}cnt.textContent=txt;}el.querySelector('.eq-name').textContent=name;el.classList.toggle('empty',!key||count<=0);el.classList.toggle('active',fill>0);el.querySelector('.eq-fill').style.width=(fill*100).toFixed(0)+'%';});}
  function hud(){const s=scene.sim,p=me(s),key=p.slots[p.slot],w=W[key],st=BPCore.stageDef(s),now=performance.now();$('objective').textContent=st.name;$('objective-hint').textContent=st.hint;
-  const prog=st.kind==='destroy'||st.kind==='survive'||st.kind==='endless';$('objective-progress').hidden=!prog;if(prog)$('objective-fill').style.width=(st.kind==='endless'?(s.director.phase==='rest'?100:0):s.progress*100)+'%';if(st.kind==='survive')$('objective-hint').textContent=`${Math.max(0,Math.ceil(st.time-s.director.clock))}s remaining · ${st.hint}`;if(st.kind==='endless'){const d=s.director,resting=d.phase==='rest'&&d.wave>0,wait=Math.max(1,Math.ceil(d.timer||0)),u=d.uplink;
+  if(st.kind==='extraction'){const X=s.extract,lz=X.called;$('objective').textContent=lz?'HOLD THE LANDING ZONE · '+Math.max(0,Math.ceil(X.need-X.hold))+'s':X.found<X.total?'CACHES '+X.found+' / '+X.total+' · LOOT '+fmt(X.loot)+' CR':'ALL CACHES TAKEN · GET TO THE LANDING ZONE';
+   $('objective-hint').textContent=lz?'Stay in the zone until the bird arrives. Leaving stops the count. Loot on board: '+fmt(X.loot)+' CR.':'Each cache is worth more than the last. Reach the landing zone whenever you choose: die first and the loot is lost.';}
+  if(st.kind==='trial'){const T=s.trial;$('objective').textContent=(T.started?'GATE '+Math.min(T.next,T.gates.length-1)+' / '+(T.gates.length-1)+' · ':'LEAVE THE START GATE · ')+T.time.toFixed(2)+'s';
+   $('objective-hint').textContent='Targets '+T.hit+' / '+T.targets.length+' (+3 s each missed) · perfect flows '+T.flows+' (−0.5 s each)'+(scene.ghost?' · racing your best':'');}
+  const prog=st.kind==='destroy'||st.kind==='survive'||st.kind==='endless'||st.kind==='extraction'||st.kind==='trial';$('objective-progress').hidden=!prog;if(prog)$('objective-fill').style.width=(st.kind==='endless'?(s.director.phase==='rest'?100:0):(s.progress||0)*100)+'%';if(st.kind==='survive')$('objective-hint').textContent=`${Math.max(0,Math.ceil(st.time-s.director.clock))}s remaining · ${st.hint}`;if(st.kind==='endless'){const d=s.director,resting=d.phase==='rest'&&d.wave>0,wait=Math.max(1,Math.ceil(d.timer||0)),u=d.uplink;
    $('objective').textContent=resting?((d.wave+1)%5===0?`Wave ${d.wave} cleared · RED WAVE in ${wait}s`:`Wave ${d.wave} cleared · next wave in ${wait}s`):d.wave?`${d.red?'RED WAVE':'Wave'} ${d.wave} · threat ${THREAT[d.tier||0]}${d.modifier?' · '+BPCore.MODIFIERS[d.modifier]:''} · ${s.enemies.filter(e=>!e.dead&&!e.built).length+s.spawnWarnings.length+(d.queue?.length||0)} hostiles`:'Get ready';
    if(resting)$('objective-hint').textContent='Supply drop: '+keyLabel('interact')+' at a crate to spend this run\'s credits.'+(s.mates.some(m=>m.bot)?' '+keyLabel('order')+' gives your partner orders.':'');
    else if(d.wave){const status=[s.jammed?'SIGNAL JAMMED · field support offline':'',s.spotted>0?'YOU ARE MARKED':'',u&&u.x!==undefined&&!u.done?'Uplink '+Math.round(u.progress*100)+'% · '+Math.max(0,Math.ceil(u.until-s.time))+'s':''].filter(Boolean);$('objective-hint').textContent=status.join(' · ')||(d.red?TIPS[d.bosses?.[0]]||'':'Hold out.');}}
   // A red wave: the edges of the screen pulse red until it is cleared.
   document.body.classList.toggle('red-wave',st.kind==='endless'&&!!s.director.red&&s.director.phase==='fight'&&!s.dead);
   // Team deathmatch: the score rides over the battlefield, and the objective line says how the match stands.
-  const T=s.tdm;$('score').hidden=!T;$('killfeed').hidden=!T;$('hud').classList.toggle('versus',!!T);$('hud').classList.toggle('learning',!!s.training);if(T){const secs=Math.max(0,Math.ceil(T.left??T.time)),t=p.team?1:0,us=T.score[t],them=T.score[1-t],lead=us-them;$('score-us').textContent=us;$('score-them').textContent=them;$('score-us-name').textContent=t?'DELTA':'ALPHA';$('score-them-name').textContent=t?'ALPHA':'DELTA';
+  const T=s.tdm;$('score').hidden=!T;$('killfeed').hidden=!T;$('hud').classList.toggle('versus',!!T);$('hud').classList.toggle('objective-mode',!!T&&!!T.rules&&T.rules!=='tdm');$('hud').classList.toggle('learning',!!s.training);if(T){const secs=Math.max(0,Math.ceil(T.left??T.time)),t=p.team?1:0,us=T.score[t],them=T.score[1-t],lead=us-them;$('score-us').textContent=us;$('score-them').textContent=them;$('score-us-name').textContent=t?'DELTA':'ALPHA';$('score-them-name').textContent=t?'ALPHA':'DELTA';
    feedRows=feedRows.filter(r=>r.until>now);setHtml($('killfeed'),feedRows.map(r=>'<p>'+r.html+'</p>').join(''));$('score-time').textContent=formatTime(secs);$('score-limit').textContent='FIRST TO '+T.limit;$('score').classList.toggle('late',secs<=30);
-   tdmVoice(T,us,them);
-   $('objective').textContent=p.dead?'You are down':!lead?'Level at '+us:lead>0?'Your team leads by '+lead:'Your team trails by '+(-lead);$('objective-hint').textContent=p.dead?'Redeploying in '+Math.max(1,Math.ceil(p.respawn||0))+'s.':'First team to '+T.limit+' kills wins. Everyone redeploys after going down.';}
+   if(!T.rules||T.rules==='tdm')tdmVoice(T,us,them);
+   $('objective').textContent=p.dead?'You are down':!lead?'Level at '+us:lead>0?'Your team leads by '+lead:'Your team trails by '+(-lead);$('objective-hint').textContent=p.dead?'Redeploying in '+Math.max(1,Math.ceil(p.respawn||0))+'s.':'First team to '+T.limit+' kills wins. Everyone redeploys after going down.';
+   if(T.rules&&T.rules!=='tdm')versusHud(s,T,p,t);}
   // Holdout with someone down: the objective line says what has to happen next, for whichever side of it you are on.
   const fallen=!T&&s.station&&!s.dead?(s.tags||[]).find(q=>p.dead?q.owner===p.id:true):null;
   if(fallen){const other=BPCore.ops(s).find(o=>o!==p&&!o.vanished),mate=scene.names?.[p.dead?fallen.carrier||other?.id:fallen.owner]||'Your squadmate',held=!!fallen.carrier;
@@ -1037,7 +1148,7 @@
  $('pause-button').addEventListener('click',pause);$('resume').addEventListener('click',resume);$('retry').addEventListener('click',retry);$('exit').addEventListener('click',menu);$('ending-menu').addEventListener('click',menu);$('ending-retry').addEventListener('click',()=>{if(mode==='complete'&&run.mode==='campaign'){startMission(run.mission,false);}else retry();});
  $('ending-next').addEventListener('click',()=>{const meta=missionMeta(run.mission),next=MISSIONS[meta.n];if(next)openOps(next.id);});$('ending-armory').addEventListener('click',()=>openArmory('weapons',null,lobby?'lobby':'menu'));
  // Squad lobby controls. The callsign is cleaned as it is typed and announced to the squad once the field is left.
- $('lobby-go').addEventListener('click',lobbyGo);$('lobby-map').addEventListener('click',()=>{if(lobby&&lobby.role!=='guest')openHoldoutPicker('lobby');});$('teams').addEventListener('click',teamClick);$('lobby-records').addEventListener('click',teamClick);$('view-challenges').addEventListener('click',()=>{scene.audio.ui('select');openChallenges();});$('challenges-close').addEventListener('click',()=>closeChallenges());$('challenges').addEventListener('cancel',e=>{e.preventDefault();closeChallenges();});$('challenges').addEventListener('click',e=>{if(e.target===$('challenges')){closeChallenges();return;}const c=e.target.closest('[data-challenge]');if(c){scene.audio.ui('select');$('challenges').close();startChallenge(c.dataset.challenge);}});$('brief-extra').addEventListener('click',e=>{const b=e.target.closest('[data-mutator]');if(!b||b.disabled)return;const k=b.dataset.mutator;if(opsMutators.has(k))opsMutators.delete(k);else opsMutators.add(k);scene.audio.ui('select');renderOps();document.querySelector('[data-mutator="'+k+'"]')?.focus();});$('op-peer').addEventListener('click',e=>{if(e.target.closest('[data-fill]')){lobbyFill();return;}const b=e.target.closest('[data-link]');if(b&&lobby?.role==='solo'){scene.audio.ui('select');openLobby(b.dataset.role,lobby.map,b.dataset.link,lobby.mode);}});$('lobby-armory').addEventListener('click',()=>openArmory('weapons',null,'lobby'));$('lobby-settings').addEventListener('click',showSettings);$('lobby-leave').addEventListener('click',lobbyBack);
+ $('lobby-go').addEventListener('click',lobbyGo);$('lobby-map').addEventListener('click',()=>{if(lobby&&lobby.role!=='guest')openHoldoutPicker('lobby');});$('teams').addEventListener('click',teamClick);$('lobby-records').addEventListener('click',teamClick);$('lobby-records').addEventListener('click',e=>{const c=e.target.closest('[data-course]');if(!c||!lobby||lobby.mode!=='trials')return;settings.trialDaily=c.dataset.course==='1';persist();scene.audio.ui('tick');renderLobby();});$('view-challenges').addEventListener('click',()=>{scene.audio.ui('select');openChallenges();});$('challenges-close').addEventListener('click',()=>closeChallenges());$('challenges').addEventListener('cancel',e=>{e.preventDefault();closeChallenges();});$('challenges').addEventListener('click',e=>{if(e.target===$('challenges')){closeChallenges();return;}const c=e.target.closest('[data-challenge]');if(c){scene.audio.ui('select');$('challenges').close();startChallenge(c.dataset.challenge);}});$('brief-extra').addEventListener('click',e=>{const b=e.target.closest('[data-mutator]');if(!b||b.disabled)return;const k=b.dataset.mutator;if(opsMutators.has(k))opsMutators.delete(k);else opsMutators.add(k);scene.audio.ui('select');renderOps();document.querySelector('[data-mutator="'+k+'"]')?.focus();});$('op-peer').addEventListener('click',e=>{if(e.target.closest('[data-fill]')){lobbyFill();return;}const b=e.target.closest('[data-link]');if(b&&lobby?.role==='solo'){scene.audio.ui('select');openLobby(b.dataset.role,lobby.map,b.dataset.link,lobby.mode);}});$('lobby-armory').addEventListener('click',()=>openArmory('weapons',null,'lobby'));$('lobby-settings').addEventListener('click',showSettings);$('lobby-leave').addEventListener('click',lobbyBack);
  $('lobby-copy').addEventListener('click',()=>{const b=$('lobby-copy'),done=ok=>{b.textContent=ok?'COPIED':'COPY FAILED';setTimeout(()=>{b.textContent='COPY';},1400);};try{navigator.clipboard.writeText(lobby.link==='online'?lobby.code:lobby.addresses[0]).then(()=>done(true),()=>done(false));}catch{done(false);}});
  const isEnter=e=>e.code==='Enter'||e.code==='NumpadEnter';
  $('lobby-connect').addEventListener('click',lobbyConnect);$('lobby-ip').addEventListener('keydown',e=>{if(isEnter(e))lobbyConnect();});$('lobby-send').addEventListener('click',lobbySay);$('lobby-chat').addEventListener('keydown',e=>{if(isEnter(e))lobbySay();});
@@ -1173,13 +1284,13 @@
    const covered=!!window.BPIntro?.active;if(covered)this.game.loop.sleep();else backdrop();window.BPIntro?.loaded();(window.BPIntro||{then:fn=>fn()}).then(()=>{if(covered){this.game.loop.wake();backdrop();}this.audio.unlock();score();greet();});
    const inspect=()=>({mode,camera:{scrollX:this.cameras.main.scrollX,scrollY:this.cameras.main.scrollY,zoom:this.cameras.main.zoom,width:this.cameras.main.width,height:this.cameras.main.height,originX:this.cameras.main.originX,originY:this.cameras.main.originY},world:JSON.parse(JSON.stringify({map:this.sim.map,walls:this.sim.walls,player:this.sim.player,guest:this.sim.guest,mates:this.sim.mates,tdm:this.sim.tdm,allies:this.sim.allies,support:this.sim.support,perks:this.sim.perks,recon:this.sim.recon,tags:this.sim.tags,station:this.sim.station,enemies:this.sim.enemies,stage:this.sim.stage,goal:this.sim.goal,time:this.sim.time,completed:this.sim.completed,dead:this.sim.dead,stats:this.sim.stats,hazards:this.sim.hazards,grenades:this.sim.grenades,pickups:this.sim.pickups,difficulty:this.sim.difficulty,spawnWarnings:this.sim.spawnWarnings,zones:this.sim.zones,director:this.sim.director,progress:this.sim.progress,mission:this.sim.mission,training:this.sim.training}))});
    if(new URLSearchParams(location.search).has('qa'))window.BPQA={sim:()=>this.sim,camera:()=>this.cameras.main,end:e=>end(e),settle:()=>Meta,save};
-   const lobbyInfo=()=>lobby&&{mode:lobby.mode,fill:lobby.fill,seat:lobby.seat,players:lobby.role==='host'?lobby.peers.length+1:lobby.role==='guest'?lobby.squad.filter(q=>!q.bot).length+1:1,squad:lobby.mode==='tdm'?seatsView(lobby):lobby.role==='guest'?lobby.squad:lobbySquad(lobby),limit:lobby.limit,support:lobby.support,mySeat:lobby.role==='guest'?lobby.mySeat:lobby.seats?.indexOf('host'),link:lobby.link,code:lobby.code,ping:lobby.ping,role:lobby.role,phase:lobby.phase,map:lobby.map,difficulty:lobby.difficulty,ready:lobby.ready,peer:lobby.peer,counting:lobby.countdown>0,inRun:lobby.inRun};
+   const lobbyInfo=()=>lobby&&{mode:lobby.mode,fill:lobby.fill,seat:lobby.seat,players:lobby.role==='host'?lobby.peers.length+1:lobby.role==='guest'?lobby.squad.filter(q=>!q.bot).length+1:1,squad:isVs(lobby.mode)?seatsView(lobby):lobby.role==='guest'?lobby.squad:lobbySquad(lobby),limit:lobby.limit,support:lobby.support,mySeat:lobby.role==='guest'?lobby.mySeat:lobby.seats?.indexOf('host'),link:lobby.link,code:lobby.code,ping:lobby.ping,role:lobby.role,phase:lobby.phase,map:lobby.map,difficulty:lobby.difficulty,ready:lobby.ready,peer:lobby.peer,counting:lobby.countdown>0,inRun:lobby.inRun};
    window.BPApp={inspect,snapshot:()=>this.sim?{mode,lobby:lobbyInfo(),training:this.sim.training,mission:this.sim.mission,time:this.sim.time,stage:this.sim.stage,health:this.sim.player.health,armor:this.sim.player.armor,stamina:this.sim.player.stamina,x:this.sim.player.x,y:this.sim.player.y,state:this.sim.player.state,weapon:this.sim.player.slots[this.sim.player.slot],slots:[...this.sim.player.slots],ammo:this.sim.player.ammo[this.sim.player.slots[this.sim.player.slot]],reload:this.sim.player.reload,stims:this.sim.player.stims,grenades:this.sim.player.grenades,tacticals:this.sim.player.tacticals,kills:this.sim.stats.kills,flows:this.sim.stats.flows,credits:this.sim.stats.credits,activeEnemies:this.sim.enemies.filter(e=>!e.dead&&e.active).length,projectiles:this.sim.projectiles.filter(p=>p.active).length,particles:this.renderer.particles.filter(p=>p.active).length,danger:Number($('danger').style.opacity||0),iconTextures:this.textures.getTextureKeys().filter(k=>/^[wgp]:/.test(k)).length,audioUnlocked:this.audio.unlocked,audioContext:this.sound.context?.state,averageFps:this.game.loop.actualFps,save:JSON.parse(JSON.stringify(save))}:{mode,lobby:lobbyInfo(),save:JSON.parse(JSON.stringify(save))}};
   }
   update(time,delta){try{this.tick(time,delta);}catch(err){fault(err);}}
   tick(time,delta){let dt=Math.min(delta/1000,.05);pollPad(dt);if(mode!=='playing'||!this.sim)return;
    if(netRole==='guest'){guestFrame(this.sim,dt);
-    this.renderer.update(this.sim,dt,padActive?padPointer:this.input.activePointer,watch(this.sim));overlay();
+    this.renderer.update(this.sim,dt,padActive?padPointer:this.input.activePointer,watch(this.sim));if(scene.ghost)this.renderer.drawGhost(scene.ghost.sim,dt);overlay();
     if(time-lastHud>70){lastHud=time;hud();}return;}
    const now=performance.now();timeScale+=((now<slowUntil?.32:1)-timeScale)*Math.min(1,dt*(now<slowUntil?14:5));dt*=timeScale;this.accumulator+=dt;
    let frameInput=input();if(netRole==='host'){
@@ -1187,7 +1298,7 @@
     // Single presses count once, on the step after they arrive, however many frames pass before the next input does.
     const now=performance.now();frameInput={...frameInput,mates:netInputs.map(q=>{if(!q)return null;if(now-q.at>800)q.input={...q.input,mx:0,my:0,sprint:false,fire:false,meleeDown:false,interactDown:false};
      const held=q.fresh?q.input:untap(q.input);q.fresh=false;return held;})};}
-   let steps=0;while(this.accumulator>=BPCore.DT&&steps<7&&mode==='playing'){BPCore.step(this.sim,frameInput);this.accumulator-=BPCore.DT;steps++;pressed.clear();padTaps.clear();
+   let steps=0;while(this.accumulator>=BPCore.DT&&steps<7&&mode==='playing'){if(scene.record&&run?.mode==='trials'&&!this.sim.completed)scene.record.push(ghostFrame(this.sim,frameInput));BPCore.step(this.sim,frameInput);if(scene.ghost)stepGhost();this.accumulator-=BPCore.DT;steps++;pressed.clear();padTaps.clear();
     frameInput={...frameInput,support:false,roll:false,slide:false,interact:false,reload:false,swap:false,gadget:false,melee:false,grenade:false,tactical:false,slot:undefined,
       mates:frameInput.mates&&frameInput.mates.map(q=>q&&untap(q))};}
    drain();

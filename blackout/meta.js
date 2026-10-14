@@ -27,7 +27,10 @@
     kestrel:{text:'Reach a ×6 kill combo',reward:500,met:r=>(r.stats.bestCombo||0)>=6},
     underground:{text:'Take less than 40 damage',reward:550,met:r=>(r.stats.damage||0)<40},
     convoy:{text:'Make three knife kills',reward:600,met:r=>(r.mastery?.melee||0)>=3},
-    meridian:{text:'Five perfect flows without dying',reward:700,met:r=>(r.stats.flows||0)>=5&&!r.deaths}};
+    meridian:{text:'Five perfect flows without dying',reward:700,met:r=>(r.stats.flows||0)>=5&&!r.deaths},
+    redline:{text:'Bring Lark out with 100 health or more',reward:750,met:r=>(r.stats.escort||0)>=100},
+    citadel:{text:'Reach a ×8 kill combo',reward:800,met:r=>(r.stats.bestCombo||0)>=8},
+    blackout:{text:'Finish without dying, taking under 100 damage',reward:900,met:r=>(r.stats.damage||0)<100&&!r.deaths}};
   // ---------- seeded challenges ----------
   // A daily and a weekly holdout challenge, the same for everyone on that day or week: map, enemy pressure, a fixed
   // loadout, one mutator, and the seed every wave is drawn from. Upgrades bought in the armory are left at the door.
@@ -99,8 +102,9 @@
   function summarize(sim,extra={}){const r=World.order.includes(sim.difficulty)?sim.difficulty:'standard',rate=sim.completed&&!sim.tdm?(()=>{const p=World.missions.find(m=>m.id===sim.mission)?.par||240,score=Math.max(0,Math.round(10000+sim.stats.flows*200-sim.stats.damage*14-Math.max(0,sim.time-p)*10));return {score,rating:score>=9800&&sim.stats.flows>0?'S':score>=8200?'A':score>=6500?'B':'C'};})():{score:0,rating:null};
     // Any holdout killhouse (the default one, or an endless variant overlaid on a campaign map) has a single
     // wave-survival stage; checking that instead of the literal id covers every unlocked killhouse.
-    const endless=sim.map.objectives[0]?.kind==='endless';
-    return {mode:sim.tdm?'tdm':endless?'holdout':sim.training?'training':'campaign',result:sim.tdm?sim.tdm.result:undefined,mission:sim.mission,difficulty:r,mutators:Object.keys(sim.mut||{}),completed:sim.completed,time:sim.time,stats:{...sim.stats},mastery:{...sim.mastery},rating:rate.rating,score:sim.tdm?[...sim.tdm.score]:rate.score,deaths:0,...extra};}
+    const kind=sim.map.objectives[0]?.kind,endless=kind==='endless';
+    const more=kind==='extraction'?{extract:{loot:sim.extract.loot,found:sim.extract.found,total:sim.extract.total,out:!!sim.completed}}:kind==='trial'?{trial:{seed:sim.trial.seed,time:+sim.trial.time.toFixed(2),score:sim.trial.score??null,hit:sim.trial.hit,targets:sim.trial.targets.length,flows:sim.trial.flows,done:!!sim.trial.done}}:{};
+    return {...more,mode:sim.tdm?'tdm':endless?'holdout':kind==='extraction'?'extract':kind==='trial'?'trial':sim.training?'training':'campaign',result:sim.tdm?sim.tdm.result:undefined,mission:sim.mission,difficulty:r,mutators:Object.keys(sim.mut||{}),completed:sim.completed,time:sim.time,stats:{...sim.stats},mastery:{...sim.mastery},rating:rate.rating,score:sim.tdm?[...sim.tdm.score]:rate.score,deaths:0,...extra};}
   // Applies one finished run to the save and returns the debrief: every line the tally screen counts up, plus rank, medals and contracts.
   const HOLDOUT_MILESTONES=[[5,250],[10,600],[15,1000],[20,1500],[25,2000],[30,2500],[40,3500],[50,5000]];
   function settle(save,run,day=0){const report={lines:[],credits:0,xp:0,medals:[],contracts:[],mastery:[],rankUps:[],newBest:false,rankBefore:rankOf(save.xp)};
@@ -115,6 +119,15 @@
       const earned=[!0,!run.deaths,run.rating==='S',run.stats.intel>0||m.intel,run.difficulty==='insane'];medalsFor(meta).forEach((md,i)=>{if(earned[i]&&!m.medals.includes(md.id)){m.medals.push(md.id);report.medals.push(md);line('MEDAL / '+md.name,150);}});
       const oc=OP_CHALLENGES[run.mission];if(oc&&!m.opChallenge&&oc.met(run,meta)){m.opChallenge=true;line('OPERATION CHALLENGE / '+oc.text.toUpperCase(),oc.reward);report.opChallenge={...oc,met:undefined};}
       m.done=true;if(run.stats.intel)m.intel=true;if(firstAtDiff)m.diffs.push(run.difficulty);const best={score:run.score,rating:run.rating,time:+run.time.toFixed(1),difficulty:run.difficulty};if(!m.best||run.score>m.best.score){m.best=best;report.newBest=true;}save.stats.missions++;}
+    // Extraction: the bounties, and what the caches were worth only if the squad got out. Each killhouse keeps its best haul.
+    else if(run.mode==='extract'){const hm=World.holdoutMaps.find(h=>h.id===run.mission),X=run.extract||{loot:0,found:0,total:0,out:false};line('HOSTILE BOUNTIES',run.stats.credits);
+      if(X.out){line('LOOT EXTRACTED',X.loot,X.found+' OF '+X.total+' CACHES');line('EXTRACTION',200);}
+      if(hm&&hm.pay>1)line('KILLHOUSE / '+hm.title,(run.stats.credits+(X.out?X.loot:0))*(hm.pay-1),'×'+hm.pay);
+      const rec=save.extract[run.mission]||(save.extract[run.mission]={runs:0,out:0,best:0});rec.runs++;if(X.out){rec.out++;rec.best=Math.max(rec.best,X.loot);}}
+    // Flow trials pay for skill, not time: a course's first finish and every new best on it. Each course keeps its best.
+    else if(run.mode==='trial'){const T=run.trial,key=run.mission+':'+(T?.seed??0);if(T?.done&&Number.isFinite(T.score)){const rec=save.trials[key],first=!rec;
+        if(first){line('COURSE FINISHED',150,'FIRST TIME');save.trials[key]={best:T.score,time:T.time,hit:T.hit,targets:T.targets,flows:T.flows,at:Date.now(),runs:1};}
+        else{rec.runs=(rec.runs||0)+1;if(T.score<rec.best){line('PERSONAL BEST',75,(rec.best-T.score).toFixed(2)+' S FASTER');Object.assign(rec,{best:T.score,time:T.time,hit:T.hit,targets:T.targets,flows:T.flows,at:Date.now()});}}}}
     else if(run.mode==='holdout'){const hm=World.holdoutMaps.find(h=>h.id===run.mission),wave=run.stats.wave||0;line('HOSTILE BOUNTIES + WAVES',run.stats.credits,run.stats.spent?'AFTER '+Math.round(run.stats.spent)+' CR SPENT ON SUPPLIES':'');
       // The campaign killhouses are harder ground and pay a little more than the default one.
       if(hm&&hm.pay>1)line('KILLHOUSE / '+hm.title,run.stats.credits*(hm.pay-1),'×'+hm.pay);
@@ -134,7 +147,7 @@
     const mult=D.reward;if(sub&&mult!==1){const extra=sub*(mult-1);report.lines.push({label:'DIFFICULTY / '+D.label,value:Math.round(extra),note:'×'+mult});sub+=extra;}
     report.xp=Math.round(sub);
     const scav=Math.min(3,save.upgrades.scavenger||0);if(scav&&sub){const extra=sub*.08*scav;report.lines.push({label:'SCAVENGER',value:Math.round(extra),note:'+'+8*scav+'%'});sub+=extra;}
-    const qualifies=run.mode==='campaign'&&run.completed||run.mode==='holdout'&&(run.stats.wave||0)>=3||run.mode==='tdm'&&!!run.result&&run.ranked!==false;
+    const qualifies=run.mode==='extract'&&!!run.extract?.out||run.mode==='campaign'&&run.completed||run.mode==='holdout'&&(run.stats.wave||0)>=3||run.mode==='tdm'&&!!run.result&&run.ranked!==false;
     if(qualifies&&save.daily.day!==day){save.daily.streak=save.daily.day===day-1?save.daily.streak+1:1;save.daily.day=day;const bonus=150*Math.min(5,save.daily.streak);report.lines.push({label:'DAILY OPERATION',value:bonus,note:'STREAK '+save.daily.streak});sub+=bonus;}
     for(const c of refreshContracts(save,day)){if(c.done)continue;const v=c.stat(run),entry=save.contracts.list.find(x=>x.id===c.id);entry.progress=Math.min(c.goal,c.max?Math.max(entry.progress,v):entry.progress+v);if(entry.progress>=c.goal){entry.done=true;report.lines.push({label:'CONTRACT / '+c.text.toUpperCase(),value:c.reward});sub+=c.reward;}report.contracts.push({text:c.text,progress:entry.progress,goal:c.goal,done:entry.done,reward:c.reward});}
     report.credits=Math.round(sub);save.credits+=report.credits;save.xp+=report.xp;
@@ -209,7 +222,7 @@
   function intelSummary(save){const all=INTEL_KEYS.map(k=>intelOf(save,k));return {total:all.length,seen:all.filter(i=>i.level>=1).length,studied:all.filter(i=>i.level>=2).length,complete:all.filter(i=>i.level>=3).length};}
   // Where a hostile is met, in words, for its file.
   function intelWhere(k){const t=INTEL[k];if(!t)return [];const title=id=>World.missions.find(m=>m.id===id)?.title||id.toUpperCase(),out=[];
-    if(t.ops.length)out.push(t.ops.map(title).join(' · '));if(t.insane?.length)out.push(t.insane.map(title).join(' · ')+' (INSANE)');
+    if(t.ops.length)out.push(t.ops.map(title).join(' · '));if(t.insane?.length)out.push(t.insane.map(title).join(' · ')+' (HARDER PRESSURE ONLY)');
     if(t.wave)out.push(t.tier===5?'HOLDOUT · RED WAVE '+t.wave:t.built?'HOLDOUT · BUILT BY ENGINEERS FROM WAVE '+t.wave:'HOLDOUT · FROM WAVE '+t.wave);return out;}
   // A save from before Intel existed starts with the files it has earned: every hostile of the operations it has
   // cleared (and their Insane reinforcements, if cleared on Insane), and every one a holdout run of its best wave met.
