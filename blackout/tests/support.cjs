@@ -107,8 +107,10 @@ test('scrounger returns a quarter magazine per gun kill, up to a full reserve',(
   p.reserve.rifle=full-1;kill(s,s.enemies[2]);assert.equal(p.reserve.rifle,full);
 });
 test('ambusher hits an unaware hostile 35% harder; executioner heals on a knife kill',()=>{
-  const hit=(perks,active)=>{const s=run({perks}),e=dummy(s,{active,hp:500,maxHp:500});s.enemies=[e];Core.damageEnemy(s,e,100,0,.1,'rifle');return 500-e.hp;};
+  // A noticed hostile here is one still able to fight (not stunned, flashed or suppressed).
+  const hit=(perks,active,extra={})=>{const s=run({perks}),e=dummy(s,{active,hp:500,maxHp:500,stagger:0,...extra});s.enemies=[e];Core.damageEnemy(s,e,100,0,.1,'rifle');return 500-e.hp;};
   assert.equal(hit([null,'ambusher',null],false),135);assert.equal(hit([null,'ambusher',null],true),100,'once they have noticed, it is an ordinary hit');assert.equal(hit([null,null,null],false),100);
+  for(const helpless of [{flashed:2},{suppressed:1},{stagger:2}])assert.equal(hit([null,'ambusher',null],true,helpless),135,'one that cannot fight back is fair game: '+Object.keys(helpless)[0]);
   const s=run({perks:[null,'executioner',null]});s.player.health=50;s.enemies=[dummy(s),dummy(s)];kill(s,s.enemies[0],'melee');assert.equal(s.player.health,70);kill(s,s.enemies[1]);assert.equal(s.player.health,70,'a bullet does not');
 });
 test('low profile: hostiles have to be a quarter closer to notice Rook',()=>{

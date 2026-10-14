@@ -63,7 +63,7 @@
       box('truck',1960,905,190,86,'vehicle',300),box('car',1750,890,70,138,'vehicle',180)
     ];
     const enemies=[enemy('c1','infantry',625,410,0),enemy('c2','infantry',820,725,0),enemy('c3','rusher',1090,540,0),
-      enemy('a1','infantry',1350,505,1),enemy('a2','infantry',1460,945,1),enemy('a3','rusher',1500,1080,1),enemy('a4','sniper',1610,840,1),
+      enemy('a1','infantry',1350,505,1),enemy('a2','infantry',1460,945,1),enemy('a3','rusher',1500,1080,1),enemy('a4','sniper',1610,840,1),enemy('a5','grenadier',1600,1180,1),
       enemy('x1','infantry',1765,1550,2),enemy('x2','shield',2270,1440,2),enemy('x3','rusher',2245,1090,2),enemy('x4','sniper',2200,1770,2)];
     const court={x:1990,y:1625};
     return finish({id:'crash',theme:'city',width:2600,height:2150,start:{x:385,y:570},walls,enemies,threat:1,
@@ -71,12 +71,12 @@
       intro:radio('ROOK','Mayday. This is Rook. Bird is down. No survivors on comms. I need a radio.',7),resume:radio('ROOK','Rook, stay off the main streets. Your last position is compromised.',7),
       stages:[
         {kind:'clear',zone:0,x:970,y:545,name:'Recover the emergency radio',hint:'Radio ahead. Clear the patrol, then interact.',spawn:{x:385,y:570}},
-        {kind:'clear',zone:1,x:1470,y:1150,name:'Search the abandoned supply cache',hint:'Cross the city. Recover breaching equipment.',spawn:{x:990,y:525},enter:{checkpoint:true,radio:radio('CONTROL / UNKNOWN','Rook. You weren’t supposed to survive. Get off this frequency. There’s a supply cache in the south alley.',7)}},
-        {kind:'clear',zone:2,...court,name:'Reach the extraction courtyard',hint:'Clear the perimeter, then activate the beacon.',spawn:{x:1470,y:1150},restoreDead:['glass'],
+        {kind:'clear',zone:1,x:1470,y:1150,name:'Search the abandoned supply cache',hint:'A marksman covers the street: when the red laser lights, break line of sight or roll through it. Grenades land in red rings - get out.',spawn:{x:990,y:525},enter:{checkpoint:true,radio:radio('CONTROL / UNKNOWN','Rook. You weren’t supposed to survive. Get off this frequency. There’s a supply cache in the south alley.',7)}},
+        {kind:'clear',zone:2,...court,name:'Reach the extraction courtyard',hint:'Clear the perimeter. A frag (G) breaks a shield; sprint, slide and vault low cover to close in.',spawn:{x:1470,y:1150},restoreDead:['glass'],
           enter:{grants:{weapons:['shotgun'],lethal:'frag',lethalCount:3,health:85,armor:45,stims:2,refill:true},checkpoint:true,unlock:['shotgun','frag'],radio:radio('ROOK','Breaching shotgun. Frags. Someone left this for me. Control, I’m moving to the courtyard.',6)}},
-        {kind:'hold',zone:2,...court,name:'Hold the extraction zone',hint:'Reinforcements inbound. Survive and stop the commander.',spawn:{x:1910,y:1650},
+        {kind:'hold',zone:2,...court,name:'Hold the extraction zone',hint:'Fight from the low walls. Move out of red rings. Stop the commander.',spawn:{x:1910,y:1650},
           enter:{checkpoint:true,radio:radio('OVERWATCH','Beacon received. Two minutes out. Multiple contacts closing on your position. Hold that courtyard.',6)},
-          waves:[{entries:[{id:'w1',type:'rusher',x:1670,y:1640},{id:'w2',type:'infantry',x:2250,y:1240},{id:'w1i',type:'scout',x:1490,y:1450,min:'insane'}]},
+          waves:[{entries:[{id:'w1',type:'rusher',x:1670,y:1640},{id:'w2',type:'infantry',x:2250,y:1240},{id:'w2g',type:'grenadier',story:'infantry',x:2300,y:1745},{id:'w1i',type:'scout',x:1490,y:1450,min:'insane'}]},
             {after:9,max:4,med:{x:1900,y:1740},entries:[{id:'boss',type:'commander',x:2250,y:1150},{id:'w3',type:'shield',story:'infantry',x:1460,y:1560},{id:'w3i',type:'grenadier',x:2300,y:1745,min:'insane'},{id:'w4i',type:'infantry',x:1660,y:1640,min:'insane'}]}],
           leave:{radio:radio('OVERWATCH','Perimeter clear. Signal the beacon. We’re coming down to you now.',5),toast:'EXTRACTION AVAILABLE'}},
         {kind:'extract',zone:2,...court,name:'Signal the extraction helicopter',hint:'The courtyard is clear. Interact with the beacon.',
@@ -84,7 +84,7 @@
           cinematic:{duration:6,beats:[{at:2.1,explode:[130,-170,180],radio:radio('ROOK','They knew our callsigns. Our route. Our extraction. This wasn’t a crash. This was a cleanup.',7)}]}}],
       pickups:[{id:'med1',x:450,y:830,type:'health'},{id:'ammo1',x:915,y:1080,type:'ammo'},{id:'armor1',x:1560,y:525,type:'armor'},{id:'med2',x:1595,y:1510,type:'health'},{id:'intel1',x:200,y:1730,type:'intel'}],
       spawnPoints:[{x:2250,y:1150},{x:1660,y:1640},{x:2300,y:1745},{x:1490,y:1450}],
-      areas:[{x:345,y:475,label:'CRASH SITE'},{x:870,y:480,label:'EMERGENCY RELAY'},{x:1325,y:1050,label:'SUPPLY ALLEY'},{x:1800,y:1525,label:'EXTRACTION COURTYARD'}],
+      areas:[{x:345,y:475,label:'CRASH SITE'},{x:870,y:480,label:'EMERGENCY RELAY'},{x:662,y:888,label:'SPRINT · SLIDE · VAULT'},{x:1325,y:1050,label:'SUPPLY ALLEY'},{x:1800,y:1525,label:'EXTRACTION COURTYARD'}],
       fires:[{x:220,y:542,size:26},{x:310,y:637,size:19},{x:1640,y:400,size:13}]});
   }
 
@@ -237,7 +237,7 @@
     const m=parse(g),k=m.marks;
     return finish({id:'holdout',theme:'city',...m,start:at(k.start),threat:1,spawnPoints:k.spawn,guns:{infantry:'rifle',scout:'smg',breacher:'sawedoff',sniper:'marksman',elite:'pulse',gunner:'lmg',rocketeer:'rocket',grenadier:'thumper',shield:'pistol',commander:'magnum'},
       intro:radio('LARK','Killhouse simulation. They keep coming until you stop. Every wave you clear pays out.',6),
-      stages:[{kind:'endless',zone:0,x:k.start.x,y:k.start.y,name:'Survive the waves',hint:'Supplies drop between waves. Every fifth wave brings a commander.',spawn:at(k.start)}],
+      stages:[{kind:'endless',zone:0,x:k.start.x,y:k.start.y,name:'Survive the waves',hint:'Supplies drop between waves. Every fifth wave is a red wave, with a boss.',spawn:at(k.start)}],
       areas:[{x:860,y:600,label:'KILLHOUSE'}]});}
 
   function range(){
@@ -256,14 +256,14 @@
   // from the operator (every one of them in Site Meridian), so a wave there could never be cleared.
   function endlessVariant(build,baseId){const base=build(),start=at(base.start);
     return finish({...base,id:'holdout-'+baseId,enemies:[],walls:base.walls.filter(w=>w.kind!=='gate'),
-      stages:[{kind:'endless',zone:0,x:start.x,y:start.y,name:'Survive the waves',hint:'Supplies drop between waves. Every fifth wave brings a commander.',spawn:start}],
+      stages:[{kind:'endless',zone:0,x:start.x,y:start.y,name:'Survive the waves',hint:'Supplies drop between waves. Every fifth wave is a red wave, with a boss.',spawn:start}],
       intro:radio('LARK','Killhouse simulation, overlaid on a live operation zone. They keep coming until you stop.',6)});}
   const builders={crash,ruins,kestrel,underground,convoy,meridian,holdout,range,
     'holdout-crash':()=>endlessVariant(crash,'crash'),'holdout-ruins':()=>endlessVariant(ruins,'ruins'),'holdout-kestrel':()=>endlessVariant(kestrel,'kestrel'),
     'holdout-underground':()=>endlessVariant(underground,'underground'),'holdout-convoy':()=>endlessVariant(convoy,'convoy'),'holdout-meridian':()=>endlessVariant(meridian,'meridian')};
   // Campaign order, briefing copy and recommended equipment. "rec" items are what the mission is tuned around; the briefing offers to buy them.
   const list=[
-    {id:'crash',outro:'Your extraction burns over Vesper City. The missile came from your own side. Rook disappears into the ruins with one question: who gave the order?',n:1,act:'ACT I / THE FALL',title:'THE CRASH',sector:'VESPER CITY / SECTOR 07',terrain:'URBAN STREETS / MIXED RANGE',brief:'Recover your radio. Find a way out. Trust no one on the other end.',threats:['infantry','rusher','sniper','shield','commander'],rec:{weapons:['rifle'],gear:[],note:'A forgiving first night. Learn to slide, vault and break line of sight.'},par:240,reward:400},
+    {id:'crash',outro:'Your extraction burns over Vesper City. The missile came from your own side. Rook disappears into the ruins with one question: who gave the order?',n:1,act:'ACT I / THE FALL',title:'THE CRASH',sector:'VESPER CITY / SECTOR 07',terrain:'URBAN STREETS / MIXED RANGE',brief:'Recover your radio. Find a way out. Trust no one on the other end.',threats:['infantry','rusher','sniper','grenadier','shield','commander'],rec:{weapons:['rifle'],gear:[],note:'A forgiving first night. Learn to slide, vault and break line of sight.'},par:240,reward:400},
     {id:'ruins',outro:'Three jammers dead, one shutter open, and a stranger called Lark in your ear. She knows the people hunting you. She says the proof is on a mountain.',n:2,act:'ACT I / THE FALL',title:'NO SAFE GROUND',sector:'VESPER CITY / OLD QUARTER',terrain:'COLLAPSED BLOCKS / CLOSE QUARTERS',brief:'Three jammers blind the district. Burn them, then hold the metro shutter while a stranger opens it.',threats:['scout','breacher','grenadier','infantry','sniper'],rec:{weapons:['shotgun'],gear:['frag'],note:'Tight rooms and weak walls. A breaching shotgun and frags clear corners fast.'},par:330,reward:550},
     {id:'kestrel',outro:"The launch log names CONTROL ACTUAL: Colonel Marek Voss. Lark's commanding officer signed your death warrant, and now he knows she helped you.",n:3,act:'ACT I / THE FALL',title:'DEAD FREQUENCY',sector:'KESTREL HIGHLANDS / RELAY',terrain:'OPEN SNOWFIELD / LONG SIGHTLINES',brief:'Cross a frozen valley under marksman fire and steal the launch log from the relay dish.',threats:['sniper','scout','drone','bomber','wraith'],rec:{weapons:['marksman','precision'],gear:['smoke'],note:'Almost no cover on the approach. Smoke and a long rifle turn a shooting gallery into a fair fight.'},par:420,reward:700},
     {id:'underground',outro:'Line Six carries you under the cordon. Somewhere above, Voss is loading something into an armoured convoy and running for the border.',n:4,act:'ACT II / THE HUNT',title:'UNDERGROUND',sector:'LINE 6 / BENEATH THE CORDON',terrain:'BLACKED-OUT TUNNELS / POINT BLANK',brief:'No power, no light, no signal. Restore the substation and ride Line Six under the cordon.',threats:['ghost','rusher','breacher','gunner','shield'],rec:{weapons:['shotgun','autoshotgun'],gear:['flash'],note:'You fight inside your flashlight. Flashbangs stop ghosts cold; a shotgun finishes them.'},par:400,reward:850},
@@ -272,7 +272,8 @@
   function build(id){return (builders[id]||builders.crash)();}
   // Holdout map picker metadata. The Killhouse is always unlocked; every other killhouse is a campaign map,
   // locked until that operation is marked done, and pays a little more the later in the campaign it comes ("pay").
-  const holdoutMaps=[{id:'holdout',title:'KILLHOUSE',sector:'ENDLESS',locks:null,pay:1},
-    ...list.map((m,i)=>({id:'holdout-'+m.id,title:m.title,sector:m.sector,locks:m.id,pay:+(1.1+.1*i).toFixed(1)}))];
+  // size: a small map is fast and close (best for 1v1 to 2v2 in team deathmatch), a large one suits 3v3 and 4v4.
+  const holdoutMaps=[{id:'holdout',title:'KILLHOUSE',sector:'ENDLESS',locks:null,pay:1,size:'small'},
+    ...list.map((m,i)=>({id:'holdout-'+m.id,title:m.title,sector:m.sector,locks:m.id,pay:+(1.1+.1*i).toFixed(1),size:'large'}))];
   return {CELL,list,build,builders,canvas,parse,box,enemy,holdoutMaps};
 });

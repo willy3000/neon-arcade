@@ -7,7 +7,7 @@
   "type": "commonjs",
   "main": "electron/main.js",
   "scripts": {
-    "test": "node blackout/tests/core.cjs && node blackout/tests/progression.cjs && node blackout/tests/walkthrough.cjs && node blackout/tests/coop.cjs && node blackout/tests/squad.cjs && node blackout/tests/support.cjs && node blackout/tests/arsenal.cjs && node electron/net/test.cjs",
+    "test": "node blackout/tests/core.cjs && node blackout/tests/progression.cjs && node blackout/tests/walkthrough.cjs && node blackout/tests/coop.cjs && node blackout/tests/squad.cjs && node blackout/tests/support.cjs && node blackout/tests/arsenal.cjs && node blackout/tests/holdout.cjs && node blackout/tests/quality.cjs && node blackout/tests/intel.cjs && node electron/net/test.cjs",
     "test:browser": "node blackout/tests/browser.cjs",
     "test:tactical": "node blackout/tests/tactical.cjs",
     "test:e2e": "node electron/net/e2e.cjs",
@@ -15,7 +15,8 @@
     "test:squad": "node blackout/tests/squad.cjs",
     "profile:test": "node blackout/tools/test-profile.cjs apply",
     "profile:restore": "node blackout/tools/test-profile.cjs restore",
-    "start:test": "node blackout/tools/test-profile.cjs apply && electron .",
+    "start:test": "node blackout/tools/launch.cjs test",
+    "start:fresh": "node blackout/tools/launch.cjs fresh",
     "serve": "python -m http.server 8127 --bind 127.0.0.1",
     "start": "electron .",
     "dist:win": "node blackout/tools/verify-static.cjs && electron-builder --win && node build/verify-package.cjs && node build/stage-steam.cjs",

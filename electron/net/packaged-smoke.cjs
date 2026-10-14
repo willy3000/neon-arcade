@@ -203,16 +203,15 @@ async function quit(game) {
   await page.click('#op-peer [data-link="online"][data-role="host"]');
   await page.waitForFunction(() => /COULD NOT REACH THE ONLINE SERVICE/.test(document.getElementById('lobby-hint').textContent), null, { timeout: 15000 });
   await page.screenshot({ path: path.join(shots, 'relay-down.png') });
+  // Leaving a hosted or joined lobby drops the player back into their own holdout lobby, not the main menu.
   await page.click('#lobby-leave');
-  await modeIs(page, 'menu');
-  await page.click('#holdout');
-  await modeIs(page, 'lobby');
+  await page.waitForFunction(() => window.BPApp.snapshot().mode === 'lobby' && /MAIN MENU/.test(document.getElementById('lobby-leave').textContent), null, { timeout: 5000 });
   await page.click('#op-peer [data-link="online"][data-role="guest"]');
   await page.fill('#lobby-ip', 'ABCDE');
   await page.click('#lobby-connect');
   await page.waitForFunction(() => /COULD NOT REACH THE ONLINE SERVICE/.test(document.getElementById('lobby-join-status').textContent), null, { timeout: 15000 });
   await page.click('#lobby-leave');
-  await page.click('#holdout');
+  await page.waitForFunction(() => /MAIN MENU/.test(document.getElementById('lobby-leave').textContent), null, { timeout: 5000 });
   await page.click('#lobby-go');
   await modeIs(page, 'playing');
   await page.keyboard.press('Escape');

@@ -1,0 +1,129 @@
+# Blackout Protocol — Weapon Roles and Balance
+
+*October 2026. This answers the audit's finding that the free MK18 out-damaged eight paid guns, so the price ladder read as a power ladder the guns did not deliver.*
+
+**The approach.** Every gun now has a **role** it is best at, rather than every expensive gun dealing more damage. Most roles come from a small set of new **traits** in the simulation.
+
+## Traits
+
+| Trait | Rule (in `core.js`) | Guns |
+|---|---|---|
+| **Armour-piercing** (`ap`) | A share of armour and shield-front reduction is ignored: full for `ap:1`, half for `ap:.5`. | SVK-9, M110 (full); KV-15, .44 (half) |
+| **Counter-shot** (`counter`) | ×1.5 damage on a hostile that is winding up an attack (its telegraph is showing). Not on bosses. | SVK-9, M110 |
+| **Suppressing** (`suppress`) | A hit rattles a soldier for that many seconds. Its wind-ups take ×1.4 as long, its shots spread ×1.8 wider, and cover users duck back. Machines ignore it. | M249 (0.8 s), M134 (0.5 s) |
+| **Steady on the move** (`steady`) | No accuracy penalty at a run. Also +25% damage fired from a slide, or within 0.8 s of a perfect flow. | MP7, VZ-61 |
+| **Shield overload** (`overload`) | Burns through barriers (the Warden takes ×0.25 instead of ×0.08, and its barrier drains twice as fast). Gets 60% of the way through riot-shield fronts. | XR-9 |
+
+Already in the game, and shown in the armory as traits:
+- pierce, through cover (rail), blast with full damage against armour (launchers);
+- chain (TESLA-3), ricochet (RX-4), fire (M2), spin-up (M134);
+- bursts and pellets.
+
+## Changes
+
+| Gun | Was | Now | Why |
+|---|---|---|---|
+| MP7 | damage 14, rate 0.065 s, spread 0.05 | damage 15, rate 0.06 s, spread 0.035, *steady* | Was a sidegrade with nothing of its own. Now the run-and-gun gun: accurate at a sprint, a quarter harder-hitting from a slide. |
+| SVK-9 | — | *ap 1, counter ×1.5* | Priority targets: goes through armour and shields; punishes a telegraphed attack. |
+| KV-15 | — | *ap 0.5* | The heavy hitter that half-ignores plating. |
+| M110 | — | *ap 1, counter ×1.5* | One shot through armour and two bodies; the answer to marksmen and rocketeers. |
+| M249 | — | *suppress 0.8 s* | Suppression is its job now, not just more bullets. |
+| M134 | — | *suppress 0.5 s* | |
+| FR-9 | rate 0.4 s, spread 0.016 | rate 0.3 s, spread 0.01 | The fastest one-pull kill of a rifleman in its class (0.12 s), accurate at range. |
+| RX-4 | damage 30, rate 0.17 s | damage 34, rate 0.15 s | Its bank shots were offset by below-baseline damage. |
+| XR-9 | — | *overload* | A legendary that does something no other gun can, not only more damage. |
+| ARC-7 | rate 1.0 s, reload 2.4 s | rate 0.85 s, reload 2.0 s | Sustained damage was equal to the free MK18 (150) at 85,000 CR; now 178, on top of six-body pierce through cover. |
+| .44 | — | *ap 0.5* | The hand cannon. |
+| VZ-61 | — | *steady* | |
+| M32 | 15,000 CR | 11,000 CR | Area denial, not a damage upgrade; priced against its role. |
+| TESLA-3 | 16,000 CR | 12,000 CR | A crowd and machine specialist. |
+| M79 | 5,000 CR | 3,500 CR | A one-shot anti-armour sidearm. |
+
+**Prices unchanged:** the XR-9 (60,000 CR) and ARC-7 (85,000 CR) keep their prices. They earn them through roles no cheaper gun has.
+
+**Armory pacing estimate** (`node blackout/qa/economy-report.cjs`): 18.7 hours → 18.4 hours for the whole armory. That is inside the project's agreed 18–25 hour band, with the legendary pair still the last purchases (14.8 h and 18.4 h). No price was raised.
+
+## Perks that make builds
+
+| Perk | Was | Now | Build |
+|---|---|---|---|
+| Ambusher | +35% to unaware hostiles | …or to hostiles that cannot fight back: flashed, suppressed or stunned | Shadow (Low Profile, smoke, flash), suppression (M249) |
+| Executioner | a knife kill heals 20 | …and the knife finishes anyone under 55 health (was 35) | Flow and melee (dive into knife) |
+| Flow State | +30% damage for 3 s after a perfect flow | …and every kill in that time adds a second, never more than 6 s ahead | Chaining flows |
+| Hardline | support charges 25% faster | …and gadget kills count double towards it | Demolition |
+| Scrounger | a gun kill returns a quarter magazine | …and every third gadget kill returns a lethal | Demolition |
+
+All five are covered by tests, including that Flow State cannot run on indefinitely.
+
+## Weapon matrix
+
+Columns:
+- **Sustained:** damage per second over a whole magazine and its reload.
+- **vs armour / tank front / shield front:** the same, run through the real damage rules against a juggernaut, a tank from the front, and a riot shield.
+- **Rifleman TTK:** seconds from the first round until a 70-health rifleman is down, every round hitting.
+- **Group:** sustained damage times the expected number of hostiles one shot reaches in a packed group.
+- **Better than the free gun:** the scenarios where it beats the MK18 (or the P226 for sidearms) by more than 5%.
+
+Generated by `node blackout/qa/weapon-report.cjs`.
+
+| Gun | Slot | Role | Price | Per shot | Burst DPS | Sustained | vs armour | vs tank front | vs shield front | Rifleman TTK (s) | Group | Traits | Better than the free gun at |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| MK18 | primary | GENERALIST | 0 CR | 24 | 229 | 150 | 75 | 38 | 22 | 0.21 | 150 | — | (baseline) |
+| M870 | primary | DOORWAY BREACHER | 600 CR | 144 | 200 | 134 | 67 | 33 | 20 | 0 | 174 | 8 PELLETS | group, TTK |
+| P226 | secondary | RELIABLE BACKUP | 0 CR | 31 | 124 | 96 | 48 | 24 | 14 | 0.5 | 96 | — | (baseline) |
+| MP7 | primary | RUN AND GUN | 1,600 CR | 15 | 250 | 156 | 78 | 39 | 23 | 0.24 | 156 | STEADY ON THE MOVE, +25% FROM A SLIDE | mobility (and the slide bonus, not in this table) |
+| SVK-9 | primary | PRIORITY TARGETS | 2,000 CR | 58 | 171 | 109 | 109 | 109 | 109 | 0.34 | 109 | ARMOUR-PIERCING, COUNTER-SHOT ×1.5 | armour, tank, shield, telegraph, range, accuracy |
+| KV-15 | primary | HEAVY HITTER | 4,500 CR | 36 | 267 | 171 | 128 | 107 | 98 | 0.135 | 171 | HALF ARMOUR-PIERCING | nearly everything |
+| M110 | primary | PRIORITY TARGETS | 6,000 CR | 105 | 124 | 94 | 94 | 94 | 94 | 0 | 245 | ARMOUR-PIERCING, COUNTER-SHOT ×1.5, PIERCES 2 | armour, tank, shield, group, range, accuracy, TTK |
+| M249 | primary | SUPPRESSION | 6,500 CR | 27 | 300 | 208 | 104 | 52 | 31 | 0.18 | 208 | SUPPRESSING | sustained, armour, group, range, TTK |
+| AS-12 | primary | ROOM CLEARER | 12,000 CR | 91 | 350 | 191 | 95 | 48 | 29 | 0 | 248 | 7 PELLETS | sustained, group, TTK |
+| M32 | primary | AREA DENIAL | 11,000 CR | 95 | 119 | 77 | 77 | 77 | 77 | 0 | 231 | BLAST · FULL VS ARMOUR | tank, shield, group, TTK |
+| XR-9 | primary | SHIELD BREAKER | 60,000 CR | 29 | 341 | 229 | 114 | 57 | 151 | 0.17 | 412 | SHIELD OVERLOAD, PIERCES 1 | everything but the tank |
+| ARC-7 | primary | LINE BREAKER | 85,000 CR | 240 | 282 | 178 | 178 | 178 | 178 | 0 | 462 | PIERCES 6, THROUGH COVER | everything |
+| VZ-61 | secondary | CLOSE DEFENCE | 500 CR | 12 | 207 | 102 | 51 | 25 | 15 | 0.29 | 102 | STEADY ON THE MOVE, +25% FROM A SLIDE | sustained, mobility, TTK |
+| .44 | secondary | HAND CANNON | 2,200 CR | 88 | 210 | 119 | 90 | 75 | 69 | 0 | 215 | HALF ARMOUR-PIERCING, PIERCES 1 | nearly everything |
+| SHORTY | secondary | POINT BLANK | 600 CR | 170 | 567 | 162 | 81 | 40 | 24 | 0 | 210 | 10 PELLETS | close range, TTK |
+| M79 | secondary | ANTI-ARMOUR SIDEARM | 3,500 CR | 110 | 183 | 44 | 44 | 44 | 44 | 0 | 132 | BLAST · FULL VS ARMOUR | tank, shield, group, TTK |
+| FR-9 | primary | PRECISE MID-RANGE | 2,600 CR | 27 | 193 | 135 | 68 | 34 | 20 | 0.12 | 135 | 3-ROUND BURST | range, accuracy, TTK |
+| RX-4 | primary | AROUND CORNERS | 5,500 CR | 34 | 227 | 154 | 77 | 38 | 23 | 0.3 | 154 | RICOCHETS 2× | range, accuracy (and bank shots, not in this table) |
+| M2 | primary | CROWD BURNER | challenge | 7 | 140 | 90 | 45 | 22 | 13 | 0.45 | 224 | PIERCES 4, SETS FIRE | group |
+| M134 | primary | SUSTAINED FIRE | challenge | 17 | 405 | 274 | 137 | 69 | 41 | 0.168 | 274 | SUPPRESSING, SPIN-UP 0.7 S | sustained, nearly everything |
+| TESLA-3 | primary | CROWDS AND MACHINES | 12,000 CR | 72 | 144 | 105 | 53 | 26 | 16 | 0 | 232 | CHAINS TO 2 | group, TTK (and stalls machines) |
+| AT4 | secondary | ANTI-VEHICLE | 13,000 CR | 190 | 173 | 49 | 49 | 49 | 49 | 0 | 146 | BLAST · FULL VS ARMOUR | tank, shield, group, range |
+
+A TTK of 0 means the first round kills. Blast weapons also hit everything in their radius, so their single-target figures understate them.
+
+**Invariants, checked by `blackout/tests/quality.cjs`:**
+- Every gun for sale beats the free gun of its slot at something.
+- The legendary pair out-damages the MK18.
+- No gun priced 13,000 CR or less matches a legendary in every scenario.
+
+## Survival in Holdout, by primary
+
+Standard pressure, 8 runs each with the same seeds (`node blackout/qa/holdout-sim.cjs standard 8 --weapons`).
+
+The driver is an AI that does not slide, roll or vault and fires in short bursts, so treat these figures as relative only:
+
+| Primary | Median wave | | Primary | Median wave |
+|---|---|---|---|---|
+| MK18 (free) | 5 | | AS-12 | 9 |
+| MP7 | 6 | | M32 | 9 |
+| M870 | 8 | | RX-4 | 9 |
+| FR-9 | 8 | | XR-9 | 10 |
+| SVK-9 | 9 | | M110 | 10 |
+| KV-15 | 9 | | TESLA-3 | 11 |
+| M249 | 9 | | ARC-7 | 12 |
+
+The free rifle remains viable, and nearly every purchase moves a run further.
+
+Two scores are artefacts of the bot, not the guns:
+- **M134:** the bot's short bursts never let it spin up.
+- **M2:** the bot keeps its distance, outside the flamer's 250-unit reach.
+
+Do not tune either gun on these numbers.
+
+## What to watch with human players
+
+- **The MP7** is still the weakest purchase on paper. Its value is the slide bonus and moving accuracy, which only a player who slides shows. If human players don't use it, give it a larger magazine.
+- **Counter-shot depends on hitting during wind-ups.** Check that players notice the "COUNTER" pop-up and learn to time it.
+- **Suppression** is meant to make LMG players feel they are pinning enemies down. Watch whether players notice enemies ducking back.

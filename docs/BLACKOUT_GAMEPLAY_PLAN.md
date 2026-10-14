@@ -104,9 +104,107 @@ Smaller changes: the camera leads the aim further when steadying a long-ranged g
 ## 4. Holdout
 
 - **Supply drop.** After each wave three priced crates land beside the operator: any three of full ammunition, +50 armour, full health, a stim, a gadget refill, or a gun to carry for the run. They are bought with interact, paid for from the credits earned so far in that run, and gone when the next wave starts. Prices rise 6% a wave. The rest between waves went from 6 to 9 seconds to give time to choose.
-- **Wave modifiers.** Every third wave that is not a commander wave carries one of four twists, named on the wave banner and paid an extra 50 + 10 × wave: Blackout (lights out), Armoured (every hostile has 50% more health), Swarm (rushers only, many of them), Marksmen (snipers and riflemen).
+- **Wave modifiers.** Every third wave that is not a red wave carries one of four twists, named on the wave banner and paid an extra 50 + 10 × wave: Blackout (lights out), Armoured (every hostile has 50% more health), Swarm (rushers only, many of them), Marksmen (snipers and riflemen).
 - **Killhouses.** The six campaign killhouses pay ×1.1 to ×1.6 in campaign order. Each killhouse keeps its own record per difficulty, shown in the lobby.
 - **Fixed on the way:** the Underground and Site Meridian killhouses kept the campaign's closed gates, which cut the enemy spawn points off from the operator (all four in Site Meridian), so a wave there could never be cleared. Killhouses now have no gates.
+
+## 5. Holdout's long game
+
+**The problem.** A playtest on High Intensity reached wave 23 and only ended because it got boring. Three things caused it. At most 10 hostiles were ever on the field, so a bigger wave was only a longer one. The last new hostile arrived on wave 10. Hostiles fought no better on wave 20 than on wave 2. The AI teammate followed the player, stood in the open and went down again and again.
+
+**The aim.** A player should feel each step up and die trying, not get bored. The point where runs end should depend on skill: an average player around waves 6 to 9, a good one around 12 to 15, a great one past 20.
+
+What changed (all in `core.js` unless noted):
+
+- **Three ways to get harder at once.**
+  - The field cap grows from 8 to 18, plus 2 per squadmate.
+  - A threat level (`pressureFor`) rises every three waves, a level sooner on High Intensity and Insane. It folds into the rules every hostile plays by: faster wind-ups, tighter spread, aim that leads a moving target, longer bursts.
+    - Level I: fighting from cover (peek out to shoot, back behind the wall between shots and to reload).
+    - Level II: flankers and grenades for anyone who camps.
+    - Level III: suppressing fire, and pushing in while you reload.
+    - Level IV: hunting and flashbangs.
+  - Hostiles gain up to 45% health over the run.
+  - Veterans (gold chevron) turn up from wave 6, with better guns that they drop.
+- **New threats on a schedule.** Each is meant to break a habit the earlier waves allowed:
+  - Field medic (wave 6): brings the fallen back.
+  - Mortar team and spotter drone (wave 8): punish sitting behind one wall; the mortar fires blind on a spotted target.
+  - Juggernaut (wave 9).
+  - Engineer, who builds sentry guns (wave 11).
+  - Jammer (wave 14): field support goes offline while it lives.
+
+  Each appears on its own wave, is announced with a NEW THREAT card and a tip, and early rank-and-file thin out as the run goes on.
+- **Red waves.** Every fifth wave has a siren, red screen edges, a longer break before it, and a boss:
+  - Wave 5: commander.
+  - Wave 10: the Warden. In holdout its barrier soaks a set amount and breaks for six seconds; it adds telegraphed missile salvos.
+  - Wave 15: the Havoc tank. It drives, has front armour and a weak rear, and fires a telegraphed main gun.
+  - Wave 20: the Wraith.
+  - From wave 25: two bosses at once.
+
+  Bosses get tougher each time round and with a squadmate. They pay about what a commander does, to keep the economy bands.
+- **The legendary crate.** It lands before every red wave and holds that boss's answer, priced to be saved for (500 + 45 × wave):
+
+  | Boss | Weapon |
+  |---|---|
+  | Commander | M32 grenade launcher |
+  | Warden | ARC-7 (rail slugs now pass through barriers, as its description always said) |
+  | Tank | AT4 |
+  | Wraith | M110 |
+- **Supply crates.**
+  - They come down on parachutes in their grade's colour, with a hologram of the contents and the price.
+  - The first crate is always a basic: whichever you are short of.
+  - The pool opens up with the waves: sentry turret, fortify (three barriers), partner kit (revives and rearms the AI teammate), hollow points (+12% damage, stacks to three), field support charge, rebuild cover, and a thermal scan of the next wave.
+- **Skill pays.**
+  - A clean wave (under 35 damage taken) pays 6 + 2 × wave; a flawless one (under 10) pays 15 + 3 × wave.
+  - A supply uplink lands out in the open on waves 7, 11, 19, 23 and so on. Securing it under fire pays credits, ammunition and armour.
+  - First-time milestones at waves 5, 10, 15, 20, 25, 30, 40 and 50 pay once per difficulty (`meta.js`).
+- **The end of a wave.** Once three or fewer hostiles are left for 12 seconds, they stop hanging back, come for you, and are marked. Sentries an engineer built do not hold a wave open.
+- **The death screen** says what killed you and how to beat it.
+- **The AI teammate** plays its own game inside a leash (`mateGoal`):
+  - It covers the side you are not facing.
+  - It hunts hostiles already in the fight, starting with whatever is closing on you and the dangerous few.
+  - Under fire it works a peek spot behind low cover; hurt, it falls back and stims.
+  - It throws a frag into a pack or behind a wall, and a flashbang when rushed, never near you.
+  - It earns a sentry of its own from its kills.
+  - It calls out contacts behind you and priority targets.
+  - It still revives you.
+  - The squad order key (T, or left stick click; `save.js`) cycles FREE / FOLLOW / HOLD HERE.
+
+**Fixed on the way.**
+- A wave could be marked cleared as its last queued hostiles were sent out onto an empty field.
+- Large bodies (a commander, a tank) could spawn inside a crate next to a spawn point and stall the wave for ever. They are now moved to the nearest clear spot, and anything wedged by the soldier-sized path grid backs out.
+- The Wraith's blink found no perches on killhouse maps.
+
+**How it is checked.**
+- `blackout/tests/holdout.cjs` (in `npm test`, 22 checks) covers:
+  - threat levels;
+  - the roster schedule;
+  - red waves and bosses;
+  - the field cap;
+  - veterans and spawn clearance;
+  - every new hostile's mechanic;
+  - the tank's armour;
+  - the Warden's barrier;
+  - hostile flashbangs;
+  - clean-wave pay;
+  - the last stand;
+  - the uplink;
+  - milestones;
+  - death blame;
+  - the legendary crate and the new crates;
+  - the partner's hunting, orders, gadgets, callouts and sentry.
+- The pay bands in `progression.cjs` still hold on every difficulty.
+
+**Balance check.** `node blackout/qa/holdout-sim.cjs [difficulty] [runs] [--partner] [--pressure]` plays holdout with an AI-driven operator.
+
+`--pressure` keeps the operator standing still and unkillable, and reports the damage each wave dealt. That measures how hard waves push, the same way whatever the AI on either side does. Standing still on High Intensity, it now soaks:
+
+| Waves | Damage per wave |
+|---|---|
+| 1–9 | 60–140 |
+| 10 | about 270 |
+| 15–25 | 700–1,250 |
+
+Without `--pressure` the AI operator, which never slides, rolls or vaults, reaches a median of wave 6 alone on Standard. With an AI partner it reaches a median of 11 on Standard and 10 on High Intensity, and it dies to a spread of threats rather than one fixed wall.
 
 ## Not built
 

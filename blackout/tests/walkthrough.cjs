@@ -43,6 +43,7 @@ function run(difficulty='standard',checkpoint=null,mission='crash',options={}){c
    const r=Math.hypot(input.aimX-p.x,input.aimY-p.y)||100;input.aimX=p.x+Math.cos(human.angle)*r;input.aimY=p.y+Math.sin(human.angle)*r;if(react&&target)input.fire=false;}
   Core.step(s,input);if(s.stage!==lastStage){records.push({stage:s.stage,time:+s.time.toFixed(1),health:+p.health.toFixed(0),kills:s.stats.kills});lastStage=s.stage;nav=[];}
   if(options.trace)for(const ev of s.events)if(ev.type==='damage')options.trace(s,ev);
+  if(options.onEvents)options.onEvents(s,s.events);
   s.events=[];
  }
  const out={mission,difficulty,completed:s.completed,dead:s.dead,stage:s.stage,time:+s.time.toFixed(1),health:+s.player.health.toFixed(0),kills:s.stats.kills,credits:s.stats.credits,records,position:{x:Math.round(s.player.x),y:Math.round(s.player.y)},remaining:s.enemies.filter(e=>!e.dead).length};

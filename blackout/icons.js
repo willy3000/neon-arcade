@@ -116,7 +116,7 @@
   return `<svg class="soldier" viewBox="0 0 240 316" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><g stroke="${O}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${body}</g></svg>`;}
  const keyOf=(kind,key)=>kind[0]+':'+key;
  // Rasterize every icon into a Phaser texture. Images decode asynchronously; the renderer falls back to drawn shapes until each texture exists.
- function load(scene){const jobs=[...Object.keys(W).map(k=>['weapon',k]),...Object.keys(GEAR).map(k=>['gear',k]),...Object.keys(PICK).map(k=>['pickup',k])];
+ function load(scene){const jobs=[...Object.keys(W).map(k=>['weapon',k]),...Object.keys(GEAR).map(k=>['gear',k]),...Object.keys(PICK).map(k=>['pickup',k]),...Object.keys(SUP).map(k=>['support',k]),...Object.keys(UP).map(k=>['upgrade',k])];
   for(const [kind,key] of jobs){const id=keyOf(kind,key);if(scene.textures.exists(id))continue;const img=new Image();img.onload=()=>{if(!scene.textures.exists(id))scene.textures.addImage(id,img);};img.src=uri(kind,key,kind==='weapon'?2:2);}}
  // Enemy pressure, as faces: who you are up against at each tier. One easy-going soldier for Story, one steady
  // regular for Standard, two hard-eyed ones for High Intensity, and for Insane three masked figures in black with red

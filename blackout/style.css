@@ -527,7 +527,8 @@ body[data-phase="playing"] .topbar>.operation,body[data-phase="playing"] .header
 #hud .score{top:10px;gap:12px}#hud .score .side b{font-size:30px;min-width:34px}#hud .score .mid{padding:3px 12px;background:#10150f73}
 #hud .boss{top:12px}
 #hud #pause-button{top:14px;bottom:auto;right:calc(2% + 146px)}
-#hud .controls-strip{display:none}#hud.learning .controls-strip{display:block;top:14px;bottom:auto;text-shadow:0 1px 3px #000,0 0 8px #000}
+#hud .controls-strip{display:none}/* The range's control reminder sits at the bottom centre, between the vitals and the weapon panels, wrapping rather than running under the objective. */
+#hud.learning .controls-strip{display:block;top:auto;bottom:12px;left:50%;width:auto;max-width:calc(100% - 640px);transform:translateX(-50%);line-height:1.7;text-shadow:0 1px 3px #000,0 0 8px #000}
 #hud .bottom-hud{left:2%;right:2%;bottom:12px}
 #hud .hud-panel{background:#0b0f0b5c;border:0;box-shadow:none;padding:7px 9px;text-shadow:0 1px 3px #000}#hud .hud-panel.seethrough{opacity:.22}
 /* Vitals: the health number, with the three bars stacked beside it. */
@@ -546,7 +547,9 @@ body[data-phase="playing"] .topbar>.operation,body[data-phase="playing"] .header
 #hud .weapon-hud.hud-panel{min-width:176px;text-align:right}#hud #weapon-slot-label{display:none}#hud .weapon-hud .weapon-head{justify-content:flex-end}
 #hud .weapon-main{margin:1px 0 2px;gap:10px}#hud .weapon-art{height:28px}#hud .weapon-art .icon{height:28px;max-width:110px}
 #hud .weapon-hud .weapon-count b{font-size:38px}#hud .mag{margin-top:0}
-#hud .weapon-alt{display:flex;justify-content:flex-end;gap:10px;border:0;margin-top:4px;padding:0}#hud .alt-art,#hud .alt-key{display:none}
+#hud .weapon-alt{display:flex;justify-content:flex-end;gap:10px;border:0;margin-top:4px;padding:0}#hud .alt-art{display:none}
+/* The swap control stays on screen (it is the only place a controller player is shown it), small and to the left. */
+#hud .alt-key{display:inline;order:-1;font:var(--t1) var(--mono);color:#9aa58c;letter-spacing:.5px}#hud .alt-key kbd{padding:0 3px;margin-right:3px;border:1px solid #d3d8ba33}
 /* Bottom centre: the run's credits and the combo, with passing messages above them. */
 #hud .flow-display #flow-hint{display:none}#hud .flow-display b{margin:0}#hud .combo{min-height:0;margin:0}#hud .combo b{min-height:0}
 body[data-phase="playing"] #toast{top:auto;bottom:9.5%;padding:5px 12px;background:#131a1499;letter-spacing:1px;text-shadow:0 1px 3px #000}
@@ -691,3 +694,95 @@ body.intro-cover :is(.menu,.topbar,#game,#loading){visibility:hidden}body.intro-
 #intro.out{pointer-events:none}#intro.out>:not(.in-logo),#intro.out .in-logo>:not(.in-name){opacity:0!important;animation:none;transition:opacity .35s}#intro.out>.in-back{transition:opacity .9s ease-in}
 #intro.out .in-name,#intro.out .in-title span{animation:none}#intro.out .in-name::before,#intro.out .in-title::after{display:none}
 #intro.out .in-title{transition:transform .9s cubic-bezier(.65,0,.2,1),opacity .4s}
+/* Holdout's red waves: the edges of the screen glow and pulse red until the wave is cleared (see hud in game.js). */
+#red-edge{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0;transition:opacity .6s;box-shadow:inset 0 0 90px 0 #b4281ea6,inset 0 0 18px 1px #e0503c80}
+body.red-wave #red-edge{opacity:.75;animation:red-wave 1.7s ease-in-out infinite}
+@keyframes red-wave{0%,100%{opacity:.5}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){body.red-wave #red-edge{animation:none;opacity:.6}}
+
+/* A boss bar on screen keeps the top centre for itself: banners step down below it. */
+body.boss-up[data-phase="playing"] .banner{top:calc(10.5% + 64px)}
+/* The death screen's two thoughts (what got you, what the difficulty asks) on lines of their own. */
+#ending-copy{white-space:pre-line}
+.run-stats .rating-note{display:block;font:var(--t1) var(--mono);letter-spacing:.4px;color:#b9a477;margin-top:4px;max-width:150px;line-height:1.35}
+/* Armory: what a gun is for, what it does beyond its numbers, and how it compares with the gun in that slot now. */
+.ad-role{font:600 var(--t2) var(--mono);letter-spacing:1px;color:var(--amber);margin:2px 0 6px}
+.ad-traits{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.ad-traits span{font:var(--t1) var(--mono);letter-spacing:.5px;padding:3px 7px;border:1px solid #dfad7055;color:#e8d3ae;background:#dfad7012}
+.ad-numbers{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px;margin:8px 0 4px}.ad-numbers span{border:1px solid var(--line);padding:5px 7px;background:#ffffff06}
+.ad-numbers small{display:block;font:var(--t1) var(--mono);letter-spacing:.5px;color:#8c9a7f}.ad-numbers b{font:600 19px var(--display);letter-spacing:.5px;margin-right:6px}
+.ad-numbers em{font:600 var(--t1) var(--mono);font-style:normal}.ad-numbers em.up{color:#9fd08a}.ad-numbers em.down{color:#d98a74}
+.ad-compare{font:var(--t1) var(--mono);letter-spacing:.6px;color:#8c9a7f;margin:2px 0 8px}
+
+/* Ops board: the operation's own challenge and the mutators for a replay. */
+.brief-extra h4{font:var(--t2) var(--mono);letter-spacing:1px;margin:14px 0 8px;color:#c9d1bb}.brief-extra h4 small{display:block;font-size:var(--t1);color:#8c9a7f;margin-top:4px}
+.op-challenge{font:var(--t1) var(--mono);letter-spacing:.5px;color:#cdd5c0;border-left:2px solid var(--amber);padding:6px 10px;margin:12px 0 0;background:#dfad700f}.op-challenge b{color:var(--amber);margin-right:6px}.op-challenge span{float:right;color:#e8d3ae}.op-challenge.done span{color:#9fd08a}
+.mutators{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}.mutator{border:1px solid var(--line);padding:7px 9px;text-align:left;display:flex;justify-content:space-between;align-items:center;background:#151b15b0}
+.mutator b{font:600 var(--t1) var(--mono);letter-spacing:.6px}.mutator small{font:var(--t1) var(--mono);color:var(--amber)}.mutator.on{border-color:var(--amber);background:#dfad7022}.mutator:disabled{opacity:.45;cursor:default}
+.mutator-desc{font:var(--t1)/1.6 var(--mono);color:#a7b398;margin:8px 0 0}
+/* Challenges panel: rows of the local board. */
+.board-row{display:grid;grid-template-columns:42px 90px 1fr 1fr;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);font:var(--t1) var(--mono);letter-spacing:.4px}.board-row b{font:600 20px var(--display)}.board-row.current{background:#dfad7014}.br-rank{color:var(--amber)}
+.board-empty{font:var(--t2) var(--mono);color:#a7b398;padding:12px}
+
+/* Colour palettes (settings): the HUD's hostile and warning colours follow the renderer's. */
+body[data-palette="redgreen"] .banner.danger b,body[data-palette="redgreen"] .killfeed b.them{color:#d55ec8}body[data-palette="redgreen"] #threats i{border-left-color:#d55ec8}body[data-palette="redgreen"] #red-edge{box-shadow:inset 0 0 90px 0 #a43ea0a6,inset 0 0 18px 1px #d55ec880}
+body[data-palette="blueyellow"] .banner.danger b,body[data-palette="blueyellow"] .killfeed b.them{color:#ff4b5c}body[data-palette="blueyellow"] #threats i{border-left-color:#ff4b5c}
+body[data-palette="contrast"] .banner.danger b,body[data-palette="contrast"] .killfeed b.them{color:#ff3b30}body[data-palette="contrast"] #threats i{border-left-color:#ff3b30}body[data-palette="contrast"] .banner b,body[data-palette="contrast"] .objective b{text-shadow:0 0 2px #000,0 2px 6px #000}
+/* Larger text (settings): headings that sat on one line may wrap instead of colliding, the dossier takes a little more
+   room, and the small credit badges keep their own size. */
+body.text-large .dossier-head,body.text-large .menu-contracts h4,body.text-large .ending-contracts h4{white-space:normal;flex-wrap:wrap;row-gap:2px}
+body.text-large .dossier{width:min(340px,31vw)}body.text-large #armory-badge,body.text-large .mode-card .chip{font-size:13px}
+body.text-large .mode-card{height:auto;min-height:104px}
+body.text-large .mode-chip{top:auto;bottom:8px;right:8px}
+/* A weapon's detail: its real numbers in one compact row stand in for the bars, and what can be done with it (buy,
+   equip, fit a part) comes straight after them, ahead of mastery and kit parts, so it never needs a scroll to reach. */
+.armory-detail{display:flex;flex-direction:column}.armory-detail .ad-numbers~.bars{display:none}
+.ad-numbers{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.ad-numbers span{padding:4px 6px}.ad-numbers small{letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ad-numbers b{font-size:17px;display:block}
+.armory-detail .ad-actions{order:1;margin-top:10px}.armory-detail .mastery,.armory-detail .kit-parts,.armory-detail .ad-compare~*:not(.ad-actions):not(.bars){order:2}
+body.text-large .ad-numbers{grid-template-columns:repeat(4,minmax(0,1fr))}
+
+/* Main menu: seeded challenges, opened from under the daily contracts into a panel that slides in from the right. */
+.menu-contracts h4 .view-challenges{display:inline-flex;align-items:center;gap:6px;border:1px solid #dfad7066;background:#dfad700d;color:var(--amber);padding:3px 8px;margin:-4px 0;font:var(--t1) var(--mono);letter-spacing:.6px;white-space:nowrap}
+.menu-contracts h4 .view-challenges:hover,.menu-contracts h4 .view-challenges:focus-visible{background:#dfad7026;border-color:var(--amber)}.view-challenges i{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber)}
+dialog.side-panel{position:fixed;inset:0 0 0 auto;margin:0;width:min(480px,100vw);height:auto;max-height:none;max-width:none;border:0;border-left:1px solid #dfad7055;padding:22px 22px 18px;overflow:auto;animation:panel-in .22s ease-out}
+dialog.side-panel::backdrop{background:#0a0d0acc;animation:fade-in .22s ease-out}dialog.side-panel.closing{animation:panel-out .2s ease-in forwards}dialog.side-panel.closing::backdrop{animation:fade-in .2s ease-in reverse forwards}
+@keyframes panel-in{from{transform:translateX(100%)}to{transform:none}}@keyframes panel-out{to{transform:translateX(100%)}}@keyframes fade-in{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){dialog.side-panel,dialog.side-panel::backdrop,dialog.side-panel.closing{animation:none}}
+.challenges-list{display:grid;gap:18px}.ch-panel{border:1px solid var(--line);border-left:3px solid var(--amber);background:#151b15b0;padding:13px 14px;display:grid;gap:10px}.ch-panel.ch-weekly{border-left-color:#9fc2d8}
+.ch-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.ch-kind{font:600 20px/1 var(--display);letter-spacing:1px;color:var(--amber)}.ch-weekly .ch-kind{color:#9fc2d8}.ch-reset{font:var(--t1) var(--mono);color:var(--muted);white-space:nowrap}
+.ch-map{display:grid;grid-template-columns:112px 1fr;gap:12px;align-items:center}.ch-map i{height:64px;background:#222 center/cover;border:1px solid var(--line)}.ch-map div{display:grid;gap:3px}.ch-map small,.ch-kit dt{font:var(--t1) var(--mono);color:var(--muted);letter-spacing:.6px}.ch-map b{font:600 22px/1 var(--display);letter-spacing:.8px}.ch-map span{font:var(--t1) var(--mono);color:#c9d1bb}
+.ch-kit{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0}.ch-kit dd{margin:0;font:var(--t2) var(--mono);color:var(--paper)}
+.ch-twist{margin:0;font:var(--t1)/1.5 var(--mono);color:#cdd5c0;border-left:2px solid #dfad7066;padding:4px 10px}.ch-twist b{color:var(--amber);font-weight:500;margin-right:4px}
+.ch-rules{margin:0;padding-left:18px;font:var(--t1)/1.55 var(--mono);color:#aeb7a0}.ch-standing{display:flex;justify-content:space-between;gap:10px;font:var(--t1) var(--mono);color:#e8d3ae}.ch-standing b{color:var(--amber)}
+.ch-play{width:100%}.ch-panel h4{font:var(--t1) var(--mono);letter-spacing:.6px;color:var(--amber);margin:2px 0 0;display:flex;justify-content:space-between}.ch-panel h4 small{color:var(--muted);font-size:var(--t1)}.ch-board{display:grid;gap:4px}
+/* Large text: the menu dossier drops its decorative map strip and never runs past the bottom of the screen. */
+body.text-large .dossier .map-art{display:none}body.text-large .dossier{max-height:calc(var(--screen-h,768)*.86px / var(--ui-scale,1) - 16px);overflow-y:auto;overscroll-behavior:contain}
+
+/* Ops board: each operation's card shows its map, the same screenshot the killhouse picker uses, under a shade that
+   keeps the number, title and medals readable. A locked operation's map is greyed out, as in the picker. */
+.mission-card{position:relative;isolation:isolate;overflow:hidden;background:#171e18}.mission-card::before{content:'';position:absolute;inset:0;z-index:-2;background:var(--art,none) center / cover no-repeat;opacity:.85;transition:opacity .15s,filter .15s}
+.mission-card::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#141a15f0 0%,#141a15c4 42%,#141a1540 100%)}
+.mission-card:hover::before,.mission-card:focus-visible::before{opacity:1}.mission-card.active{background:#232b20}.mission-card.active::before{opacity:1}.mission-card.active::after{background:linear-gradient(90deg,#232b20ee 0%,#232b20b8 42%,#2a2a1a33 100%)}
+.mission-card.locked::before{filter:grayscale(1) brightness(.7)}
+
+/* Ops board briefing: the selected operation's map along the top, fading into the panel so the text stays readable. */
+.briefing{position:relative;isolation:isolate;overflow:hidden}.briefing::before{content:'';position:absolute;inset:0 0 auto;height:72%;z-index:-2;background:var(--art,none) center / cover no-repeat;opacity:1;transition:background-image .2s}
+.briefing::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#151b1659 0%,#151b169e 30%,#151b16e0 52%,#151b16 72%),linear-gradient(90deg,#151b16b3 0%,#151b1600 80%)}
+.briefing>:not(.segmented):not(.difficulty-pick){text-shadow:0 1px 3px #0b0f0c,0 0 12px #0b0f0ccc}
+.briefing.locked::before{filter:grayscale(1) brightness(.7)}
+
+/* Intel (armory): every hostile's file in its threat grade's colour. Portraits are the field's own drawing; a hostile
+   never met is a silhouette in its colour (the armory's sealed style). The file fills in step by step. */
+.intel-portrait{width:100%;height:100%;object-fit:contain}.intel-portrait:not([src]){visibility:hidden}
+.armory-item.intel-item .ai-art{display:flex;align-items:center;justify-content:center}.armory-item.intel-item .ai-art .icon.intel-portrait{width:66px;height:66px;max-width:none;max-height:none}
+.armory-detail .ad-art.ad-intel{display:flex;align-items:center;justify-content:center}.armory-detail .ad-art.ad-intel{flex:0 0 170px;min-height:150px;max-height:200px}.armory-detail .ad-art.ad-intel .icon.intel-portrait{width:auto;height:96%;max-height:none;aspect-ratio:1}
+.armory-item.intel-item.sealed b{letter-spacing:1.5px}
+.intel-steps{display:flex;gap:4px;margin:6px 0 10px}.intel-steps span{flex:1;text-align:center;font:var(--t1) var(--mono);letter-spacing:.8px;padding:4px 0;border:1px solid #ccd3b826;color:var(--muted)}
+.intel-steps span.on{border-color:color-mix(in srgb,var(--rar) 60%,transparent);color:var(--rar);background:color-mix(in srgb,var(--rar) 10%,transparent)}
+.intel-where{font:var(--t1)/1.6 var(--mono);color:#c9d1bb}.intel-where b{display:block;color:var(--amber);font-weight:500;letter-spacing:.8px}
+.intel-note{display:grid;gap:4px;border-left:2px solid var(--rar,var(--amber));background:#1a211bcc;padding:8px 11px;margin:8px 0}.intel-note b{font:var(--t1) var(--mono);letter-spacing:1px;color:var(--rar,var(--amber));font-weight:500}.intel-note span{font:var(--t2)/1.5 var(--mono);color:#dfe3d2}
+.intel-note.weak{border-left-color:#e07a5f}.intel-note.weak b{color:#e9a08a}
+.intel-locked{font:var(--t1) var(--mono);letter-spacing:.6px;color:var(--muted);border:1px dashed #ccd3b833;padding:7px 10px;margin:8px 0}
+.ad-numbers.intel-numbers{grid-template-columns:repeat(3,1fr)}
+.intel-progress{display:grid;gap:5px;margin-top:10px}.intel-progress small{font:var(--t1) var(--mono);color:#c9d1bb;letter-spacing:.4px}.intel-progress .xp-track i{background:var(--rar,var(--amber))}
+#armory-cats button[data-rar]{color:color-mix(in srgb,var(--rar) 75%,#e7e8de)}#armory-cats button[data-rar].active{border-color:var(--rar)}
+#armory-cats .cats-sum{margin-left:auto;align-self:center;font:var(--t1) var(--mono);letter-spacing:.6px;color:var(--muted);white-space:nowrap}

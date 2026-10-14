@@ -12,6 +12,55 @@
   const MASTERY=[20,60,150],masteryLevel=k=>MASTERY.filter(n=>k>=n).length,MASTERY_PERKS=['+10% reserve ammunition','8% faster reload','+6% damage'];
   // Weapon kit: one purchasable part per mastery level, bought in order. Parts cost a share of the gun's price.
   const KIT=[{name:'MATCH BARREL',desc:'20% tighter spread.',share:.25},{name:'FAST MAG',desc:'10% faster reload.',share:.4},{name:'HOT LOADS',desc:'+8% damage.',share:.6}],FOUND_DISCOUNT=.25;
+  // A gun's numbers as a player meets them: damage per shot, rounds a second, damage a second while the trigger is
+  // held, and over a whole magazine and its reload ("sustained"). A burst gun fires "burst" rounds "gap" apart each pull.
+  function weaponStats(k){const w=W[k],per=w.damage*w.pellets,shots=w.burst||1,cycle=w.rate+(shots-1)*(w.gap||0),rps=shots/cycle,magTime=(w.capacity/shots)*cycle;
+    return {per,rps,dps:per*rps,sustained:per*w.capacity/(magTime+w.reload),mag:w.capacity,reload:w.reload,range:w.range,mobility:w.mobility};}
+  // What a gun does beyond its numbers, in the armory's words.
+  function weaponTraits(k){const w=W[k],out=[];if(w.ap)out.push(w.ap>=1?'ARMOUR-PIERCING':'HALF ARMOUR-PIERCING');if(w.counter)out.push('COUNTER-SHOT ×'+w.counter);if(w.suppress)out.push('SUPPRESSING');if(w.steady)out.push('STEADY ON THE MOVE','+25% FROM A SLIDE');if(w.overload)out.push('SHIELD OVERLOAD');
+    if(w.pierce)out.push('PIERCES '+w.pierce);if(w.breach)out.push('THROUGH COVER');if(w.explosive)out.push('BLAST · FULL VS ARMOUR');if(w.chain)out.push('CHAINS TO '+w.chain);if(w.bounce)out.push('RICOCHETS '+w.bounce+'×');if(w.flame)out.push('SETS FIRE');if(w.spin)out.push('SPIN-UP '+w.spin+' S');if(w.burst)out.push(w.burst+'-ROUND BURST');if(w.pellets>1)out.push(w.pellets+' PELLETS');return out;}
+  // Operation challenges: one optional goal per operation, paid once, that asks for a different way of playing it.
+  // Every one can be met with the starting kit (flows, the knife, a combo, a time, care).
+  const OP_CHALLENGES={
+    crash:{text:'Finish with three perfect flows',reward:400,met:r=>(r.stats.flows||0)>=3},
+    ruins:{text:'Finish inside par time',reward:450,met:(r,m)=>r.time<=(m?.par||240)},
+    kestrel:{text:'Reach a ×6 kill combo',reward:500,met:r=>(r.stats.bestCombo||0)>=6},
+    underground:{text:'Take less than 40 damage',reward:550,met:r=>(r.stats.damage||0)<40},
+    convoy:{text:'Make three knife kills',reward:600,met:r=>(r.mastery?.melee||0)>=3},
+    meridian:{text:'Five perfect flows without dying',reward:700,met:r=>(r.stats.flows||0)>=5&&!r.deaths}};
+  // ---------- seeded challenges ----------
+  // A daily and a weekly holdout challenge, the same for everyone on that day or week: map, enemy pressure, a fixed
+  // loadout, one mutator, and the seed every wave is drawn from. Upgrades bought in the armory are left at the door.
+  // The daily counts its first attempt only - later runs that day are practice; the weekly keeps the best attempt.
+  // Records are local to this machine (save.challenges) and say so.
+  const CHALLENGE_RULES=1,CHALLENGE_KINDS={daily:{label:'DAILY CHALLENGE',difficulty:'standard',once:true},weekly:{label:'WEEKLY CHALLENGE',difficulty:'intense',once:false}};
+  const CHALLENGE_KITS=[{primary:'rifle',secondary:'pistol',lethal:'frag',tactical:'flash',support:'airstrike'},{primary:'smg',secondary:'sawedoff',lethal:'incendiary',tactical:'smoke',support:'turret'},
+    {primary:'battle',secondary:'magnum',lethal:'frag',tactical:'emp',support:'recon'},{primary:'shotgun',secondary:'machinepistol',lethal:'mine',tactical:'flash',support:'dog'},
+    {primary:'marksman',secondary:'pistol',lethal:'cluster',tactical:'smoke',support:'supply'},{primary:'lmg',secondary:'pistol',lethal:'frag',tactical:'cover',support:'turret'},
+    {primary:'burst',secondary:'thumper',lethal:'knife',tactical:'decoy',support:'airstrike'},{primary:'ricochet',secondary:'magnum',lethal:'seeker',tactical:'sensor',support:'recon'}];
+  const CHALLENGE_TWISTS=['night','veterans','scarcity','sidearms',null];
+  // Weeks start on a Monday (day 0, 1 January 1970, was a Thursday).
+  const challengePeriod=(kind,day)=>kind==='weekly'?Math.floor((day+3)/7):day;
+  function challengeFor(kind,day){const k=CHALLENGE_KINDS[kind]||CHALLENGE_KINDS.daily,period=challengePeriod(kind,day);let seed=(Math.imul(period+1,2654435761)^(kind==='weekly'?0x9e3779b9:0x85ebca6b))>>>0;
+    // The generator's high bits are the well-mixed ones; the low bits of a linear congruential generator repeat quickly.
+    const next=n=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return (seed>>>16)%n;},maps=World.holdoutMaps;
+    const map=maps[next(maps.length)].id,kit={...CHALLENGE_KITS[next(CHALLENGE_KITS.length)],perks:[null,null,null]},mutator=CHALLENGE_TWISTS[next(CHALLENGE_TWISTS.length)];
+    return {kind,period,label:k.label,difficulty:k.difficulty,once:k.once,map,loadout:kit,mutators:mutator?[mutator]:[],seed:1701+((seed=(Math.imul(seed,1664525)+1013904223)>>>0)%1e6),rules:CHALLENGE_RULES};}
+  // A challenge run's score: waves first, then hostiles and the best chain.
+  const challengeScore=stats=>Math.max(0,Math.round((stats.wave||0)*1000+(stats.kills||0)*10+(stats.bestCombo||0)*25));
+  // A challenge run is counted when it starts (so restarting does not dodge the daily's one-attempt rule): this says
+  // whether it can set a record - it is today's (or this week's) challenge, and for the daily, its first attempt.
+  function startChallenge(save,cfg,day){const c=save.challenges||(save.challenges={attempts:{},best:{},board:[]}),key=cfg.kind+':'+cfg.period,before=c.attempts[key]||0;c.attempts[key]=before+1;
+    return {eligible:challengePeriod(cfg.kind,day)===cfg.period&&(!cfg.once||before===0),attempt:before+1};}
+  // Files a finished challenge run: a practice run is scored but not recorded; an eligible one goes on this machine's
+  // board (the best ten of its kind) and may be the period's new best. The same run is never filed twice.
+  function recordChallenge(save,cfg,stats,runId,eligible,at=Date.now()){const c=save.challenges||(save.challenges={attempts:{},best:{},board:[]}),key=cfg.kind+':'+cfg.period,score=challengeScore(stats);
+    if(!eligible)return {score,practice:true};if(c.board.some(e=>e.id===String(runId))||c.best[key]?.id===String(runId))return {score,practice:false,duplicate:true};
+    const entry={id:String(runId),kind:cfg.kind,period:cfg.period,seed:cfg.seed,map:cfg.map,score,wave:stats.wave||0,kills:stats.kills||0,combo:stats.bestCombo||0,time:Math.round(stats.time||0),rules:cfg.rules,at};
+    const prev=c.best[key],newBest=!prev||score>prev.score;if(newBest)c.best[key]=entry;
+    c.board=c.board.filter(e=>e.kind!==cfg.kind).concat([...c.board.filter(e=>e.kind===cfg.kind),entry].sort((a,b)=>b.score-a.score).slice(0,10));
+    const rank=challengeBoard(save,cfg.kind).findIndex(e=>e.id===entry.id)+1;return {score,practice:false,newBest,rank};}
+  const challengeBoard=(save,kind)=>(save.challenges?.board||[]).filter(e=>e.kind===kind).sort((a,b)=>b.score-a.score);
   const cls=(m,c)=>Object.entries(m).reduce((n,[k,v])=>n+(W[k]&&W[k].cls===c?v:0),0);
   const CONTRACTS=[
     {id:'kills',text:'Eliminate 40 hostiles',goal:40,reward:300,stat:r=>r.stats.kills},
@@ -27,18 +76,33 @@
     {id:'flawless',text:'Complete a mission without dying',goal:1,reward:450,stat:r=>r.completed&&r.mode==='campaign'&&!r.deaths?1:0},
     {id:'holdout',text:'Reach wave 8 in HOLDOUT',goal:8,reward:500,max:true,stat:r=>r.mode==='holdout'?r.stats.wave||0:0},
     {id:'srank',text:'Earn an S field rating',goal:1,reward:500,stat:r=>r.completed&&r.rating==='S'?1:0}];
-  function contractsFor(day){let seed=(day*2654435761)>>>0;const pool=[...CONTRACTS],out=[];while(out.length<3){seed=(Math.imul(seed,1664525)+1013904223)>>>0;out.push(pool.splice(seed%pool.length,1)[0]);}return out;}
-  function refreshContracts(save,day){if(save.contracts.day!==day){save.contracts={day,list:contractsFor(day).map(c=>({id:c.id,progress:0,done:false}))};}return save.contracts.list.map(c=>({...CONTRACTS.find(x=>x.id===c.id),...c}));}
+  // A contract is only offered to a player who can do it today: the weapon- and gadget-specific ones need something of
+  // that kind in the armory (the knife, the pistol, every mode and every difficulty are open to anyone, so the rest
+  // always can be). Without a save every contract is eligible.
+  const EXPLOSIVE_GEAR=['frag','incendiary','mine','cluster','c4','seeker'],ownsClass=(save,c)=>save.owned.weapons.some(k=>W[k]&&W[k].cls===c);
+  const NEEDS={shotgun:s=>ownsClass(s,'shotgun'),precision:s=>ownsClass(s,'precision'),smg:s=>ownsClass(s,'smg'),explosive:s=>ownsClass(s,'explosive')||s.owned.gear.some(k=>EXPLOSIVE_GEAR.includes(k))};
+  const eligible=(save,c)=>!!c&&(!save||!NEEDS[c.id]||NEEDS[c.id](save));
+  // Three contracts a day, picked from the day number alone (so the same player gets the same three), out of those the
+  // player can do.
+  function contractsFor(day,save=null){let seed=(day*2654435761)>>>0;const pool=CONTRACTS.filter(c=>eligible(save,c)),out=[];while(out.length<3&&pool.length){seed=(Math.imul(seed,1664525)+1013904223)>>>0;out.push(pool.splice(seed%pool.length,1)[0]);}return out;}
+  // A new day rolls new contracts. Within a day the list is kept, progress and all - except a contract the player
+  // cannot do and has not started (one rolled before this rule, or one a save no longer recognises), which is swapped
+  // for the next eligible one of the day.
+  function refreshContracts(save,day){if(save.contracts.day!==day)save.contracts={day,list:contractsFor(day,save).map(c=>({id:c.id,progress:0,done:false}))};
+    else{const fresh=contractsFor(day,save),list=save.contracts.list;for(let i=0;i<list.length;i++){const c=list[i],def=CONTRACTS.find(x=>x.id===c.id);if(def&&(c.done||c.progress>0||eligible(save,def)))continue;
+      const swap=fresh.find(f=>!list.some(x=>x.id===f.id));if(swap)list[i]={id:swap.id,progress:0,done:false};else if(!def)list.splice(i--,1);}}
+    return save.contracts.list.map(c=>({...CONTRACTS.find(x=>x.id===c.id),...c}));}
   const medalsFor=m=>[{id:'complete',name:'MISSION COMPLETE'},{id:'flawless',name:'NO DEATHS'},{id:'srank',name:'S RATING'},{id:'intel',name:'INTEL RECOVERED'},{id:'insane',name:'INSANE CLEAR'}];
   const mission=(save,id)=>save.missions[id]||(save.missions[id]={done:false,best:null,medals:[],diffs:[],intel:false});
   function unlocked(save,id){const i=World.missions.findIndex(m=>m.id===id);return i<=0||!!save.missions[World.missions[i-1].id]?.done;}
   const nextMission=save=>World.missions.find(m=>!save.missions[m.id]?.done)||null;
-  function summarize(sim,extra={}){const r=World.order.includes(sim.difficulty)?sim.difficulty:'standard',rate=sim.completed&&!sim.tdm?(()=>{const p=World.missions.find(m=>m.id===sim.mission)?.par||240,score=Math.max(0,Math.round(10000+sim.stats.flows*200-sim.stats.damage*14-Math.max(0,sim.time-p)*10));return {score,rating:score>=9600?'S':score>=8200?'A':score>=6500?'B':'C'};})():{score:0,rating:null};
+  function summarize(sim,extra={}){const r=World.order.includes(sim.difficulty)?sim.difficulty:'standard',rate=sim.completed&&!sim.tdm?(()=>{const p=World.missions.find(m=>m.id===sim.mission)?.par||240,score=Math.max(0,Math.round(10000+sim.stats.flows*200-sim.stats.damage*14-Math.max(0,sim.time-p)*10));return {score,rating:score>=9800&&sim.stats.flows>0?'S':score>=8200?'A':score>=6500?'B':'C'};})():{score:0,rating:null};
     // Any holdout killhouse (the default one, or an endless variant overlaid on a campaign map) has a single
     // wave-survival stage; checking that instead of the literal id covers every unlocked killhouse.
     const endless=sim.map.objectives[0]?.kind==='endless';
-    return {mode:sim.tdm?'tdm':endless?'holdout':sim.training?'training':'campaign',result:sim.tdm?sim.tdm.result:undefined,mission:sim.mission,difficulty:r,completed:sim.completed,time:sim.time,stats:{...sim.stats},mastery:{...sim.mastery},rating:rate.rating,score:sim.tdm?[...sim.tdm.score]:rate.score,deaths:0,...extra};}
+    return {mode:sim.tdm?'tdm':endless?'holdout':sim.training?'training':'campaign',result:sim.tdm?sim.tdm.result:undefined,mission:sim.mission,difficulty:r,mutators:Object.keys(sim.mut||{}),completed:sim.completed,time:sim.time,stats:{...sim.stats},mastery:{...sim.mastery},rating:rate.rating,score:sim.tdm?[...sim.tdm.score]:rate.score,deaths:0,...extra};}
   // Applies one finished run to the save and returns the debrief: every line the tally screen counts up, plus rank, medals and contracts.
+  const HOLDOUT_MILESTONES=[[5,250],[10,600],[15,1000],[20,1500],[25,2000],[30,2500],[40,3500],[50,5000]];
   function settle(save,run,day=0){const report={lines:[],credits:0,xp:0,medals:[],contracts:[],mastery:[],rankUps:[],newBest:false,rankBefore:rankOf(save.xp)};
     if(run.mode==='training')return report;const D=World.difficulties[run.difficulty]||World.difficulties.standard,meta=World.missions.find(m=>m.id===run.mission);let sub=0;const line=(label,value,note='')=>{if(value){report.lines.push({label,value:Math.round(value),note});sub+=value;}};
     for(const [k,v] of Object.entries(run.mastery||{})){if(!W[k])continue;const before=masteryLevel(save.mastery[k]||0);save.mastery[k]=(save.mastery[k]||0)+v;const after=masteryLevel(save.mastery[k]);if(after>before)report.mastery.push({weapon:k,level:after,perk:MASTERY_PERKS[after-1]});}
@@ -49,18 +113,24 @@
       line('MISSION COMPLETE',meta.reward);line('HOSTILE BOUNTIES',run.stats.credits);line('FLOW CHAINS',(run.stats.flows||0)*20,'×'+(run.stats.flows||0));line('FIELD RATING '+run.rating,{S:400,A:250,B:100}[run.rating]||0);
       if(!run.deaths)line('NO DEATHS',250);if(run.stats.intel&&!m.intel)line('INTEL RECOVERED',200);if(firstAtDiff)line('FIRST CLEAR / '+D.label,meta.reward*1.5);
       const earned=[!0,!run.deaths,run.rating==='S',run.stats.intel>0||m.intel,run.difficulty==='insane'];medalsFor(meta).forEach((md,i)=>{if(earned[i]&&!m.medals.includes(md.id)){m.medals.push(md.id);report.medals.push(md);line('MEDAL / '+md.name,150);}});
+      const oc=OP_CHALLENGES[run.mission];if(oc&&!m.opChallenge&&oc.met(run,meta)){m.opChallenge=true;line('OPERATION CHALLENGE / '+oc.text.toUpperCase(),oc.reward);report.opChallenge={...oc,met:undefined};}
       m.done=true;if(run.stats.intel)m.intel=true;if(firstAtDiff)m.diffs.push(run.difficulty);const best={score:run.score,rating:run.rating,time:+run.time.toFixed(1),difficulty:run.difficulty};if(!m.best||run.score>m.best.score){m.best=best;report.newBest=true;}save.stats.missions++;}
     else if(run.mode==='holdout'){const hm=World.holdoutMaps.find(h=>h.id===run.mission),wave=run.stats.wave||0;line('HOSTILE BOUNTIES + WAVES',run.stats.credits,run.stats.spent?'AFTER '+Math.round(run.stats.spent)+' CR SPENT ON SUPPLIES':'');
       // The campaign killhouses are harder ground and pay a little more than the default one.
       if(hm&&hm.pay>1)line('KILLHOUSE / '+hm.title,run.stats.credits*(hm.pay-1),'×'+hm.pay);
-      const b=save.holdout[run.difficulty]||0;if(wave>b){save.holdout[run.difficulty]=wave;report.newBest=true;if(b)line('NEW RECORD / WAVE '+wave,100*wave);}
-      if(hm){const rec=save.killhouse[hm.id]||(save.killhouse[hm.id]={});if(wave>(rec[run.difficulty]||0)){rec[run.difficulty]=wave;report.newBest=true;}}}
+      // A milestone wave reached for the first time on this pressure pays once, on top of everything else.
+      // A seeded challenge (fixed kit, a mutator) is a record of its own: it does not touch the ordinary wave records.
+      const b=save.holdout[run.difficulty]||0;if(!run.challenge){for(const [m,pay] of HOLDOUT_MILESTONES)if(wave>=m&&b<m)line('MILESTONE / WAVE '+m,pay,'FIRST TIME ON '+D.label);
+      if(wave>b){save.holdout[run.difficulty]=wave;report.newBest=true;if(b)line('NEW RECORD / WAVE '+wave,100*wave);}}
+      if(hm&&!run.challenge){const rec=save.killhouse[hm.id]||(save.killhouse[hm.id]={});if(wave>(rec[run.difficulty]||0)){rec[run.difficulty]=wave;report.newBest=true;}}}
     // Team deathmatch: bounties for the hostiles you put down yourself, a bonus for the result, and the same map
     // bonus a killhouse pays. An abandoned match (no result) banks its bounties only.
     else if(run.mode==='tdm'){const hm=World.holdoutMaps.find(h=>h.id===run.mission);line('HOSTILE BOUNTIES',run.stats.credits);
       if(run.result){line(run.result==='win'?'MATCH WON':run.result==='draw'?'MATCH DRAWN':'MATCH PLAYED',run.stats.match||0,Array.isArray(run.score)?run.score.join(' – '):'');
         if(run.ranked!==false){const rec=save.tdm[run.difficulty]||(save.tdm[run.difficulty]={played:0,wins:0});rec.played++;if(run.result==='win')rec.wins++;}}
       if(hm&&hm.pay>1)line('MAP / '+hm.title,sub*(hm.pay-1),'×'+hm.pay);}
+    // Mutators pay for the harder rules they set (World.mutators).
+    const muts=(run.mutators||[]).filter(k=>World.mutators[k]);if(muts.length&&sub){const m=muts.reduce((a,k)=>a*World.mutators[k].reward,1);line('MUTATORS / '+muts.map(k=>World.mutators[k].short).join(' + '),sub*(m-1),'×'+m.toFixed(2));}
     const mult=D.reward;if(sub&&mult!==1){const extra=sub*(mult-1);report.lines.push({label:'DIFFICULTY / '+D.label,value:Math.round(extra),note:'×'+mult});sub+=extra;}
     report.xp=Math.round(sub);
     const scav=Math.min(3,save.upgrades.scavenger||0);if(scav&&sub){const extra=sub*.08*scav;report.lines.push({label:'SCAVENGER',value:Math.round(extra),note:'+'+8*scav+'%'});sub+=extra;}
@@ -123,5 +193,28 @@
     const open=perkSlots(save),perks=[0,1,2].map(i=>{const k=Array.isArray(lo.perks)?lo.perks[i]:null;return i<open&&PERKS[k]?.slot===i&&save.owned.perks.includes(k)?k:null;});
     return {primary:pick(lo.primary,0,'rifle'),secondary:pick(lo.secondary,1,'pistol'),lethal:gear(lo.lethal,'lethal'),tactical:gear(lo.tactical,'tactical'),support:SUP[lo.support]&&save.owned.support.includes(lo.support)?lo.support:null,perks};}
   const profile=save=>({upgrades:{...save.upgrades},kit:{...save.kit},mastery:Object.fromEntries(Object.entries(save.mastery).map(([k,v])=>[k,masteryLevel(v)]))});
-  return {TITLES,rankOf,need,MASTERY,masteryLevel,MASTERY_PERKS,CONTRACTS,contractsFor,refreshContracts,medalsFor,mission,unlocked,nextMission,summarize,settle,price,owns,buy,loadout,profile,KIT,FOUND_DISCOUNT,tierOf,rankFor,RARITY,rarity,CHALLENGES,EXTRA_KILLS,challenge,claim,grant,perkSlots,locked,catalogue,nextGoal,nextUp};
+  // ---------- Intel: the armory's file on every hostile ----------
+  // A file opens in three steps: UNKNOWN (never met: a silhouette in its threat colour), SIGHTED (seen in a run: its
+  // picture, name, role and description), STUDIED (one kill: its counter and its numbers), and COMPLETE once enough
+  // have been killed (fewer for the dangerous ones), which pays once. save.intel[type] = {seen, kills, paid}.
+  const INTEL=World.intel||{},INTEL_KEYS=Object.keys(INTEL).sort((a,b)=>INTEL[a].tier-INTEL[b].tier),INTEL_GOAL=[0,15,10,8,5,2],INTEL_PAY=[0,100,150,250,400,750],INTEL_LEVELS=['UNKNOWN','SIGHTED','STUDIED','COMPLETE'];
+  const intelEntry=(save,k)=>(save.intel||(save.intel={}))[k]||(save.intel[k]={seen:0,kills:0});
+  function intelOf(save,k){const t=INTEL[k];if(!t)return null;const i=save.intel?.[k]||{seen:0,kills:0},goal=INTEL_GOAL[t.tier],level=i.kills>=goal?3:i.kills>0?2:i.seen?1:0;
+    return {key:k,tier:t.tier,level,label:INTEL_LEVELS[level],seen:!!i.seen||i.kills>0,kills:i.kills||0,goal,pay:INTEL_PAY[t.tier],paid:!!i.paid};}
+  // A first sighting; true if it opened the file.
+  function intelSight(save,k){if(!INTEL[k])return false;const i=intelEntry(save,k);if(i.seen)return false;i.seen=1;return true;}
+  // A kill by the player's squad. Completing a file pays its reward straight into the wallet, once.
+  function intelKill(save,k){if(!INTEL[k])return null;const before=intelOf(save,k),i=intelEntry(save,k);i.seen=1;i.kills=Math.min(1e6,(i.kills||0)+1);const after=intelOf(save,k);let pay=0;
+    if(after.level===3&&!i.paid){i.paid=1;pay=after.pay;save.credits+=pay;}return {opened:!before.seen,studied:before.level<2&&after.level>=2,complete:pay>0,pay,level:after.level};}
+  function intelSummary(save){const all=INTEL_KEYS.map(k=>intelOf(save,k));return {total:all.length,seen:all.filter(i=>i.level>=1).length,studied:all.filter(i=>i.level>=2).length,complete:all.filter(i=>i.level>=3).length};}
+  // Where a hostile is met, in words, for its file.
+  function intelWhere(k){const t=INTEL[k];if(!t)return [];const title=id=>World.missions.find(m=>m.id===id)?.title||id.toUpperCase(),out=[];
+    if(t.ops.length)out.push(t.ops.map(title).join(' · '));if(t.insane?.length)out.push(t.insane.map(title).join(' · ')+' (INSANE)');
+    if(t.wave)out.push(t.tier===5?'HOLDOUT · RED WAVE '+t.wave:t.built?'HOLDOUT · BUILT BY ENGINEERS FROM WAVE '+t.wave:'HOLDOUT · FROM WAVE '+t.wave);return out;}
+  // A save from before Intel existed starts with the files it has earned: every hostile of the operations it has
+  // cleared (and their Insane reinforcements, if cleared on Insane), and every one a holdout run of its best wave met.
+  // Sightings only - kills are counted from here on. Done once per save.
+  function intelBackfill(save){if(save.intelInit)return 0;save.intelInit=1;let n=0;const best=Math.max(0,...Object.values(save.holdout||{}).map(Number).filter(Number.isFinite),...Object.values(save.killhouse||{}).flatMap(r=>Object.values(r||{})).map(Number).filter(Number.isFinite));
+    for(const k of INTEL_KEYS){const t=INTEL[k],m=id=>save.missions?.[id]?.done,met=t.ops.some(m)||(t.insane||[]).some(id=>m(id)&&(save.missions[id].diffs||[]).includes('insane'))||t.wave>0&&best>=t.wave;if(met&&intelSight(save,k))n++;}return n;}
+  return {INTEL_KEYS,INTEL_GOAL,INTEL_PAY,INTEL_LEVELS,intelOf,intelSight,intelKill,intelSummary,intelWhere,intelBackfill,OP_CHALLENGES,CHALLENGE_RULES,CHALLENGE_KINDS,challengePeriod,challengeFor,challengeScore,startChallenge,recordChallenge,challengeBoard,weaponStats,weaponTraits,TITLES,rankOf,need,MASTERY,masteryLevel,MASTERY_PERKS,CONTRACTS,contractsFor,refreshContracts,medalsFor,mission,unlocked,nextMission,summarize,settle,price,owns,buy,loadout,profile,KIT,FOUND_DISCOUNT,tierOf,rankFor,RARITY,rarity,CHALLENGES,EXTRA_KILLS,challenge,claim,grant,perkSlots,locked,catalogue,nextGoal,nextUp};
 });

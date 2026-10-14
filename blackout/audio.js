@@ -83,6 +83,8 @@
    const src=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();src.buffer=buf;f.type=type;f.frequency.setValueAtTime(freq,t);if(sweep)f.frequency.exponentialRampToValueAtTime(sweep,t+dur);f.Q.value=q;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol*this.settings.volume,t+attack);g.gain.linearRampToValueAtTime(0,t+dur);src.connect(f).connect(g).connect(ctx.destination);src.start(t);src.stop(t+dur+.02);}
   // Menu navigation adds hover (landing on a control), back and launch. uiAt lets it tell that a control has just made
   // its own sound, so the two never double up (see the navigation sounds in game.js).
+  // A perfect flow chained into another rises a step each time (up to the sixth).
+  flowChain(n){if(n<2)return;const f=523*Math.pow(1.122,Math.min(6,n)-1);this.tone(f,.16,{type:'triangle',vol:.045});this.tone(f*1.5,.2,{type:'triangle',vol:.035,delay:.06});}
   ui(kind){this.uiAt=performance.now();switch(kind){
    case 'hover':this.tone(1250,.04,{type:'triangle',vol:.022});break;case 'back':this.tone(540,.1,{type:'triangle',vol:.04,to:350});break;
    case 'launch':this.tone(392,.16,{type:'triangle',vol:.05});this.tone(587,.2,{type:'triangle',vol:.05,delay:.07});this.tone(784,.3,{type:'triangle',vol:.045,delay:.14});break;
@@ -95,7 +97,16 @@
    if(now>=this.breathAt){const len=1+.6*k;this.noise(len*.42,{vol:.045,freq:700,q:.7,attack:len*.3});this.noise(len*.55,{vol:.035,freq:420,q:.6,attack:.05,delay:len*.5});this.breathAt=now+len*1.15;}}
   event(e){switch(e.type){
    case 'shot':{const kind=e.weapon,sounds={precision:['rifle',.8,.7],marksman:['rifle',.7,.78],battle:['rifle',.62,.82],lmg:['rifle',.5,.9],rocket:['boom',.7,.9],launcher:['shotgun',.7,.75],thumper:['shotgun',.7,.7],magnum:['pistol',.75,.7],machinepistol:['smg',.43,1.15],sawedoff:['shotgun',.95,.86],autoshotgun:['shotgun',.75,1.08],pulse:['laser',.32,1],rail:['laser-large',.7,.85],burst:['rifle',.45,1.12],ricochet:['rifle',.5,.92],flamer:['wind',.2,1.7],minigun:['rifle',.34,1.28],arc:['laser-large',.5,1.3]};
-     const [key,vol,rate]=sounds[kind]||[kind,kind==='shotgun'?.85:.43,1];this.play(key,e.enemy?.18:vol,rate,e.x,e.y);if((kind==='shotgun'||kind==='sawedoff')&&!e.enemy)this.play('metal',.28,1.5);if(kind==='rail'&&!e.enemy)this.play('rumble',.45,1.4);if(kind==='rocket'&&e.enemy)this.tone(400,.4,{type:'sawtooth',vol:.02,to:120});break;}
+     const [key,vol,rate]=sounds[kind]||[kind,kind==='shotgun'?.85:.43,1];this.play(key,e.enemy?.18:vol,rate,e.x,e.y);
+     // Your own guns get a short layer by class on top of the shared samples, so a battle rifle does not sound like
+     // the free MK18: a low thump for the heavy hitters, a crack and a tail for precision rifles, a body thud for
+     // shotguns, a tight click for SMGs. Synthesised here; no extra sound files.
+     if(!e.enemy&&!e.ally){const cls=BPWorld.weapons[kind]?.cls;
+      if(['battle','magnum','precision','marksman','rail'].includes(kind))this.tone(kind==='magnum'?95:78,.11,{type:'sine',vol:.06,to:42});
+      if(cls==='precision')this.noise(.38,{vol:.022,freq:950,q:.5,attack:.01,delay:.04});
+      else if(cls==='shotgun')this.noise(.13,{vol:.045,freq:260,q:.7});
+      else if(cls==='smg')this.noise(.025,{vol:.014,freq:4200,q:2.2});
+      else if(kind==='lmg'||kind==='minigun')this.noise(.05,{vol:.016,freq:180,q:.8});}if((kind==='shotgun'||kind==='sawedoff')&&!e.enemy)this.play('metal',.28,1.5);if(kind==='rail'&&!e.enemy)this.play('rumble',.45,1.4);if(kind==='rocket'&&e.enemy)this.tone(400,.4,{type:'sawtooth',vol:.02,to:120});break;}
    case 'footstep':{this.step++;const snow=e.surface==='snow';this.play(snow?(this.step%2?'footstep-snow-0':'footstep-snow-1'):this.step%2?'footstep-concrete-0':'footstep-concrete-1',.13,1+(this.step%3)*.035,e.x,e.y);break;}
    case 'reload':this.play('reload-'+(['shotgun','autoshotgun','sawedoff','launcher','thumper'].includes(e.weapon)?'shotgun':BPWorld.weapons[e.weapon]?.sprite==='handgun'?'pistol':'rifle'),.44);break;
    case 'empty':this.play('empty',.3);break;
@@ -124,7 +135,7 @@
    case 'damage':this.play('body',.5,.7);break;case 'armorbreak':this.play('glass',.5,.7);this.play('plate',.5,.8);break;
    case 'throw':case 'plant':this.play('metal',.2,1.8);break;
    case 'whiz':{const now=this.scene.sound.context?.currentTime||0;if(now-this.lastWhiz>.09){this.lastWhiz=now;this.noise(.16,{vol:.05,freq:3200,sweep:900,q:3});}break;}
-   case 'telegraph':if(e.enemy==='sniper'||e.enemy==='wraith'||e.enemy==='rocketeer')this.tone(e.enemy==='rocketeer'?520:1250,.5,{type:'sine',vol:.025,to:e.enemy==='rocketeer'?1040:1300},e.x,e.y);else if(e.enemy==='bomber')this.tone(1600,.07,{type:'square',vol:.04});break;
+   case 'telegraph':if(e.mode==='cannon')this.tone(180,1.1,{type:'sawtooth',vol:.04,to:420});else if(e.mode==='missiles')for(let i=0;i<4;i++)this.tone(1400,.08,{type:'square',vol:.035,delay:i*.22});else if(e.mode==='flash')this.play('metal',.3,2.2,e.x,e.y);else if(e.enemy==='sniper'||e.enemy==='wraith'||e.enemy==='rocketeer')this.tone(e.enemy==='rocketeer'?520:1250,.5,{type:'sine',vol:.025,to:e.enemy==='rocketeer'?1040:1300},e.x,e.y);else if(e.enemy==='bomber')this.tone(1600,.07,{type:'square',vol:.04});break;
    case 'flash':this.play('explosion',.6,1.8,e.x,e.y);if(e.self)this.tone(3400,1.6,{vol:.035,attack:.02});break;
    case 'smoke':this.noise(1.1,{vol:.06,freq:1200,q:.5,attack:.05});break;
    case 'emp':this.tone(900,.8,{type:'sawtooth',vol:.04,to:50});this.play('forcefield',.7,.7,e.x,e.y);break;
@@ -132,7 +143,24 @@
    case 'zap':this.tone(140,.25,{type:'sawtooth',vol:.06,to:90});this.play('forcefield',.4,2);break;
    case 'stomp':this.play('punch',.8,.6,e.x,e.y);this.play('rumble',.7,.8,e.x,e.y);break;
    case 'blink':case 'blinkin':this.play('forcefield',.3,2.2,e.x,e.y);break;
-   case 'wave':this.tone(110,.7,{type:'sawtooth',vol:.04});this.tone(165,.7,{type:'sawtooth',vol:.03,delay:.05});break;
+   // A red wave opens on an air-raid siren: three slow rising and falling sweeps over a low drone.
+   case 'wave':if(e.red){for(let i=0;i<3;i++){this.tone(420,.75,{type:'sawtooth',vol:.035,to:880,delay:i*1.1});this.tone(880,.35,{type:'sawtooth',vol:.03,to:420,delay:i*1.1+.75});}this.tone(55,3.4,{type:'sine',vol:.09});this.play('rumble',.7,.6);}
+    else{this.tone(110,.7,{type:'sawtooth',vol:.04});this.tone(165,.7,{type:'sawtooth',vol:.03,delay:.05});if(e.fresh?.length)this.tone(988,.5,{type:'triangle',vol:.03,to:740,delay:2.3});}break;
+   // Crates coming down: a heavy landing for each, and a chord and a bell when a legendary one is among them.
+   case 'supplydrop':this.play('wood',.5,.7);this.tone(70,.3,{type:'sine',vol:.12,delay:.25});if(e.legendary){[392,494,587,784].forEach((f,i)=>this.tone(f,.6,{type:'triangle',vol:.06,delay:.4+i*.09}));this.play('bell',.5,.9);}break;
+   case 'cannon':this.play('boom',1,.6,e.x,e.y);this.play('explosion',.5,.7,e.x,e.y);break;
+   case 'missiles':for(let i=0;i<5;i++)this.tone(300,.5,{type:'sawtooth',vol:.025,to:1200,delay:i*.12});this.play('wind',.5,1.6,e.x,e.y);break;
+   case 'mortar':this.play('boom',.45,1.4,e.x,e.y);this.tone(1800,1,{type:'sine',vol:.025,to:500,delay:.15});break;
+   case 'shieldbreak':this.play('glass',.8,.6,e.x,e.y);this.play('forcefield',.8,.5,e.x,e.y);this.tone(600,.6,{type:'sawtooth',vol:.04,to:80});break;
+   case 'shieldup':this.play('forcefield',.5,1.2,e.x,e.y);break;
+   case 'enemyrevive':this.tone(330,.5,{type:'sine',vol:.035,to:660});this.play('heal',.4,1,e.x,e.y);break;
+   case 'build':this.play('metal',.6,.7,e.x,e.y);this.play('door',.4,1.2,e.x,e.y);break;
+   case 'rearhit':this.play('metal',.3,.8,e.x,e.y);break;
+   case 'countershot':this.tone(1480,.09,{type:'triangle',vol:.05});this.tone(1975,.12,{type:'triangle',vol:.04,delay:.05});break;
+   case 'uplink':if(e.phase==='start')this.tone(660,.3,{type:'square',vol:.03,to:990});else if(e.phase==='done'){this.play('points',.6,1);this.tone(784,.3,{type:'triangle',vol:.05});}else this.tone(300,.4,{type:'square',vol:.03,to:150});break;
+   case 'callout':this.play('radio',.22,1.3);break;
+   case 'marked':this.tone(1500,.12,{type:'square',vol:.03});this.tone(1500,.12,{type:'square',vol:.03,delay:.18});break;
+   case 'laststand':this.tone(220,.5,{type:'sawtooth',vol:.03,to:330});break;
    case 'waveclear':case 'stage':this.play('bell',.3,1.1);break;
    case 'death':this.tone(220,1.4,{type:'sine',vol:.08,to:55});this.vitalsOn=false;break;
    case 'down':this.tone(196,.9,{type:'sine',vol:.07,to:62});this.play('body',.6,.6,e.x,e.y);this.vitalsOn=false;break;

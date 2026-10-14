@@ -7,13 +7,35 @@
   subway:{ground:0x2b2c2f,specks:[0x6b6d72,0x141517],road:0x202124,alt:0x37383c,mark:0x2a2b2e,roof:0x1a1b1d,edge:0x46484c,curb:0x55575c,wall:0x161719,rock:0x3c3e42,rockTop:0x5d5f64,water:0x1f3238},
   desert:{ground:0x76644a,specks:[0xb39d74,0x4e412c],road:0x3b3934,alt:0x86724f,mark:0x45413b,roof:0x6b5b42,edge:0xa89069,curb:0x8d7a5b,wall:0x5c4d37,rock:0x6b573d,rockTop:0x9c8460,water:0x3e5550,tint:[0xd39a52,.06]},
   facility:{ground:0x384047,specks:[0x8d9aa4,0x1d2328],road:0x2c3339,alt:0x434c54,mark:0x30373d,roof:0x272e33,edge:0x6f8290,curb:0x5f6f7a,wall:0x20272c,rock:0x45515a,rockTop:0x6f7f8a,water:0x24363f,accent:0x6fd0e8}};
- const TINTS={infantry:0xb2a797,rusher:0xb8a58e,sniper:0x8dafa1,shield:0xaaa58e,commander:0xc9aa89,scout:0x9fb08a,breacher:0x8e8d84,grenadier:0xa69278,gunner:0x9a8c7a,rocketeer:0x9e9c82,elite:0x8aa8b8,ghost:0x6f7d84,wraith:0x5a6670,raider:0xc59a86,striker:0xc9a078,deadeye:0xb98f9a};
+ // Supply crates by grade (Meta.RARITY order), what each sells shown as, and its short name.
+ const RARITY_COL=[0xb9c2a8,0x8fd07a,0x6fb4f0,0xb68cf0,0xf4c04e],RARITY_HEX=['#d3dbc7','#b3e6a4','#a9d3f8','#d4b8f8','#f8d784'];
+ const OFFER_ICON={ammo:'p:ammo',armor:'p:armor',health:'p:health',stim:'p:stim',gadgets:'p:gadget',sentry:'s:turret',barricade:'g:cover',partner:'s:reinforce',hollow:'u:bandolier',charge:'s:blackout',repair:'u:plating',thermal:'g:sensor'};
+ const OFFER_NAME={ammo:'AMMO',armor:'ARMOUR',health:'HEALTH',stim:'STIM',gadgets:'GADGETS',sentry:'SENTRY',barricade:'FORTIFY',partner:'PARTNER KIT',hollow:'HOLLOW POINTS',charge:'SUPPORT CHARGE',repair:'REBUILD COVER',thermal:'THERMAL'};
+ // What each kind of hostile wears on its head, seen from above: the first thing that tells a medic from a rifleman.
+ // Shape does as much of the work as colour (a brim, a visor, a stripe, a cross, a ghillie hood), so it reads for
+ // colour-blind players too. Drawn in the body's frame (facing +x), on the helmet.
+ const HEAD={infantry:{c:0x5d6646,r:7},rusher:{band:0xc0473a},scout:{c:0xb4a36f,r:6.2,brim:true},breacher:{c:0x2f332c,r:8,visor:0x8fa3ad},sniper:{ghillie:true},deadeye:{ghillie:true},
+  shield:{c:0x39434d,r:8,visor:0x9fb4c0},grenadier:{c:0x5d6646,r:7,stripe:0xe08a3c},gunner:{c:0x34382c,r:8.5},rocketeer:{c:0x5d6646,r:7,stripe:0xe08a3c},medic:{c:0xeeebe2,r:7.5,cross:0xc8463a},
+  mortar:{c:0x5d6646,r:7,stripe:0xe08a3c},engineer:{c:0xe3b544,r:7,brim:true},jammer:{c:0x3c4650,r:7,headset:0x8fe3ff},heavy:{c:0x1d1f1e,r:9.5,visor:0xd8503e},elite:{c:0x5c6a73,r:7.5,visor:0x8fe3ff},
+  commander:{c:0x7a2f2c,r:7.5,beret:true,badge:0xe2b074},ghost:{c:0x2a3136,r:7}};
+ // A small sign above the hostiles that change a fight, so they can be picked out of a crowd and dealt with first:
+ // a cross for the medic, a scope for marksmen, a fused bomb for anything that lobs explosives, a hexagon for the
+ // engineer, a zigzag for anything that jams or spots, a diamond for the juggernaut, and a chevron for a veteran.
+ // How much room each hostile's drawing takes, so its portrait fills the frame (soldiers are about 60 across).
+ const PORTRAIT_SPAN={shield:70,gunner:66,rocketeer:96,heavy:74,mortar:78,commander:66,drone:66,bomber:46,spotter:50,turret:78,apc:138,mech:96,tank:132,wraith:66,ghost:58};
+ const BADGE={medic:'cross',sniper:'scope',deadeye:'scope',grenadier:'blast',mortar:'blast',rocketeer:'blast',engineer:'hex',jammer:'signal',spotter:'signal',heavy:'diamond'};
+ // Gameplay colours that must stay distinct: C.red (hostiles, their marks and the warnings of a locked-on attack),
+ // C.amber (your own marks and an ordinary wind-up) and C.cyan (machines, EMP, allies' devices). Each palette in
+ // settings swaps the three in place (Render.palette), so everything drawn with them follows. The colour-safe sets are
+ // from the Okabe-Ito palette; telegraphs also differ by shape and thickness, so none relies on colour alone.
+ const PALETTES={standard:{red:0xd3846c,amber:0xe2b074,cyan:0x8fe3ff},redgreen:{red:0xd55ec8,amber:0xf0e442,cyan:0x56b4e9},blueyellow:{red:0xff4b5c,amber:0xff9ec8,cyan:0x2bd9c1},contrast:{red:0xff3b30,amber:0xffd60a,cyan:0x64d2ff}};
+ const TINTS={infantry:0xb2a797,rusher:0xb8a58e,sniper:0x8dafa1,shield:0xaaa58e,commander:0xc9aa89,scout:0x9fb08a,breacher:0x8e8d84,grenadier:0xa69278,gunner:0x9a8c7a,rocketeer:0x9e9c82,elite:0x8aa8b8,ghost:0x6f7d84,wraith:0x5a6670,medic:0xc9c4b8,mortar:0x9a9178,heavy:0x7b766c,engineer:0xbba66c,jammer:0x8c99a6,raider:0xc59a86,striker:0xc9a078,deadeye:0xb98f9a};
  const PICKUP={health:0x5c7155,armor:0x526559,ammo:0x797153,lethal:0x6b6a4a,tactical:0x4f6670,intel:0x8a7340,cache:0x9a8240,supply:0x5c7155};
  class Render {
   constructor(scene){this.scene=scene;this.staticObjects=[];this.actors=new Map();this.props=new Map();this.particles=Array.from({length:360},()=>({active:false}));this.flashes=[];this.decals=[];this.cameraX=0;this.cameraY=0;this.lastMap=null;this.hurt=[];this.hitMark=0;this.killMark=0;this.weather=[];
    this.effects=scene.add.graphics().setDepth(11000);this.lines=scene.add.graphics().setDepth(10900);this.decalsGraphics=scene.add.graphics().setDepth(2);this.smoke=scene.add.graphics().setDepth(11500);this.uiGraphics=scene.add.graphics().setScrollFactor(0).setDepth(20000);
    this.crosshair=scene.add.graphics().setScrollFactor(0).setDepth(20010);this.brush=scene.make.graphics({x:0,y:0,add:false});this.dark=null;
-   this.sprites=new Map();this.frame=0;this.labels=Array.from({length:6},()=>scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:'13px',fontStyle:'600',color:'#f4cf8e',stroke:'#0b0f0a',strokeThickness:3}).setOrigin(.5,1).setDepth(12001).setVisible(false));
+   this.sprites=new Map();this.landed=new Set();this.frame=0;this.labels=Array.from({length:6},()=>scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:'13px',fontStyle:'600',color:'#f4cf8e',stroke:'#0b0f0a',strokeThickness:3}).setOrigin(.5,1).setDepth(12001).setVisible(false));
    // Squads: a callsign over each operator, and the caption under the revive station.
    const small=(size,color)=>scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:size,fontStyle:'600',color,stroke:'#0b0f0a',strokeThickness:3}).setDepth(12001).setVisible(false);
    this.nameTags=Array.from({length:8},()=>small('13px','#8fe3ff').setOrigin(.5,1));this.stationLabel=small('13px','#9fd08a').setOrigin(.5,0).setText('REVIVE STATION');
@@ -108,6 +130,23 @@
   }
   actor(id){let a=this.actors.get(id);if(a)return a;const scene=this.scene;a={shadow:scene.add.ellipse(0,0,40,24,C.shadow,.5),feet:scene.add.sprite(0,0,'characters','feet/idle/0'),ghost:scene.add.sprite(0,0,'characters','rifle/idle/0').setVisible(false),body:scene.add.sprite(0,0,'characters','rifle/idle/0'),gear:scene.add.graphics(),phase:0,lastFrame:'',lastSeq:'',blend:0};this.actors.set(id,a);return a;}
   hide(a){for(const obj of [a.body,a.ghost,a.feet,a.gear,a.shadow])obj.setVisible(false);}
+  // An actor whose hostile has left the simulation (a corpse cleared away) is taken down for good, not just hidden.
+  drop(id){const a=this.actors.get(id);if(!a)return;for(const obj of [a.body,a.ghost,a.feet,a.gear,a.shadow])obj.destroy();this.actors.delete(id);}
+  // Intel portraits for the armory: a hostile drawn exactly as the field draws it (body, kit, headgear, or a machine's
+  // own drawing), posed facing up and to the right, scaled to fill a square and snapshotted to an image. The actor is
+  // taken down again before the frame is drawn, so nothing of it ever shows in the world.
+  portrait(type,size=176){const meta=BPWorld.archetypes[type];if(!meta||!this.scene.make?.renderTexture)return Promise.resolve(null);
+   const id='__intel_'+type,e={id,type,x:0,y:0,vx:0,vy:0,angle:-.55,hull:-.4,state:'idle',gun:meta.gun,hp:meta.hp,maxHp:meta.hp,attack:0,attackAge:0,shotAge:9,dead:false,moveTime:0,stagger:0,spawned:false},
+    s={time:.37,recon:1,player:{x:-1e5,y:-1e5},tdm:false,dark:0},big=size*2,k=big*.42/(PORTRAIT_SPAN[type]||62);
+   try{this.drawActor(e,s,0,false);const a=this.actors.get(id);a.blend=0;a.ghost.setVisible(false);if(!meta.machine)a.body.setAlpha(1);const parts=[a.shadow,a.feet,a.body,a.gear].filter(o=>o.visible);
+    for(const o of parts){o.setPosition(o.x*k,o.y*k);o.setScale(o.scaleX*k,o.scaleY*k);}
+    const rt=this.scene.make.renderTexture({x:0,y:0,width:big,height:big},false);rt.draw(parts,big/2,big/2);this.drop(id);
+    // Drawn large, then cut to what was drawn and fitted to the square, so a long rifle or a tank's barrel is never cut off.
+    return new Promise(res=>rt.snapshot(img=>{rt.destroy();if(!img){res(null);return;}const c=document.createElement('canvas');c.width=c.height=big;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0);
+     const d=x.getImageData(0,0,big,big).data;let l=big,t=big,r=-1,b=-1;for(let yy=0;yy<big;yy++)for(let xx=0;xx<big;xx++)if(d[(yy*big+xx)*4+3]>24){if(xx<l)l=xx;if(xx>r)r=xx;if(yy<t)t=yy;if(yy>b)b=yy;}
+     if(r<0){res(null);return;}const w=r-l+1,h=b-t+1,f=Math.min(size*.9/w,size*.9/h),o=document.createElement('canvas');o.width=o.height=size;const ox=o.getContext('2d');ox.imageSmoothingQuality='high';
+     ox.drawImage(c,l,t,w,h,(size-w*f)/2,(size-h*f)/2,w*f,h*f);res(o.toDataURL('image/png'));}));}
+   catch(err){this.drop(id);return Promise.resolve(null);}}
   // Field support in the field. Both are drawn in code, like the drones and the mech: the sentry in the squad's green
   // with a ring that runs down as its time does, the hound nose-first along the way it is running. Each flickers in its last two seconds.
   drawAlly(al,s,dt){
@@ -134,7 +173,12 @@
    if(meta?.machine){this.drawMachine(a,e,s,dt,meta);return;}
    const speed=Math.hypot(e.vx,e.vy),state=e.state||'idle';a.phase+=speed*dt/95;const face=e.angle||0;let feetSeq='idle',seq='idle',bodyTime=s.time*10,footTime=a.phase*20,angle=face,scaleX=1,scaleY=1,lift=0;
    const melee=meta?.melee,tint=isPlayer?(e.decoy?C.cyan:s.tdm&&this.self&&e.team!==undefined&&e.team!==this.self.team?0xe6a38a:e.ally?0x9fb4bd:0xc4cfad):TINTS[type]||0xb2a797;
-   if(e.dead||state==='death'){a.shadow.setVisible(false);a.feet.setVisible(false);a.body.setVisible(true).setFrame((melee?'knife':w.sprite)+'/idle/8').setPosition(e.x+6,e.y).setRotation(face+.6).setScale(.86,.55).setTint(0x747761).setDepth(3).setAlpha(.65);a.gear.clear();a.ghost.setVisible(false);return;}
+   // The fallen: a quarter-second fall to the ground, then flat, grey and without their kit, on a dark stain, so a body
+   // can never be read as someone still standing. A hostile's body fades over the last moments before it is cleared.
+   if(e.dead||state==='death'){const age=isPlayer?9:e.deathAge||0,k=Math.min(1,age/.25),life=BPCore.CORPSE,fade=isPlayer||!e.spawned?1:Math.max(0,Math.min(1,(life.life-age)/life.fade));
+    a.shadow.setVisible(false);a.feet.setVisible(false);a.ghost.setVisible(false);
+    a.body.setVisible(true).setFrame((melee?'knife':w.sprite)+'/idle/8').setPosition(e.x+6*k,e.y).setRotation(face+.6*k).setScale(1-.14*k,1-.5*k).setTint(k<1?tint:isPlayer?0x747761:0x4b4d45).setDepth(k<1?e.y+51:3).setAlpha((k<1?1:isPlayer?.65:.5)*fade);
+    a.gear.clear().setVisible(true).setPosition(e.x,e.y).setRotation(0).setDepth(2).setAlpha(fade);if(!isPlayer)a.gear.fillStyle(0x1a120e,.42*k).fillEllipse(5,3,40*k,24*k);return;}
    if(speed>8){feetSeq=state==='sprint'?'run':'walk';seq='move';bodyTime=a.phase*20;const moveAngle=isPlayer?e.moveAngle:Math.atan2(e.vy,e.vx),relative=Math.atan2(Math.sin(moveAngle-face),Math.cos(moveAngle-face));if(Math.abs(relative)>.6&&Math.abs(relative)<2.5)feetSeq=relative>0?'strafe_right':'strafe_left';if(Math.abs(relative)>2.5)footTime=-a.phase*20;}
    let count=20,group=melee?'knife':w.sprite;if(isPlayer&&e.reload>0){seq='reload';bodyTime=(1-e.reload/e.reloadTotal)*(group==='handgun'?15:20);count=group==='handgun'?15:20;}
    else if(state==='melee'||melee&&e.attack>0){group='knife';seq='meleeattack';const t=state==='melee'?e.age/e.duration:e.attackAge/e.attack;bodyTime=t*15;count=15;angle+=Math.sin(t*Math.PI)*.18;}
@@ -154,7 +198,7 @@
    const feetFrame=feetSeq==='idle'?0:Math.floor(((footTime%20)+20)%20);
    a.shadow.setPosition(e.x+5,e.y+9).setVisible(true).setScale(1-lift/55).setDepth(4).setAlpha(alpha*.5);
    a.feet.setFrame('feet/'+feetSeq+'/'+feetFrame).setPosition(e.x,e.y-lift*.45).setRotation(face).setScale(state==='dive'?1.2:1,state==='roll'?.72:1).setTint(tint).setVisible(true).setDepth(e.y+50).setAlpha(alpha);
-   const recoil=e.shotAge<.12?(1-e.shotAge/.12)*(w.cls==='shotgun'?5:2):0,big=type==='commander'||type==='gunner'?1.12:type==='scout'?.94:1;
+   const recoil=e.shotAge<.12?(1-e.shotAge/.12)*(w.cls==='shotgun'?5:2):0,big=type==='heavy'?1.4:type==='commander'||type==='gunner'?1.12:type==='scout'?.94:1;
    a.body.setVisible(true).setFrame(frame).setPosition(e.x-Math.cos(face)*recoil,e.y-lift-Math.sin(face)*recoil).setRotation(angle).setScale(scaleX*big,scaleY*big).setTint(tint).setAlpha((a.blend>0?1-a.blend/.07:1)*alpha).setDepth(e.y+51);
    a.ghost.setPosition(e.x,e.y-lift).setRotation(angle).setScale(scaleX*big,scaleY*big).setTint(tint).setAlpha(a.blend/.07*alpha).setDepth(e.y+50.5).setVisible(a.blend>0);
    a.gear.setVisible(true).clear().setPosition(e.x,e.y-lift).setRotation(angle).setDepth(e.y+53).setAlpha(alpha);const g=a.gear;
@@ -170,11 +214,41 @@
    if(type==='scout'){g.lineStyle(2,0xb9c48d,.7).lineBetween(-10,-12,-10,12);}
    if(type==='wraith'){g.lineStyle(2,C.red,.95).lineBetween(9,-5,13,5);g.lineStyle(1,0xb8c8d0,.35).strokeCircle(0,0,22+Math.sin(s.time*6)*2);}
    if(type==='ghost'){g.lineStyle(2,0xc9d6dc,.35*alpha).strokeCircle(0,0,19);}
+   // Holdout's later threats, each with something to pick it out of a crowd at a glance.
+   if(type==='medic'){g.fillStyle(0xe9e6dc,.95).fillRect(-13,7,10,10);g.fillStyle(0xc8463a).fillRect(-9.5,8,3,8).fillRect(-12,10.5,8,3);}
+   if(type==='mortar'){g.fillStyle(0x3d4434).fillRect(-21,-7,20,12);g.lineStyle(6,0x5a6248).lineBetween(-12,-1,-32,-1);g.lineStyle(2,0x8c9474).lineBetween(-12,-4,-32,-4);}
+   if(type==='heavy'){g.fillStyle(0x3b3c37,.95).fillRoundedRect(-13,-15,22,30,4);g.lineStyle(2,0x8a8d80,.8).strokeRoundedRect(-13,-15,22,30,4);g.fillStyle(0x23241f).fillCircle(-2,-17,6).fillCircle(-2,17,6);g.fillStyle(0x9b3d2e,.9).fillRect(-6,-3,6,6);}
+   if(type==='engineer'){g.fillStyle(0xd7a63a,.95).fillRect(-15,-7,9,14);g.lineStyle(2,0x5b4a22,.9).strokeRect(-15,-7,9,14);g.lineStyle(2,0xd7a63a,.8).lineBetween(-10,-15,-10,15);}
+   if(type==='jammer'){g.lineStyle(2,0x9fb0bd,.9).lineBetween(-10,-8,-24,-22);g.fillStyle(C.cyan,.55+.45*Math.sin(s.time*9)).fillCircle(-24,-22,3.5);g.fillStyle(0x3a444c).fillRect(-16,-6,8,12);}
+   // A veteran: a gold chevron on the shoulder.
+   if(e.vet){g.lineStyle(2.5,0xe0b04a,.95).lineBetween(-16,-5,-11,-10).lineBetween(-11,-10,-6,-5);g.lineStyle(2.5,0xe0b04a,.7).lineBetween(-16,0,-11,-5).lineBetween(-11,-5,-6,0);}
+   if(!isPlayer)this.headgear(g,type);
    if(e.flashed>0){g.lineStyle(2,0xffffff,.6);for(let i=0;i<3;i++){const t=s.time*6+i*2.1;g.strokeCircle(Math.cos(t)*14,Math.sin(t)*14-10,3);}}
   }
+  get palette(){return {hostile:C.red,team:C.cyan,self:C.amber,warn:C.red};}
+  headgear(g,type){const h=HEAD[type];if(!h)return;const x=-3,y=0;
+   if(h.ghillie){for(let i=0;i<7;i++){const q=i/7*Math.PI*2;g.fillStyle(i%2?0x55693c:0x73844a,.95).fillCircle(x+Math.cos(q)*5.5,y+Math.sin(q)*5.5,3.6);}g.fillStyle(0x4a5c34).fillCircle(x,y,5);return;}
+   if(h.band){g.lineStyle(3,h.band,.95).strokeCircle(x,y,6);g.lineStyle(2,h.band,.95).lineBetween(x-6,y+1,x-12,y+4);return;}
+   const cx=h.beret?x-1:x,cy=h.beret?y-2:y;if(h.brim)g.fillStyle(h.c,.5).fillCircle(cx,cy,h.r+3.5);
+   g.fillStyle(h.c,1).fillCircle(cx,cy,h.r);g.lineStyle(1.5,0x101410,.85).strokeCircle(cx,cy,h.r);
+   if(h.visor){g.lineStyle(3,h.visor,.95).beginPath();g.arc(cx,cy,h.r-1.5,-.95,.95);g.strokePath();}
+   if(h.stripe)g.lineStyle(2.5,h.stripe,.95).lineBetween(cx-h.r+1.5,cy,cx+h.r-1.5,cy);
+   if(h.cross)g.fillStyle(h.cross).fillRect(cx-1.7,cy-5,3.4,10).fillRect(cx-5,cy-1.7,10,3.4);
+   if(h.headset)g.fillStyle(h.headset).fillCircle(cx,cy-h.r,2.2).fillCircle(cx,cy+h.r,2.2);
+   if(h.badge)g.fillStyle(h.badge).fillCircle(cx+3,cy-2.5,2.2);}
+  // The sign above a hostile (see BADGE), upright whichever way it faces, on a dark disc so it reads on any ground.
+  badge(l,e,meta,t){const kind=BADGE[e.type]||(e.vet?'chevron':null);if(!kind)return;const x=e.x,y=e.y-(meta.radius||17)*(meta.heavy?1.4:1)-17,P=this.palette;
+   l.fillStyle(0x0b0f0a,.72).fillCircle(x,y,8);l.lineStyle(1,0xd3d8ba,.4).strokeCircle(x,y,8);
+   if(kind==='cross')l.fillStyle(0xf2eee4).fillRect(x-1.6,y-5,3.2,10).fillRect(x-5,y-1.6,10,3.2);
+   else if(kind==='scope'){l.lineStyle(1.5,P.hostile,1).strokeCircle(x,y,4.2);l.lineBetween(x-6.5,y,x+6.5,y);l.lineBetween(x,y-6.5,x,y+6.5);}
+   else if(kind==='blast'){l.fillStyle(0xe8913c).fillCircle(x-.5,y+1.2,3.8);l.lineStyle(1.5,0xf1d27d).lineBetween(x+2,y-2,x+4.5,y-5.2);}
+   else if(kind==='hex'){const pts=[0,1,2,3,4,5].map(i=>({x:x+Math.cos(i*Math.PI/3)*5,y:y+Math.sin(i*Math.PI/3)*5}));l.lineStyle(2,0xe3b544).strokePoints(pts,true);}
+   else if(kind==='signal'){l.lineStyle(1.8,0x8fe3ff).beginPath();l.moveTo(x-5.5,y+2);l.lineTo(x-2.5,y-3);l.lineTo(x,y+2.5);l.lineTo(x+2.5,y-3);l.lineTo(x+5.5,y+2);l.strokePath();}
+   else if(kind==='diamond'){l.fillStyle(P.hostile).fillPoints([{x,y:y-5.5},{x:x+5,y},{x,y:y+5.5},{x:x-5,y}],true);}
+   else if(kind==='chevron'){l.lineStyle(2.2,0xe0b04a).beginPath();l.moveTo(x-4.5,y+2.5);l.lineTo(x,y-2.5);l.lineTo(x+4.5,y+2.5);l.strokePath();}}
   drawMachine(a,e,s,dt,meta){a.body.setVisible(false);a.feet.setVisible(false);a.ghost.setVisible(false);const g=a.gear;g.clear().setVisible(true).setAlpha(1).setRotation(0).setPosition(e.x,e.y);const t=s.time,dead=e.dead,off=e.disabled>0;
    a.shadow.setVisible(!dead).setPosition(e.x+6,e.y+10).setDepth(4).setScale(meta.radius?meta.radius/17:1).setAlpha(.45);g.setDepth(e.y+52);
-   if(dead){g.fillStyle(0x1a1e18,.85).fillCircle(0,0,(meta.radius||17)*.9);g.lineStyle(2,0x3a3d33,.8).strokeCircle(0,0,(meta.radius||17)*.9);if(e.type==='apc'||e.type==='mech')g.fillStyle(0xb36c35,.3+.2*Math.sin(t*9)).fillCircle(Math.sin(t)*6,0,10);return;}
+   if(dead){if(e.spawned)g.setAlpha(Math.max(0,Math.min(1,(BPCore.CORPSE.life-(e.deathAge||0))/BPCore.CORPSE.fade)));g.fillStyle(0x1a1e18,.85).fillCircle(0,0,(meta.radius||17)*.9);g.lineStyle(2,0x3a3d33,.8).strokeCircle(0,0,(meta.radius||17)*.9);if(e.type==='apc'||e.type==='mech'||e.type==='tank')g.fillStyle(0xb36c35,.3+.2*Math.sin(t*9)).fillCircle(Math.sin(t)*6,0,10);return;}
    if(e.type==='drone'){g.fillStyle(0x556b5a).fillRect(-15,-12,30,24);g.lineStyle(3,0x899f80,.8).lineBetween(-22,-18,22,18).lineBetween(-22,18,22,-18);g.lineStyle(2,0x314b3b,.7);for(const [x,y] of [[-22,-18],[22,-18],[-22,18],[22,18]])g.strokeEllipse(x,y,20,8);g.fillStyle(C.amber).fillRect(9,-3,9,6);g.setPosition(e.x,e.y-12-Math.sin(t*4)*3);}
    else if(e.type==='bomber'){const blink=e.attack>0?Math.sin(t*50)>0:Math.sin(t*10)>0;g.fillStyle(0x5e5a48).fillCircle(0,0,11);g.lineStyle(2,0x8f8a6b,.8).lineBetween(-16,-12,16,12).lineBetween(-16,12,16,-12);g.lineStyle(1,0x3d3a2c,.8);for(const [x,y] of [[-16,-12],[16,-12],[-16,12],[16,12]])g.strokeEllipse(x,y,14,6);g.fillStyle(C.red,blink?1:.3).fillCircle(0,0,4);if(e.attack>0)g.lineStyle(2,C.red,.8).strokeCircle(0,0,95*(e.attackAge/e.attack));g.setPosition(e.x,e.y-10-Math.sin(t*6)*2);}
    else if(e.type==='turret'){g.fillStyle(0x2c3338).fillCircle(0,0,20);g.lineStyle(3,off?C.cyan:0x7d8c96,.9).strokeCircle(0,0,20);g.fillStyle(0x4a565e).fillCircle(0,0,12);const c=Math.cos(e.angle),sn=Math.sin(e.angle);g.lineStyle(7,0x1d2327).lineBetween(c*4,sn*4,c*34,sn*34);g.lineStyle(3,0x8796a0).lineBetween(c*6,sn*6,c*32,sn*32);g.fillStyle(off?0x334047:C.red,.9).fillCircle(c*8,sn*8,3);
@@ -186,13 +260,27 @@
     g.fillStyle(0x6a7a85).fillRect(-10+px*24-6,py*24-6,12,12).fillRect(-10-px*24-6,-py*24-6,12,12);g.lineStyle(6,0x1d2327).lineBetween(c*6+px*20,sn*6+py*20,c*40+px*20,sn*40+py*20);g.fillStyle(C.cyan,.9).fillCircle(c*12,sn*12,4);
     const shield=!(e.shieldDown>0)&&!e.barrierOff;if(shield){g.lineStyle(3,C.cyan,.35+.15*Math.sin(t*5));g.strokeCircle(0,0,40);g.lineStyle(1,C.cyan,.3);for(let i=0;i<6;i++){const q=i/6*Math.PI*2+t*.4;g.lineBetween(Math.cos(q)*40,Math.sin(q)*40,Math.cos(q+1.05)*40,Math.sin(q+1.05)*40);}}else if(!e.barrierOff){g.lineStyle(1,C.cyan,.25*Math.abs(Math.sin(t*20))).strokeCircle(0,0,40);}
     if(e.attack>0&&e.mode==='stomp'){g.lineStyle(3,C.red,.8).strokeCircle(0,0,130*(e.attackAge/e.attack));}if(off){g.lineStyle(2,C.cyan,.8);for(let i=0;i<4;i++){const q=t*13+i;g.lineBetween(Math.cos(q)*30,Math.sin(q)*20,Math.cos(q+1)*14,Math.sin(q+1.7)*24);}}}
-   if(off&&e.type!=='apc'&&e.type!=='mech'){g.lineStyle(2,C.cyan,.85);for(let i=0;i<3;i++){const q=t*15+i*2;g.lineBetween(Math.cos(q)*16,Math.sin(q)*16,Math.cos(q+.8)*6,Math.sin(q+1.4)*6);}}}
+   // The spotter: a small quad drone with a red eye that burns bright while it is marking someone.
+   else if(e.type==='spotter'){g.fillStyle(0x4d5a60).fillCircle(0,0,10);g.lineStyle(2,0x8fa2ab,.8).lineBetween(-18,0,18,0).lineBetween(0,-18,0,18);g.lineStyle(1,0x3d4a50,.8);for(const [x,y] of [[-18,0],[18,0],[0,-18],[0,18]])g.strokeCircle(x,y,7);g.fillStyle(C.red,e.marking?1:.35+.25*Math.sin(t*5)).fillCircle(0,0,4);g.setPosition(e.x,e.y-14-Math.sin(t*4)*3);}
+   // The tank: tracks and hull turned to the way it drives, a turret turned to its aim. The engine deck at the back
+   // glows - that is where it is weak - and the gun's muzzle glows red while the main gun is winding up.
+   else if(e.type==='tank'){const h=e.hull||0,box=(w,hh,ox,oy,col,al=1)=>{const c=Math.cos(h),sn=Math.sin(h);g.fillStyle(col,al).fillPoints([[-w/2,-hh/2],[w/2,-hh/2],[w/2,hh/2],[-w/2,hh/2]].map(([x,y])=>({x:(x+ox)*c-(y+oy)*sn,y:(x+ox)*sn+(y+oy)*c})),true);};
+    box(92,66,3,4,0x10140f,.55);box(90,14,0,-26,0x23271f);box(90,14,0,26,0x23271f);const tr=(e.moveTime||0)*14%12;for(let x=-42;x<44;x+=12){box(3,14,x+tr-6,-26,0x3a3f33);box(3,14,x+tr-6,26,0x3a3f33);}
+    box(80,46,0,0,0x4f5a3c);box(62,34,2,0,0x5f6b48);box(10,30,-36,0,0xb36c35,.55+.25*Math.sin(t*6));
+    const c=Math.cos(e.angle),sn=Math.sin(e.angle),k=e.shotAge<.1?4:0,wind=e.attack>0&&e.mode==='cannon';g.lineStyle(9,0x1f241a).lineBetween(c*8,sn*8,c*(60-k),sn*(60-k));g.lineStyle(5,0x6f7a58).lineBetween(c*10,sn*10,c*(58-k),sn*(58-k));
+    g.fillStyle(0x3f4832).fillCircle(0,0,18);g.lineStyle(2,0x8b9273).strokeCircle(0,0,18);g.fillStyle(0x2a3022).fillCircle(-c*6,-sn*6,6);if(wind)g.fillStyle(C.red,.6+.4*Math.sin(t*30)).fillCircle(c*60,sn*60,6);
+    if(off){g.lineStyle(2,C.cyan,.8);for(let i=0;i<4;i++){const q=t*13+i;g.lineBetween(Math.cos(q)*38,Math.sin(q)*24,Math.cos(q+1)*18,Math.sin(q+1.7)*28);}}}
+   if(e.type==='mech'&&e.attack>0&&e.mode==='missiles'){const c=Math.cos(e.angle),sn=Math.sin(e.angle),px=-sn,py=c;g.fillStyle(C.red,.6+.4*Math.sin(t*25)).fillCircle(-10+px*24,py*24,5).fillCircle(-10-px*24,-py*24,5);}
+   if(off&&e.type!=='apc'&&e.type!=='mech'&&e.type!=='tank'){g.lineStyle(2,C.cyan,.85);for(let i=0;i<3;i++){const q=t*15+i*2;g.lineBetween(Math.cos(q)*16,Math.sin(q)*16,Math.cos(q+.8)*6,Math.sin(q+1.4)*6);}}}
   emit(x,y,count,kind='spark',angle=null){const max=this.scene.settings.quality==='low'?Math.ceil(count/2):count;for(let i=0;i<max;i++){const p=this.particles.find(p=>!p.active);if(!p)break;const a=angle===null?Math.random()*Math.PI*2:angle+(Math.random()-.5)*1.8;const speed=kind==='smoke'?15+Math.random()*35:kind==='ember'?20+Math.random()*40:70+Math.random()*190;Object.assign(p,{active:true,x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-(kind==='ember'?30:0),life:kind==='smoke'?1.4+Math.random()*1.4:.2+Math.random()*.6,total:kind==='smoke'?2:.8,kind,size:kind==='smoke'?7+Math.random()*14:1+Math.random()*4,color:kind==='spark'?0xddb170:kind==='glass'?0xa8c5b7:kind==='cloth'?0x987c62:kind==='dust'?0xa7a087:kind==='casing'?0xad9b64:kind==='emp'?C.cyan:kind==='ember'?0xe58f45:0x596457});}}
   popup(x,y,text,color='#e2b074'){const t=this.texts.find(q=>q.life<=0)||this.texts[0];t.life=.95;t.x=x;t.y=y;t.obj.setText(text).setColor(color).setPosition(x,y).setVisible(true).setAlpha(1).setScale(1.25);}
   event(e){const sim=this.scene.sim;switch(e.type){case 'shot':{const tr=BPWorld.weapons[e.weapon]?.tracer;this.emit(e.x,e.y,e.weapon==='shotgun'||e.weapon==='sawedoff'||e.weapon==='autoshotgun'?13:4,tr?'emp':'spark',e.angle);this.emit(e.x,e.y,2,'smoke',e.angle);if(!tr)this.emit(e.x-Math.cos(e.angle)*16,e.y-Math.sin(e.angle)*16,1,'casing',e.angle+Math.PI/2);this.flashes.push({x:e.x,y:e.y,angle:e.angle,life:.055,big:['shotgun','sawedoff','autoshotgun','rail','rocket','magnum'].includes(e.weapon),color:tr});if(!e.enemy&&['shotgun','sawedoff','autoshotgun','rail','rocket'].includes(e.weapon))this.shake(.045,.002);break;}
     case 'hit':{this.emit(e.x,e.y,5,'cloth',e.angle);const actor=this.actors.get(e.id);if(actor)actor.hitTime=.14;if(e.player&&(e.by||'player')===(this.scene.selfId||'player'))this.hitMark=.12;break;}
     case 'kill':if(e.credits&&(!sim.tdm||e.by===(this.scene.selfId||'player')))this.popup(e.x,e.y-26,'+'+e.credits+(e.combo>1?'  ×'+e.combo:''),e.combo>=3?'#f1c27d':'#e2b074');if((e.by||'player')===(this.scene.selfId||'player'))this.killMark=.24;if(e.boss)this.shake(.4,.01);break;
-    case 'cache':this.popup(e.x,e.y-20,'+'+e.credits+' CR','#f1d27d');break;case 'intel':this.popup(e.x,e.y-20,'INTEL','#f1d27d');break;
+    case 'cache':this.popup(e.x,e.y-20,'+'+e.credits+' CR','#f1d27d');break;
+    case 'countershot':this.popup(e.x,e.y-40,'COUNTER','#f1d27d');this.emit(e.x,e.y,8,'spark');break;
+    // A perfect flow: an amber ring off the operator and a spray of sparks (no flash, so reduced-flash play keeps it).
+    case 'flow':this.flashes.push({x:e.x,y:e.y,ring:true,radius:95,color:C.amber,life:.4});this.emit(e.x,e.y,12,'spark');break;case 'intel':this.popup(e.x,e.y-20,'INTEL','#f1d27d');break;
     case 'weaponfound':this.popup(e.x,e.y-24,'NEW WEAPON','#f1d27d');this.emit(e.x,e.y,18,'spark');break;
     case 'bulletimpact':this.emit(e.x,e.y,5,'spark');this.decals.push({x:e.x,y:e.y,size:2});break;
     case 'meleeimpact':this.emit(e.x,e.y,12,'dust');this.shake(.075,.0025);break;
@@ -226,7 +314,7 @@
    // The camera leads the aim, and further when steadying a long gun: a marksman rifle sees more ahead than a pistol.
    const ahead=p.aiming?115*Math.max(.85,Math.min(1.7,(BPWorld.weapons[p.slots?.[p.slot]]?.range||940)/940)):65,aimX=Math.cos(p.angle)*ahead,aimY=Math.sin(p.angle)*ahead,targetX=p.x+p.vx*.14+aimX,targetY=p.y+p.vy*.14+aimY,lerp=1-Math.exp(-dt*6);
    this.cameraX+=(targetX-this.cameraX)*lerp;this.cameraY+=(targetY-this.cameraY)*lerp;cam.centerOn(this.cameraX,this.cameraY);
-   for(const b of s.walls)if(b.deployed&&!this.props.has(b.id))this.prop(b);
+   for(const b of s.walls)if((b.deployed||b.fort)&&!this.props.has(b.id))this.prop(b);
    for(const {container,b} of this.props.values()){container.setVisible(!b.dead);if(!b.dead&&Number.isFinite(b.hp)&&b.hp<b.maxHp)container.setAlpha(.6+.4*b.hp/b.maxHp);if(container.blink&&!b.dead)container.list[0].setAlpha(Math.sin(t*6)>0?1:.85);if(container.pulse&&!b.dead)container.setScale(1+.04*Math.sin(t*5));}
    this.drawActor(s.player,s,dt,true);
    for(const id of ['guest','m2','m3','m4','m5','m6','m7']){const m=(s.mates||[]).find(o=>o.id===id);if(m&&!m.vanished)this.drawActor(m,s,dt,true);else{const a=this.actors.get(id);if(a)this.hide(a);}}
@@ -238,17 +326,31 @@
    if(s.decoy)this.drawActor({id:'decoy',decoy:true,x:s.decoy.x,y:s.decoy.y,vx:0,vy:0,angle:Math.sin(t*1.3)*1.4,slots:p.slots,slot:p.slot,state:'idle',shotAge:10,age:0,duration:1,reload:0,heal:0},s,dt,true);else{const a=this.actors.get('decoy');if(a)this.hide(a);}
    if(s.tdm)for(const o of s.roster){const d=o.ctx&&o.ctx.decoy,id='decoy-'+o.id;if(d)this.drawActor({id,decoy:true,x:d.x,y:d.y,vx:0,vy:0,angle:Math.sin(t*1.3)*1.4,slots:o.slots,slot:o.slot,state:'idle',shotAge:10,age:0,duration:1,reload:0,heal:0},s,dt,true);else{const a=this.actors.get(id);if(a)this.hide(a);}
     if(foe(o)&&!o.dead&&sensed(o)){l.lineStyle(1.5,C.red,.45+.3*Math.sin(t*8)).strokeRect(o.x-21,o.y-21,42,42);this.marker(o,C.red,cam,true);}}
+   {const ids=new Set(s.enemies.map(e=>e.id));for(const id of this.enemyIds||[])if(!ids.has(id))this.drop(id);this.enemyIds=ids;}
    for(const e of s.enemies){const visible=e.x>cam.worldView.x-120&&e.x<cam.worldView.right+120&&e.y>cam.worldView.y-120&&e.y<cam.worldView.bottom+120;if(visible)this.drawActor(e,s,dt,false);else{const a=this.actors.get(e.id);if(a)this.hide(a);}
     // A recon sweep boxes every hostile in view, noticed or not.
     if(visible&&!e.dead&&!(e.gone>0)&&sensed(e)){const k=.45+.3*Math.sin(t*8);l.lineStyle(1.5,C.red,k).strokeRect(e.x-21,e.y-21,42,42);}
-    if(visible&&e.active&&!e.dead&&!(e.gone>0)){const meta=BPWorld.archetypes[e.type];if(e.attack>0){const k=Math.min(1,e.attackAge/e.attack),d=Math.min(meta.range||950,BPCore.distance(e,p)+40),aim=meta.static?e.angle:e.aim;
-      if(meta.lob||e.mode==='mortar'){const pts=e.mode==='mortar'?[[0,0],[110,-60],[-100,70]]:[[0,0]];for(const [dx,dy] of pts){l.lineStyle(2,C.red,.25+.6*k).strokeCircle(e.targetX+dx,e.targetY+dy,meta.lob?130*(.4+.6*k):120*(.4+.6*k));}}
-      else if(!meta.melee&&!meta.kamikaze&&e.mode!=='stomp'){const sniper=meta.locked;l.lineStyle(sniper?2+(meta.rocket?2:0):1,sniper?C.red:C.amber,.2+.6*k);l.lineBetween(e.x,e.y,e.x+Math.cos(aim)*d,e.y+Math.sin(aim)*d);}
+    if(visible&&!e.dead&&!(e.gone>0)&&!BPWorld.archetypes[e.type]?.cloak&&!s.tdm)this.badge(l,e,BPWorld.archetypes[e.type]||{},t);
+    if(visible&&e.active&&!e.dead&&!(e.gone>0)){const meta=BPWorld.archetypes[e.type];if(e.attack>0){const k=Math.min(1,e.attackAge/e.attack),d=Math.min(meta.range||950,BPCore.distance(e,p)+40),aim=meta.turn?e.angle:e.aim;
+      if(e.mode==='missiles'&&e.salvo){for(const q of e.salvo){l.lineStyle(2,C.red,.25+.6*k).strokeCircle(q.x,q.y,95*(.4+.6*k));l.lineBetween(q.x-8,q.y,q.x+8,q.y);l.lineBetween(q.x,q.y-8,q.x,q.y+8);}}
+      else if(e.mode==='flash'){l.lineStyle(2,0xffffff,.3+.5*k).strokeCircle(e.targetX,e.targetY,40+30*k);}
+      else if(meta.shell){const z=s.spotted>0?.6:1;for(const [dx,dy] of [[0,0],[90,-55],[-85,60]])l.lineStyle(2,C.red,.25+.6*k).strokeCircle(e.targetX+dx*z,e.targetY+dy*z,110*(.4+.6*k));}
+      else if(meta.lob||e.mode==='mortar'){const pts=e.mode==='mortar'?[[0,0],[110,-60],[-100,70]]:[[0,0]];for(const [dx,dy] of pts){l.lineStyle(2,C.red,.25+.6*k).strokeCircle(e.targetX+dx,e.targetY+dy,meta.lob?130*(.4+.6*k):120*(.4+.6*k));}}
+      else if(!meta.melee&&!meta.kamikaze&&e.mode!=='stomp'){const sniper=meta.locked||e.mode==='cannon';l.lineStyle(sniper?2+(meta.rocket||e.mode==='cannon'?2:0):1,sniper?C.red:C.amber,.2+.6*k);l.lineBetween(e.x,e.y,e.x+Math.cos(aim)*d,e.y+Math.sin(aim)*d);}
       l.lineStyle(2,C.red,.8).strokeCircle(e.x,e.y,(meta.radius||17)+7+4*k);}
+     if(e.marking){const o=BPCore.ops(s).find(q=>q.id===e.marking);if(o){l.lineStyle(1.5,C.red,.45+.35*Math.sin(t*12)).lineBetween(e.x,e.y-14,o.x,o.y);l.lineStyle(2,C.red,.6).strokeCircle(o.x,o.y,26+3*Math.sin(t*8));}}
+     if(e.healing>0&&e.patient){const b=s.enemies.find(q=>q.id===e.patient);if(b){l.lineStyle(2,0x9fd08a,.75).lineBetween(e.x,e.y,b.x,b.y);l.lineStyle(3,0x9fd08a,.9).beginPath();l.arc(b.x,b.y,20,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,e.healing/2));l.strokePath();}}
+     if(e.building>0){l.lineStyle(3,0xd7a63a,.9).beginPath();l.arc(e.x,e.y,24,-Math.PI/2,-Math.PI/2+Math.PI*2*(1-e.building/2.2));l.strokePath();}
+     // Suppressed: two small grey arcs over the head while the rattle lasts.
+     if(e.suppressed>0){const k=Math.min(1,e.suppressed);l.lineStyle(1.5,0xb8bfb2,.7*k).beginPath();l.arc(e.x,e.y-6,24,-2.3,-1.9);l.strokePath();l.beginPath();l.arc(e.x,e.y-6,24,-1.25,-.85);l.strokePath();}
+     if(meta.jams){const q=(t*.8)%1;l.lineStyle(1.5,C.cyan,.4*(1-q)).strokeCircle(e.x,e.y,20+90*q);}
+     if(e.vet)l.lineStyle(1.5,0xe0b04a,.45).strokeCircle(e.x,e.y,(meta.radius||17)*(meta.heavy?1.4:1)+6);
      if(e.hp<e.maxHp&&!meta.boss){l.fillStyle(0x111d16,.8).fillRect(e.x-22,e.y-38,44,3);l.fillStyle(0xb1b99b).fillRect(e.x-22,e.y-38,44*Math.max(0,e.hp/e.maxHp),3);}if(e.type==='commander'){l.fillStyle(0x111d16,.8).fillRect(e.x-22,e.y-38,44,3);l.fillStyle(C.amber).fillRect(e.x-22,e.y-38,44*Math.max(0,e.hp/e.maxHp),3);}}}
    for(const b of s.projectiles){if(!b.active)continue;const tr=BPWorld.weapons[b.weapon]?.tracer,hostile=b.enemy||!!sides&&sides[b.owner]!==undefined&&sides[b.owner]!==self.team;if(b.weapon==='rail'&&!b.enemy){g.lineStyle(5,tr,.35).lineBetween(b.x,b.y,b.x-b.vx*.03,b.y-b.vy*.03);g.lineStyle(2,0xffffff,.95).lineBetween(b.x,b.y,b.x-b.vx*.03,b.y-b.vy*.03);continue;}
     g.lineStyle(b.explosive?4:2,tr&&!b.enemy?tr:hostile?(b.weapon==='pulse'?C.cyan:0xe39a82):0xe0caa0,.9).lineBetween(b.x,b.y,b.x-b.vx*.013,b.y-b.vy*.013);if(b.explosive){g.fillStyle(hostile?0xff9a6a:0xf6d99a,.85).fillCircle(b.x,b.y,hostile?5:4);this.emit(b.x,b.y,1,'smoke');}}
-   for(const grenade of s.grenades){const gfoe=grenade['enemy']||foe(grenade),k=Math.min(1,grenade.age/grenade.duration),lift=Math.sin(k*Math.PI)*45,kind=grenade.kind||'frag',col=gfoe?C.red:kind==='emp'?C.cyan:kind==='smoke'?0xb8bfb2:kind==='flash'?0xffffff:kind==='incendiary'?0xe58f45:0xaeb78c;g.fillStyle(0x1c271c,.8).fillEllipse(grenade.x+3,grenade.y+4,12,7);const gs=this.sprite('gr'+s.grenades.indexOf(grenade),'g:'+(kind==='frag'||!BPWorld.gear[kind]?'frag':kind));if(gs)gs.setPosition(grenade.x,grenade.y-lift).setDisplaySize(19,19).setRotation(k<1?grenade.age*11:.3).setDepth(11001);else g.fillStyle(col).fillCircle(grenade.x,grenade.y-lift,5);if(gfoe)g.lineStyle(2,C.red,.9).strokeCircle(grenade.x,grenade.y-lift,11);
+   for(const grenade of s.grenades){const gfoe=grenade['enemy']||foe(grenade),k=Math.min(1,grenade.age/grenade.duration),lift=Math.sin(k*Math.PI)*45,kind=grenade.kind||'frag',col=gfoe?C.red:kind==='emp'?C.cyan:kind==='smoke'?0xb8bfb2:kind==='flash'?0xffffff:kind==='incendiary'?0xe58f45:0xaeb78c;g.fillStyle(0x1c271c,.8).fillEllipse(grenade.x+3,grenade.y+4,12,7);if(gfoe&&(grenade.missile||grenade.shell)&&k<1)l.lineStyle(2,C.red,.3+.5*k).strokeCircle(grenade.tx,grenade.ty,(grenade.radius||100)*(.5+.5*k));
+    if(grenade.missile&&k<1){const a=Math.atan2(grenade.ty-grenade.sy,grenade.tx-grenade.sx),y=grenade.y-lift;g.lineStyle(4,0xd8d2bf).lineBetween(grenade.x-Math.cos(a)*9,y-Math.sin(a)*9,grenade.x+Math.cos(a)*7,y+Math.sin(a)*7);g.fillStyle(0xf0a050,.9).fillCircle(grenade.x-Math.cos(a)*11,y-Math.sin(a)*11,3);if(Math.random()<.5)this.emit(grenade.x,y,1,'smoke');continue;}
+    const gs=this.sprite('gr'+s.grenades.indexOf(grenade),'g:'+(kind==='frag'||!BPWorld.gear[kind]?'frag':kind));if(gs)gs.setPosition(grenade.x,grenade.y-lift).setDisplaySize(19,19).setRotation(k<1?grenade.age*11:.3).setDepth(11001);else g.fillStyle(col).fillCircle(grenade.x,grenade.y-lift,5);if(gfoe)g.lineStyle(2,C.red,.9).strokeCircle(grenade.x,grenade.y-lift,11);
     if(grenade.age>=grenade.duration&&(kind==='frag')){const r=grenade.radius||155;l.lineStyle(1,gfoe?C.red:C.amber,.65).strokeCircle(grenade.x,grenade.y,r);l.lineStyle(2,gfoe?C.red:C.amber,.9);l.beginPath();l.arc(grenade.x,grenade.y,13,-Math.PI/2,-Math.PI/2+(grenade.age/grenade.fuse)*Math.PI*2);l.strokePath();if(gfoe)this.marker(grenade,C.red,cam,false);}}
    for(const z of s.zones){
     if(z.kind==='sensor'){const k=(t*1.1)%1;l.lineStyle(1.5,C.cyan,.5*(1-k)).strokeCircle(z.x,z.y,z.r*k);l.lineStyle(1,C.cyan,.22).strokeCircle(z.x,z.y,z.r);g.fillStyle(C.cyan,.95).fillCircle(z.x,z.y,4);continue;}
@@ -259,7 +361,13 @@
    for(const h of s.hazards){const vertical=h.h>h.w,on=h.on;if(on){g.fillStyle(C.red,.18).fillRect(h.x,h.y-(vertical?0:6),h.w+(vertical?0:0),h.h+(vertical?0:12));g.lineStyle(3,0xff6a5a,.9);if(vertical)g.lineBetween(h.x+h.w/2,h.y,h.x+h.w/2,h.y+h.h);else g.lineBetween(h.x,h.y+h.h/2,h.x+h.w,h.y+h.h/2);g.lineStyle(1,0xffd2c8,.9);if(vertical)g.lineBetween(h.x+h.w/2,h.y,h.x+h.w/2,h.y+h.h);else g.lineBetween(h.x,h.y+h.h/2,h.x+h.w,h.y+h.h/2);}
     else{g.lineStyle(1,h.off>0?C.cyan:C.red,.25);if(vertical)g.lineBetween(h.x+h.w/2,h.y,h.x+h.w/2,h.y+h.h);else for(let x=h.x;x<h.x+h.w;x+=12)g.lineBetween(x,h.y+h.h/2,x+5,h.y+h.h/2);}
     g.fillStyle(0x3a4248).fillRect(vertical?h.x+h.w/2-6:h.x-4,vertical?h.y-4:h.y+h.h/2-6,vertical?12:8,vertical?8:12).fillRect(vertical?h.x+h.w/2-6:h.x+h.w-4,vertical?h.y+h.h-4:h.y+h.h/2-6,vertical?12:8,vertical?8:12);}
-   for(const w of s.spawnWarnings){l.lineStyle(2,C.red,.65).strokeRect(w.x-25,w.y-25,50,50);l.lineBetween(w.x-9,w.y-9,w.x+9,w.y+9);l.lineBetween(w.x-9,w.y+9,w.x+9,w.y-9);}
+   for(const w of s.spawnWarnings){l.lineStyle(2,C.red,.65).strokeRect(w.x-25,w.y-25,50,50);l.lineBetween(w.x-9,w.y-9,w.x+9,w.y+9);l.lineBetween(w.x-9,w.y+9,w.x+9,w.y-9);this.marker(w,C.red,cam,true);}
+   // Holdout's supply uplink: a beacon with its ring and how far it has been secured, marked at the screen edge.
+   const up=BPCore.arena(s)&&s.director?.uplink;if(up&&up.x!==undefined&&!up.done){const k=up.progress||0,beat=1+.05*Math.sin(t*5);g.fillStyle(0x0b0f0a,.5).fillEllipse(up.x+3,up.y+14,40,14);g.fillStyle(0x24302a).fillRoundedRect(up.x-15,up.y-15,30,30,4);g.lineStyle(2,0x9fd08a,.9).strokeRoundedRect(up.x-15,up.y-15,30,30,4);
+    g.lineStyle(2,0x9fd08a).lineBetween(up.x,up.y-15,up.x,up.y-36);g.fillStyle(0x9fd08a,.5+.5*Math.sin(t*8)).fillCircle(up.x,up.y-38,4);l.lineStyle(1.5,0x9fd08a,.45).strokeCircle(up.x,up.y,80*beat);
+    if(k>0){l.lineStyle(5,0xd6f2c4,.95).beginPath();l.arc(up.x,up.y,80,-Math.PI/2,-Math.PI/2+Math.PI*2*k);l.strokePath();}this.marker(up,0x9fd08a,cam);}
+   // A partner told to hold: where.
+   if(s.order==='hold'&&s.orderAt){l.lineStyle(1.5,0x9fb4bd,.6).strokeCircle(s.orderAt.x,s.orderAt.y,30);l.lineBetween(s.orderAt.x,s.orderAt.y-30,s.orderAt.x,s.orderAt.y-52);l.fillStyle(0x9fb4bd,.8).fillTriangle(s.orderAt.x,s.orderAt.y-52,s.orderAt.x+14,s.orderAt.y-47,s.orderAt.x,s.orderAt.y-42);}
    this.drawPickups(s,g,t);
    if(!s.training&&!BPCore.arena(s)){const obj=s.goal,pulse=1+Math.sin(t*2)*.05;l.lineStyle(2,C.amber,.65).strokeRect(obj.x-22*pulse,obj.y-22*pulse,44*pulse,44*pulse);l.lineStyle(1,C.amber,.25).strokeCircle(obj.x,obj.y,58);l.lineBetween(obj.x-8,obj.y,obj.x+8,obj.y);l.lineBetween(obj.x,obj.y-8,obj.x,obj.y+8);this.marker(obj,C.amber,cam);}
    this.decalsGraphics.clear();for(const d of this.decals)this.decalsGraphics.fillStyle(0x18241b,.55).fillEllipse(d.x,d.y,d.size*1.5,d.size);
@@ -273,7 +381,7 @@
    if(p.aiming){l.lineStyle(1,0xc3cbb0,.3).lineBetween(p.x+Math.cos(p.angle)*40,p.y+Math.sin(p.angle)*40,p.x+Math.cos(p.angle)*500,p.y+Math.sin(p.angle)*500);}
    if(p.state==='melee'){const k=p.age/p.duration;l.lineStyle(p.heavy?5:3,0xd6d3ac,.35);l.beginPath();l.arc(p.x,p.y,p.heavy?68:52,p.angle-1+k*2,p.angle-.3+k*2);l.strokePath();}
    this.darkness(s,cam,self);this.drawWeather(s,cam,dt);
-   for(const e of s.enemies)if(!e.dead&&!(e.gone>0)&&(e.active&&BPCore.distance(p,e)<1000||sensed(e)))this.marker(e,C.red,cam,true);
+   for(const e of s.enemies)if(!e.dead&&!(e.gone>0)&&(e.active&&BPCore.distance(p,e)<1000||sensed(e)||e.rush))this.marker(e,C.red,cam,true);
    // Damage direction: a red arc on the side the hit came from, so cover can be chosen without guessing.
    this.hurt=this.hurt.filter(h=>(h.life-=dt)>0);for(const h of this.hurt){const r=Math.min(cam.width,cam.height)*.32;this.uiGraphics.lineStyle(10,C.red,.55*Math.min(1,h.life*1.6));this.uiGraphics.beginPath();this.uiGraphics.arc(cam.width/2,cam.height/2,r,h.angle-.32,h.angle+.32);this.uiGraphics.strokePath();}
    this.hitMark=Math.max(0,this.hitMark-dt);this.killMark=Math.max(0,this.killMark-dt);
@@ -303,18 +411,31 @@
     if(!q.carrier){l.lineStyle(2,C.amber,.5+.4*Math.sin(t*6)).strokeCircle(q.x,q.y,22+Math.sin(t*6)*3);this.marker(q,C.amber,cam);}}}
   // Pickups use the shared icon art. Dropped guns lie on their side inside a pulsing amber outline with a name label as Rook closes in;
   // lethal/tactical refills show the gadget they will actually top up.
-  drawPickups(s,g,t){const p=this.self||s.player,RING={health:0xd4846c,supply:0xd4846c,armor:0x9fc0d0,ammo:0xd4c79b,lethal:0xc9d09a,tactical:C.cyan,intel:0xf1d27d,cache:0xf1d27d};let labels=0;
-   for(const pick of s.pickups){if(pick.taken)continue;const x=pick.x,y=pick.y,bob=Math.sin(t*3+x*.01)*2;
+  // Labels over pickups never sit on one another: one that would overlap a label already placed this frame is lifted
+  // clear of it, up to four times. Pickups are labelled nearest first, so the ones within reach always get theirs.
+  placeLabel(lab,x,y){lab.setPosition(x,y);const w=lab.width,h=lab.height;for(let i=0;i<4;i++){const hit=this.placed.find(r=>x-w/2<r.x+r.w/2&&x+w/2>r.x-r.w/2&&y-h<r.y&&y>r.y-r.h);if(!hit)break;y=hit.y-hit.h-2;lab.setPosition(x,y);}this.placed.push({x,y,w,h});return lab;}
+  drawPickups(s,g,t){this.placed=[];const p=this.self||s.player,RING={health:0xd4846c,supply:0xd4846c,armor:0x9fc0d0,ammo:0xd4c79b,lethal:0xc9d09a,tactical:C.cyan,intel:0xf1d27d,cache:0xf1d27d};let labels=0;
+   for(const pick of [...s.pickups].sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))){if(pick.taken)continue;const x=pick.x,y=pick.y,bob=Math.sin(t*3+x*.01)*2;
     if(pick.type==='weapon'){const w=BPWorld.weapons[pick.weapon],sz=BPIcons.size(pick.weapon),dw=sz.w*.47,dh=sz.h*.47,pulse=.5+.5*Math.sin(t*4),fresh=!pick.owned,rot=((Math.floor(x)*7+Math.floor(y)*3)%50-25)/100;
      g.fillStyle(C.amber,fresh?.13+.08*pulse:.05).fillEllipse(x,y,dw*1.3,dh*2);g.lineStyle(2,C.amber,fresh?.5+.4*pulse:.28).strokeEllipse(x,y,dw*1.2+4*pulse,dh*1.8+3*pulse);g.fillStyle(0x0b0f0a,.45).fillEllipse(x+3,y+5,dw*.92,dh*.55);
      const o=this.sprite(pick.id,'w:'+pick.weapon);if(o)o.setPosition(x,y).setDisplaySize(dw,dh).setRotation(rot).setDepth(6);else{g.fillStyle(0x23281d).fillRect(x-dw/2,y-3,dw,6);g.fillStyle(0x8b8a6e).fillRect(x-dw/2+2,y-2,dw-4,3);}
-     const d=Math.hypot(p.x-x,p.y-y);if(d<240&&labels<this.labels.length){const lab=this.labels[labels++];lab.setText((fresh?'NEW · ':'')+w.short+(fresh?'':' · SWAP')).setPosition(x,y-dh*.9-6).setColor(fresh?'#f4cf8e':'#d3dbc7').setAlpha(Math.min(1,(240-d)/60)).setVisible(true);}
+     const d=Math.hypot(p.x-x,p.y-y);if(d<240&&labels<this.labels.length){const lab=this.labels[labels++];this.placeLabel(lab.setText((fresh?'NEW · ':'')+w.short+(fresh?'':' · SWAP')),x,y-dh*.9-6).setColor(fresh?'#f4cf8e':'#d3dbc7').setAlpha(Math.min(1,(240-d)/60)).setVisible(true);}
      continue;}
-    // Supply-drop crates: a priced box holding what it sells, brighter once Rook is close enough to buy.
-    if(pick.type==='offer'){const near=Math.hypot(p.x-x,p.y-y)<70,pulse=.5+.5*Math.sin(t*4),gun=pick.item==='weapon',key=gun?'w:'+pick.weapon:'p:'+({armor:'armor',health:'health',stim:'stim',gadgets:'gadget'}[pick.item]||'ammo');
-     g.fillStyle(0x0b0f0a,.5).fillEllipse(x+3,y+20,58,18);g.fillStyle(0x1a2119,.92).fillRoundedRect(x-27,y-20,54,40,4);g.lineStyle(2,near?0xf4cf8e:C.amber,near?.95:.35+.3*pulse).strokeRoundedRect(x-27,y-20,54,40,4);
-     const o=this.sprite(pick.id,key);if(o){if(gun){const sz=BPIcons.size(pick.weapon),k=Math.min(46/sz.w,26/sz.h);o.setDisplaySize(sz.w*k,sz.h*k);}else o.setDisplaySize(26,26);o.setPosition(x,y).setRotation(0).setDepth(6);}
-     if(labels<this.labels.length){const lab=this.labels[labels++];lab.setText((gun?BPWorld.weapons[pick.weapon].short:{ammo:'AMMO',armor:'ARMOUR',health:'HEALTH',stim:'STIM',gadgets:'GADGETS'}[pick.item]||'SUPPLY')+' · '+pick.cost+' CR').setPosition(x,y-26).setColor(near?'#f4cf8e':'#d3dbc7').setAlpha(1).setVisible(true);}
+    // Supply-drop crates. Each comes down on a parachute in the colour of its grade (Meta.RARITY: standard issue to
+    // legendary), lands with a puff of smoke, and projects a hologram of what it sells over the lid, with the price.
+    // A legendary crate also throws a column of gold light into the sky, so it can be found from across the map.
+    if(pick.type==='offer'){const near=Math.hypot(p.x-x,p.y-y)<70,pulse=.5+.5*Math.sin(t*4),gun=pick.item==='weapon',r=Math.max(0,Math.min(4,pick.rarity??(gun?2:0))),col=RARITY_COL[r],
+      key=gun?'w:'+pick.weapon:OFFER_ICON[pick.item]||'p:ammo',fall=Math.max(0,1-(s.time-(pick.at??-9))/.8),drop=fall*fall*340,cy=y-drop;
+     if(fall>0){g.fillStyle(0x0b0f0a,.4*(1-fall)).fillEllipse(x+3,y+20,58*(1-fall*.5),18*(1-fall*.5));g.lineStyle(1,0xd8d2bf,.7).lineBetween(x-24,cy-18,x-4,cy-62).lineBetween(x+24,cy-18,x+4,cy-62);g.fillStyle(col,.85).slice(x,cy-62,30,Math.PI,0,false).fillPath();g.lineStyle(1.5,0x1a1f17,.6).strokeCircle(x,cy-62,1);}
+     else{if(!this.landed.has(pick.id+'@'+pick.at)){this.landed.add(pick.id+'@'+pick.at);this.emit(x,y+12,10,'dust');this.emit(x,y,4,'smoke');if(r===4)this.emit(x,y,20,'spark');}g.fillStyle(0x0b0f0a,.5).fillEllipse(x+3,y+20,60,18);}
+     if(r===4&&fall<.5){g.fillStyle(col,.07+.05*pulse).fillRect(x-16,cy-420,32,420);g.fillStyle(col,.1+.06*pulse).fillRect(x-6,cy-420,12,420);for(let i=0;i<6;i++){const q=t*.7+i*Math.PI/3;g.lineStyle(2,col,.16).lineBetween(x+Math.cos(q)*24,cy+Math.sin(q)*14,x+Math.cos(q)*70,cy+Math.sin(q)*42);}}
+     g.fillStyle(0x262c22,.97).fillRoundedRect(x-28,cy-18,56,38,3);g.fillStyle(0x394131).fillRect(x-28,cy-18,56,9);g.fillStyle(0x1a1f17).fillRect(x-28,cy-18,7,38).fillRect(x+21,cy-18,7,38);
+     g.fillStyle(col,.9).fillRect(x-21,cy+1,42,4);g.lineStyle(2,col,near?1:.5+.35*pulse).strokeRoundedRect(x-28,cy-18,56,38,3);if(near)g.lineStyle(1,col,.5).strokeRoundedRect(x-33,cy-23,66,48,5);
+     // The hologram: a cone of light off the lid, the item floating in it, and a scan line running through it.
+     const hy=cy-46+Math.sin(t*2.4+x*.01)*3;g.fillStyle(col,.09+.05*pulse).fillPoints([{x:x-9,y:cy-18},{x:x+9,y:cy-18},{x:x+24,y:hy+14},{x:x-24,y:hy+14}],true);g.lineStyle(1,col,.55).strokeEllipse(x,hy+14,48,8);
+     const o=this.sprite(pick.id,key);if(o){if(gun){const sz=BPIcons.size(pick.weapon),k=Math.min(66/sz.w,34/sz.h);o.setDisplaySize(sz.w*k,sz.h*k);}else o.setDisplaySize(36,36);o.setPosition(x,hy).setRotation(0).setDepth(6).setAlpha(.82+.18*Math.sin(t*9+x));}
+     const sl=hy-14+((t*26)%28);g.lineStyle(1,col,.35).lineBetween(x-22,sl,x+22,sl);
+     if(labels<this.labels.length){const lab=this.labels[labels++];this.placeLabel(lab.setText((r===4?'★ LEGENDARY · ':'')+(gun?BPWorld.weapons[pick.weapon].short:OFFER_NAME[pick.item]||'SUPPLY')+' · '+pick.cost+' CR'),x,hy-30).setColor(RARITY_HEX[r]).setAlpha(near?1:.85).setVisible(true);}
      continue;}
     const key=pick.type==='lethal'?'g:'+(p.lethal||'frag'):pick.type==='tactical'?(p.tactical?'g:'+p.tactical:'p:gadget'):'p:'+(pick.type==='supply'?'health':pick.type),size=pick.type==='supply'?36:27;
     g.fillStyle(0x0b0f0a,.5).fillEllipse(x+3,y+10,size,size*.42);g.lineStyle(1.5,RING[pick.type]||0xb6bf99,.3+.25*Math.sin(t*4+x)).strokeCircle(x,y+bob,size*.66);
@@ -333,5 +454,6 @@
     q.x=(q.x%1+1)%1;q.y=(q.y%1+1)%1;const x=q.x*w,y=q.y*h;if(kind==='snow')ui.fillStyle(0xf2f6f8,.35+.4*q.z).fillCircle(x,y,1+q.z*1.6);else if(kind==='dust')ui.lineStyle(1,0xd8c49a,.15+.2*q.z).lineBetween(x,y,x+18*q.z,y);else ui.fillStyle(q.p>3?0xe58f45:0xa49d92,.25+.3*q.z).fillRect(x,y,1.5,1.5);}}
   marker(obj,col,cam,enemy=false){const x=(obj.x-cam.scrollX)*cam.zoom,y=(obj.y-cam.scrollY)*cam.zoom,w=cam.width,h=cam.height;if(x>40&&x<w-40&&y>90&&y<h-100)return;const dx=x-w/2,dy=y-h/2,a=Math.atan2(dy,dx),radius=Math.min((w/2-40)/(Math.abs(Math.cos(a))||.01),(h/2-105)/(Math.abs(Math.sin(a))||.01)),sx=w/2+Math.cos(a)*radius,sy=h/2+Math.sin(a)*radius;const g=this.uiGraphics;g.fillStyle(col,enemy?.65:.95).fillTriangle(sx+Math.cos(a)*7,sy+Math.sin(a)*7,sx+Math.cos(a+2.2)*6,sy+Math.sin(a+2.2)*6,sx+Math.cos(a-2.2)*6,sy+Math.sin(a-2.2)*6);}
  }
+ Render.palette=k=>Object.assign(C,PALETTES[k]||PALETTES.standard);
  root.BPRender=Render;
 })(globalThis);

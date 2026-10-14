@@ -86,7 +86,7 @@ test('the modifiers change the wave: swarm is all rushers, armoured adds plating
       for(let i=0;i<120*60*10&&s.director.wave<3;i++){s.player.health=100;Core.step(s,{});s.events.length=0;for(const e of s.enemies)if(!e.dead&&e.active)Core.damageEnemy(s,e,99999,0,.1,'rifle',true,true);}
       if(s.director.modifier===mod)return s;}throw new Error('no seed gave '+mod);};
   const swarm=force('swarm');assert(swarm.director.queue.concat(swarm.spawnWarnings).every(e=>e.type==='rusher'));assert(swarm.director.queue.length+swarm.spawnWarnings.length>=12);
-  const plated=force('armoured');for(let i=0;i<120*4;i++){plated.player.health=100;Core.step(plated,{});}const foe=plated.enemies.find(e=>!e.dead&&e.plated);assert(foe);assert.equal(foe.maxHp,World.archetypes[foe.type].hp*1.5);
+  const plated=force('armoured');for(let i=0;i<120*4;i++){plated.player.health=100;Core.step(plated,{});}const foe=plated.enemies.find(e=>!e.dead&&e.plated);assert(foe);assert.equal(foe.maxHp,World.archetypes[foe.type].hp*1.5*foe.tough,'plating on top of the wave toughness');
   const dark=force('blackout');assert(dark.dark>=.86);for(let i=0;i<120*90&&dark.stats.wave<3;i++){dark.player.health=100;Core.step(dark,{});dark.events.length=0;for(const e of dark.enemies)if(!e.dead&&e.active)Core.damageEnemy(dark,e,99999,0,.1,'rifle',true,true);}assert.equal(dark.stats.wave,3);assert.equal(dark.dark,0,'the lights come back when the wave is cleared');});
 
 test('every killhouse lets its hostiles reach the operator: no spawn point is walled off',()=>{
