@@ -288,17 +288,16 @@ body.fit .ad-art{flex:1 1 128px;min-height:72px;max-height:240px;margin:-4px 0 1
 body.fit .ad-actions{margin-top:auto;padding-top:12px;width:100%;max-width:none;grid-auto-flow:column;grid-auto-columns:minmax(0,360px)}
 body.fit .armory-detail.wide{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 34px;align-content:start;align-self:start;max-height:100%;padding:22px 24px}
 /* Lobby: the squad cards take the height the chat or records strip leaves; the side column keeps Ready Up at its foot. */
-/* The side column's cards are placed on the lobby's own grid: map and pressure, then the loadout, with Ready Up at the
-   foot. The mode switch sits under the squad instead, where there is width for it, so the column never has to scroll. */
+/* The side column's cards are placed on the lobby's own grid: map and pressure, the loadout, then the mode, with Ready Up
+   at the foot. The column is a fixed width, so changing the mode never resizes its card or the roster beside it. */
 body.fit .lobby-grid{grid-template-columns:minmax(0,1fr) 420px;grid-template-rows:auto auto auto minmax(0,1fr) auto;gap:0 18px}
 body.fit .lobby-side{display:contents}body.fit .lobby-side>*{grid-column:2;margin-bottom:8px}
 body.fit #lobby-join{grid-row:1}body.fit #lobby-brief{grid-row:2}body.fit .lobby-card:has(>#lobby-loadout){grid-row:3}
 body.fit .lobby-actions{grid-row:5;align-self:end;margin-bottom:0;gap:6px}body.fit .lobby-actions .primary{min-height:46px}
-body.fit #lobby-modes{grid-column:1;grid-row:5;margin-bottom:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:16px;padding:8px 12px}
-body.fit #lobby-modes h4{display:grid;gap:4px;margin:0}body.fit #lobby-modes .mode-tiles{height:100%}body.fit #lobby-modes .mode-tile{height:auto;min-height:48px}
-/* A linked deathmatch has both the match rules and the squad chat: they share a row so the teams keep their height. */
-body.fit .lobby-stage:has(>.lobby-rules:not([hidden])):has(>#lobby-comms:not([hidden])){grid-template-columns:1fr 1fr}body.fit .lobby-stage:has(>.lobby-rules:not([hidden])):has(>#lobby-comms:not([hidden]))>.squad{grid-column:1 / -1}
-body.fit .lobby-stage{grid-column:1;grid-row:1 / 5;margin-bottom:8px;gap:8px;grid-template-rows:minmax(0,1fr);grid-auto-rows:auto;min-height:0}body.fit .squad{grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr);min-height:0}
+body.fit #lobby-modes{grid-row:4;align-self:stretch;display:flex;flex-direction:column;min-height:0}body.fit #lobby-modes>h4{flex:none}body.fit #lobby-mode{flex:1;min-height:0;grid-template-rows:minmax(0,1fr)}body.fit #lobby-modes .mode-tile{height:100%}
+body.fit #lobby-modes .mode-tile{height:auto;min-height:48px}
+/* A linked deathmatch has both the match rules and the squad chat: the rules close to one line, so each gets a full-width row. */
+body.fit .lobby-stage{grid-column:1;grid-row:1 / -1;margin-bottom:8px;gap:8px;grid-template-rows:minmax(0,1fr);grid-auto-rows:auto;min-height:0}body.fit .squad{grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr);min-height:0}
 /* Main menu: the same composition at every size, drawn as it is at 1366x768. Taller windows get the synopsis back. */
 body.fit .menu-content{width:58%;padding:calc(84px + (var(--screen-h,768)*1px - 768px)*.3) 0 0 6%}
 body.fit h1{font-size:86px;margin:12px 0 14px}body.fit .classified{display:flex;margin-bottom:14px}body.fit .tagline{display:block;font-size:18px;line-height:1.35}body.fit .menu-content>.eyebrow{margin:0}
@@ -794,3 +793,101 @@ body.text-large .dossier .map-art{display:none}body.text-large .dossier{max-heig
 .picker-list.modes .pick-head{grid-column:1 / -1;margin:8px 0 0;font:var(--t1) var(--mono);letter-spacing:1px;color:var(--amber)}
 .picker-list.modes .pick small{display:block;font:var(--t1)/1.4 var(--mono);color:#9aa58c;margin-top:3px}
 .picker-list.modes{grid-template-columns:repeat(3,minmax(0,1fr))}.picker-list.modes .pick-art{height:62px}.picker-list.modes .pick>div:last-child{padding:7px 10px 8px}.picker-list.modes .pick b{font-size:18px}
+
+/* Lobby, decluttered: the same cards, colours and pictures, with less of them repeated. */
+/* A scaled window narrower than 1000 pixels is still drawn 1366 wide: the two teams stay side by side. */
+body.fit .teams{grid-template-columns:1fr 1fr}
+/* Versus: your card down the left; the teams beside it with the match rules straight under them; the squad chat
+   across the foot of both. The four seats of each team share whatever height the rules and chat leave, so nothing
+   below the teams is empty. */
+body.fit .lobby-stage:has(>.squad.versus){grid-template-columns:176px minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-auto-rows:auto;gap:10px 12px}
+body.fit .squad.versus{display:contents}body.fit .squad.versus>#op-self{grid-column:1;grid-row:1 / span 2;min-height:0}body.fit .squad.versus>#teams{grid-column:2;grid-row:1}
+body.fit .lobby-stage:has(>.squad.versus)>#lobby-records{grid-column:2;grid-row:2}body.fit .lobby-stage:has(>.squad.versus)>#lobby-comms{grid-column:1 / -1;grid-row:3}
+body.fit .teams{grid-template-rows:minmax(min-content,1fr);align-content:stretch}body.fit .teams:has(>.team-tools){grid-template-rows:auto minmax(min-content,1fr)}
+body.fit .team{grid-template-rows:auto repeat(4,minmax(min-content,1fr))}body.fit .seat{align-content:center}
+/* The narrow operator card beside the teams: smaller tag and state chips with a gap between them, each on one line. */
+.squad.versus #op-self .op-top{gap:6px}.squad.versus #op-self :is(.op-tag,.op-state){font-size:calc(var(--t1) * .85);letter-spacing:.4px;padding:2px 5px;white-space:nowrap}
+/* The squad chat: its log and the line to type in sit side by side. */
+body.fit #lobby-comms{grid-template-columns:minmax(0,1fr) 360px;align-items:end;column-gap:12px}
+/* Team seats: their actions stack in a narrow column at the right, so the name keeps its room. An open seat always
+   shows them (they are all it has); an AI's seat shows them when it is pointed at or focused, a controller's focus included. */
+.seat:has(.seat-acts){grid-template-areas:"head name side" "head sub side" "head kit kit"}.seat-side:empty{display:none}
+.seat-acts{grid-area:side;display:flex;flex-direction:column;gap:3px;align-items:stretch;justify-content:center}
+.seat-acts .chip-button{font-size:var(--t1);padding:2px 8px;line-height:1.25;letter-spacing:.4px;white-space:nowrap;text-align:center}
+.seat.ai .seat-acts{opacity:0;transition:opacity .12s}.seat.ai:hover .seat-acts,.seat.ai:focus-within .seat-acts{opacity:1}
+@media(hover:none){.seat.ai .seat-acts{opacity:1}}
+/* Match rules: one line that sums them up, opening into the full set. */
+.rules-toggle{display:flex;align-items:center;gap:14px;width:100%;padding:0;border:0;background:none;text-align:left}
+.rules-toggle b{flex:none;font:var(--t2) var(--mono);font-weight:400;letter-spacing:1px;color:var(--amber)}
+.rules-toggle span{flex:1;min-width:0;font:var(--t2) var(--mono);letter-spacing:.4px;color:var(--paper);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rules-toggle em{flex:none;font:var(--t1) var(--mono);font-style:normal;letter-spacing:.8px;color:var(--muted)}.rules-toggle:hover em,.rules-toggle:focus-visible em{color:var(--amber)}
+#lobby-rules-body{margin-top:8px}#lobby-rules-body[hidden]{display:none}#lobby-rules-body .rules{gap:6px 18px}#lobby-rules-body .rule-text{flex:1 1 320px;margin:0;align-self:center}#lobby-rules-body .rule .chip-button{padding:4px 7px}
+/* The mode: one wide picture tile that opens the mode picker. */
+#lobby-mode.mode-tiles{grid-template-columns:1fr}body.fit #lobby-modes .mode-tile{min-height:52px}body.fit .lobby-side .lobby-map-art{height:40px}body.fit #lobby-modes{padding-top:7px;padding-bottom:7px}
+/* The mode's description keeps two lines whatever its length, so switching modes never changes the card's height. */
+#lobby-modes h4{align-items:flex-start;min-height:calc(2 * 1.25 * var(--t1));margin-bottom:4px}#lobby-modes h4 small{text-align:right;line-height:1.25}
+/* The loadout presets sit in the card's header row, in place of a note that only repeated the slots under it. */
+.lobby-card:has(>#lobby-loadout){position:relative}#lobby-loadout-note{display:none}
+#lobby-loadout .presets{position:absolute;top:5px;right:12px}#lobby-loadout .presets small{display:none}#lobby-loadout .preset{padding:2px 0;min-width:28px}
+/* Support and perks: one slim row of chips. */
+/* Under the way in, a note only when something stands in the way; empty, it takes no room. */
+#lobby-hint:empty{display:none}body.fit .lobby-inner .screen-head{margin-bottom:8px;padding-bottom:8px}
+body.fit .lobby-side>*{margin-bottom:6px}body.fit .lobby-side .lobby-map{padding-top:5px;padding-bottom:5px}
+#lobby-loadout .extra{grid-template-columns:auto minmax(0,1fr);padding:4px 6px;min-height:0;row-gap:1px}#lobby-loadout .extra i{grid-row:1 / 3}#lobby-loadout .extra small{grid-column:2;letter-spacing:0}#lobby-loadout .extra{column-gap:4px;padding-left:5px;padding-right:4px}#lobby-loadout .extra i:empty+span :is(small,b){grid-column:1 / -1}
+.mode-tile em{position:absolute;bottom:calc(9px + var(--t1) * 1.25);right:10px;z-index:1;font:var(--t1) var(--mono);font-style:normal;letter-spacing:.6px;color:var(--amber);text-shadow:0 1px 3px #000}
+/* The map note fits one line; amber when the lobby has outgrown a small map. */
+#lobby-map-note.warn{color:var(--amber);cursor:help}
+/* Enemy pressure: the same coloured cards, shorter. */
+#lobby-difficulty button{padding:4px 2px 5px;gap:1px}#lobby-difficulty .pressure-art{height:18px}
+/* Loadout: the two guns stay big; lethal and tactical become one row of slim chips. */
+#lobby-loadout .slot:is([data-slot="lethal"],[data-slot="tactical"]){grid-template-columns:26px minmax(0,1fr) auto;grid-template-rows:auto;column-gap:8px;padding:3px 8px;min-height:0}
+#lobby-loadout .slot:is([data-slot="lethal"],[data-slot="tactical"]) .slot-art{height:22px}#lobby-loadout .slot:is([data-slot="lethal"],[data-slot="tactical"]) .slot-art .icon{max-height:20px}
+#lobby-loadout .slot:is([data-slot="lethal"],[data-slot="tactical"]) small{display:none}#lobby-loadout .slot:is([data-slot="lethal"],[data-slot="tactical"]) b{font-size:16px}
+#lobby-loadout .slot:is([data-slot="lethal"],[data-slot="tactical"]) span{font:var(--t1) var(--mono);letter-spacing:.4px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* An empty gadget slot names itself (LETHAL / TACTICAL) in place of the picture and the word NONE. */
+#lobby-loadout .slot:is([data-slot="lethal"],[data-slot="tactical"]):has(.slot-art:empty){grid-template-columns:auto minmax(0,1fr)}
+#lobby-loadout .slot:is([data-slot="lethal"],[data-slot="tactical"]):has(.slot-art:empty) :is(.slot-art,b){display:none}#lobby-loadout .slot:is([data-slot="lethal"],[data-slot="tactical"]):has(.slot-art:empty) small{display:block;line-height:22px}
+/* Amber is for what is selected or can be acted on: the small labels on cards are muted. */
+#lobby .slot small,#lobby .extra small,#lobby .operator:not(.ai) .op-plate label{color:var(--muted)}
+@media(prefers-reduced-motion:reduce){.seat.ai .seat-acts{transition:none}}
+
+/* Header: LOCKER in amber outline beside the wallet, and sound as a speaker icon that toggles (waves on, cross off). */
+.locker-button{border:1px solid #dfad7066;padding:6px 12px;color:var(--amber);font:600 var(--t2) var(--mono);letter-spacing:1px;transition:background .15s,color .15s}
+.locker-button:hover,.locker-button:focus-visible,.locker-button.active{background:var(--amber);color:#1b221b}
+.sound-toggle{display:grid;place-items:center;width:34px;height:32px;padding:0;color:#d4dcc9}.sound-toggle svg{width:22px;height:22px}.sound-toggle.muted{color:#7c8775}
+.sound-toggle:hover,.sound-toggle:focus-visible{color:var(--amber)}
+/* The sixth grade, above legendary: MYTHIC, awarded rather than sold. */
+[data-rar="6"]{--rar:#d58cff}
+/* Locker: tabs per grade, the avatars as busts in a grid, and the one picked worn in full beside them. */
+#locker-tabs button[data-rar]{color:color-mix(in srgb,var(--rar) 75%,#e7e8de)}#locker-tabs button[data-rar].active{color:#1b221b;background:var(--rar);border-color:var(--rar)}
+.locker-grid{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:20px;align-items:start}
+.locker-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;align-content:start}
+.locker-item{display:grid;justify-items:center;gap:4px;min-width:0;padding:8px 6px 7px;text-align:center;border:1px solid #ccd3b826;background:linear-gradient(180deg,color-mix(in srgb,var(--rar,#8a927f) 14%,#1c231c) 0,#1c231c 60%);box-shadow:inset 0 3px 0 var(--rar,#8a927f);transition:border-color .15s,background .15s}
+.locker-item .li-art{display:flex;height:62px}.locker-item .li-art .bust{height:62px;width:auto}
+.locker-item b{max-width:100%;font:600 17px/1 var(--display);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.locker-item .li-tag{font:var(--t1) var(--mono);letter-spacing:.3px;color:var(--muted);white-space:nowrap}
+.locker-item.owned .li-tag{color:#a8c48f}.locker-item.worn .li-tag{color:var(--amber)}.locker-item.worn{border-color:#dfad7088}
+.locker-item.locked .li-art{filter:grayscale(.55) brightness(.75)}
+.locker-item:hover{border-color:#ccd3b84d}.locker-item.active{border-color:var(--amber);background:linear-gradient(180deg,color-mix(in srgb,var(--rar,#8a927f) 22%,#232b22) 0,#232b22 60%)}
+.locker-detail{display:grid;overflow:hidden;border:1px solid #ccd3b826;background:#151b16d9}
+.ld-stage{display:flex;justify-content:center;align-items:flex-end;height:300px;padding-top:10px;background:radial-gradient(ellipse 60% 46% at 50% 64%,color-mix(in srgb,var(--rar,#8a927f) 28%,#2c3627) 0,#1a211a 62%,#131813 100%);border-bottom:2px solid var(--rar,#8a927f)}
+.ld-stage .soldier{height:94%;width:auto;filter:drop-shadow(0 10px 12px #0009);transform-origin:50% 100%;animation:opidle 3.4s ease-in-out infinite}
+.ld-body{display:grid;gap:8px;padding:14px 18px 16px}.ld-body .ad-kind{margin:0;color:var(--rar,var(--amber))!important}.ld-body h3{margin:0;font:700 34px/1 var(--display);letter-spacing:1px}
+.ld-desc{margin:0;font-size:var(--t3);line-height:1.5;color:#c9d1bb}
+.ld-challenge{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:8px 10px;border-left:2px solid var(--rar);background:#1c231c;font:var(--t1) var(--mono);letter-spacing:.5px;color:#cdd5c0}
+.ld-challenge b{color:var(--rar);font-weight:500}.ld-challenge i{grid-column:1 / -1;height:5px;background:#2a3328;position:relative}.ld-challenge i::after{content:'';position:absolute;inset:0 auto 0 0;width:calc(var(--v) * 100%);background:var(--rar)}
+.ld-actions{display:grid;margin-top:4px}.ld-actions .secondary:disabled{opacity:.6;cursor:default}
+.ld-note{margin:0;font:var(--t1) var(--mono);letter-spacing:.5px;color:var(--muted)}
+body.fit .locker-grid{flex:1;min-height:0;grid-template-columns:minmax(0,1fr) 440px;grid-template-rows:minmax(0,1fr);align-items:stretch}
+body.fit .locker-list{min-height:0;overflow-y:auto;padding-right:6px}body.fit .locker-detail{min-height:0;grid-template-rows:minmax(0,1fr) auto}body.fit .ld-stage{height:auto;min-height:0}
+@media(max-width:900px){body:not(.fit) .locker-grid{grid-template-columns:1fr}}
+/* Avatar idle animations: the android's visor scans, the revenant sways, the spectre's smoke drifts, eyes and lenses
+   glow, and light runs across the sentinel's shield. */
+@keyframes lkscan{50%{transform:translateX(44px)}}.lk-scan{transform-box:fill-box;animation:lkscan 2.4s ease-in-out infinite}
+@keyframes lkglow{50%{opacity:.45}}.lk-glow{animation:lkglow 1.8s ease-in-out infinite}
+@keyframes lksmoke{50%{transform:translate(4px,-8px) scale(1.12);opacity:.18}}.lk-smoke{transform-box:fill-box;transform-origin:center;animation:lksmoke 3s ease-in-out infinite}
+@keyframes lksway{50%{transform:rotate(-2.5deg)}}.lk-sway{transform-box:fill-box;transform-origin:50% 100%;animation:lksway 2.6s ease-in-out infinite}
+@keyframes lkglint{0%,70%{opacity:0}80%{opacity:.9}100%{opacity:0}}.lk-glint{animation:lkglint 3.2s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.lk-scan,.lk-glow,.lk-smoke,.lk-sway,.lk-glint,.ld-stage .soldier{animation:none}}
+/* An avatar's bust where an item's icon would be: the purchase banner, and a mythic award on the debrief. */
+.banner-art .bust{height:64px;width:auto;filter:drop-shadow(0 0 3px #f4cf8e88) drop-shadow(0 4px 6px #000c)}.award-art .bust{height:30px;width:auto}body.fit .tally .award-art .bust{height:20px}

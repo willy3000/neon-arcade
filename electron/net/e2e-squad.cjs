@@ -33,11 +33,11 @@ const worldOf = (w) => w.win.evaluate(() => window.BPApp.inspect().world);
 const saveOf = (w) => w.win.evaluate(() => window.BPApp.snapshot().save);
 const modeIs = (w, mode) => w.win.waitForFunction((m) => window.BPApp.snapshot().mode === m, mode, { timeout: 15000 });
 const seatsOf = (l) => l.squad.map((q) => (q ? (q.bot ? 'ai' : q.name) : '-'));
-const save = (callsign, extra = {}) => ({ version: 3, drill: true, xp: 60000, settings: { volume: 0, music: false, voice: false, callsign, ...extra.settings }, owned: extra.owned, loadout: extra.loadout });
+const save = (callsign, extra = {}) => ({ version: 3, drill: true, xp: 60000, settings: { volume: 0, music: false, voice: false, callsign, ...extra.settings }, owned: extra.owned && { ...extra.owned, avatars: extra.avatars }, loadout: extra.loadout, avatar: extra.avatar });
 
 (async () => {
   const host = await bootWindow(save('ROOK', { owned: { weapons: ['rifle', 'pistol'], gear: ['frag'], support: [], perks: [] }, loadout: { primary: 'rifle', secondary: 'pistol', lethal: 'frag' }, settings: { lobbyMode: 'tdm' } }));
-  const one = await bootWindow(save('VIPER', { owned: { weapons: ['rifle', 'pistol', 'shotgun'], gear: ['frag', 'smoke'], support: ['recon'], perks: ['regen', 'scrounger'] }, loadout: { primary: 'shotgun', secondary: 'pistol', lethal: 'frag', tactical: 'smoke', support: 'recon', perks: ['regen', 'scrounger', null] } }));
+  const one = await bootWindow(save('VIPER', { owned: { weapons: ['rifle', 'pistol', 'shotgun'], gear: ['frag', 'smoke'], support: ['recon'], perks: ['regen', 'scrounger'] }, loadout: { primary: 'shotgun', secondary: 'pistol', lethal: 'frag', tactical: 'smoke', support: 'recon', perks: ['regen', 'scrounger', null] }, avatars: ['ronin'], avatar: 'ronin' }));
   const two = await bootWindow(save('MAKO', { owned: { weapons: ['rifle', 'pistol', 'smg'], gear: ['frag'], support: [], perks: [] }, loadout: { primary: 'smg', secondary: 'pistol', lethal: 'frag' }, settings: { lobbyMode: 'tdm' } }));
   try {
     // Host: the lobby opens in team deathmatch as one player and seven AI. HOST A MATCH opens it to the LAN.
@@ -69,8 +69,11 @@ const save = (callsign, extra = {}) => ({ version: 3, drill: true, xp: 60000, se
     await swapGun('MK18', 'rifle');
     await swapGun('M870', 'shotgun');
     assert.equal(await one.win.locator('#teams .seat.me .seat-kit .kit-i').count(), 7, 'a seat shows the whole kit: two guns, two gadgets, field support and two perks');
-    assert.equal(await one.win.locator('#teams .seat.player .face-player').count(), 2, 'players have a face');
+    assert.equal(await one.win.locator('#teams .seat.player :is(.face-player, .bust)').count(), 2, 'players have a face, or the bust of the avatar they wear');
     assert.equal(await one.win.locator('#teams .seat.ai .face-ai').count(), 6, 'and AI operators a visored mask');
+    // The look a player wears in the Locker travels with them: VIPER's ronin is on their own seat and on the host's screen.
+    assert.equal((await lobbyOf(host)).squad[4]?.avatar, 'ronin', "the host has the guest's avatar");
+    await host.win.waitForFunction(() => !!document.querySelector('#teams .team.delta .seat.player .bust'), null, { timeout: 4000 });
     console.log("PASS a guest's change of gun shows on their own seat and the host's; seats show the whole kit and tell players from AI");
     await two.win.click('#holdout');
     await two.win.click('#teams [data-link="lan"][data-role="guest"]');
@@ -89,6 +92,7 @@ const save = (callsign, extra = {}) => ({ version: 3, drill: true, xp: 60000, se
     await two.win.click('#teams [data-seat="5"]');
     await host.win.waitForFunction(() => window.BPApp.snapshot().lobby.squad[5]?.name === 'MAKO', null, { timeout: 5000 });
     for (const n of [1, 2, 3, 6, 7]) await host.win.click(`#teams [data-ai="${n}"]`);
+    await host.win.click('#lobby-records [data-rules]'); // the match rules open from their one-line summary
     await host.win.click('#lobby-records [data-limit="5"]');
     const want = ['ROOK', '-', '-', '-', 'VIPER', 'MAKO', '-', '-'];
     for (const w of [host, one, two]) {
@@ -116,6 +120,11 @@ const save = (callsign, extra = {}) => ({ version: 3, drill: true, xp: 60000, se
     await host.win.waitForFunction(() => !document.getElementById('lobby-go').disabled, null, { timeout: 5000 });
     await host.win.click('#lobby-go');
     for (const w of [host, one, two]) await modeIs(w, 'playing');
+    // Each operator wears their avatar into the field: VIPER's ronin is known to the host's renderer and to VIPER's own.
+    const looksOf = (w) => w.win.evaluate(() => window.BPQA.camera().scene.looks);
+    assert.ok(Object.values(await looksOf(host)).includes('ronin'), "the host draws the guest's avatar");
+    const mine = await one.win.evaluate(() => { const sc = window.BPQA.camera().scene; return sc.looks[sc.selfId]; });
+    assert.equal(mine, 'ronin', 'and the guest wears their own');
     console.log('PASS the host starts the match once both guests are ready, and all three windows are in it');
 
     // One roster on the host: ROOK for Alpha; VIPER and MAKO for Delta, each with their own guns, gadgets and perks.

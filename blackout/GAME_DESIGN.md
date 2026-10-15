@@ -32,7 +32,7 @@ All the combat modes share one lobby (the COMBAT MODES card on the main menu): t
 
 ## Difficulty
 
-Story, standard and high intensity keep their original damage (×.55 / ×1 / ×1.22) and cadence. **Insane** is the skill tier:
+Story, standard and intense keep their original damage (×.55 / ×1 / ×1.22) and cadence. **Insane** is the skill tier:
 
 - every authored soldier gets a reinforcement beside it (marksmen are replaced by mission specialists so sniper pairs don't decide fights), and waves get extra spawns;
 - incoming damage ×1.5, post-hit protection .2s instead of .32s (lowered from ×1.85 and .14s after the October 2026 audit found a difficulty wall; the tactical rules below are what make it Insane);
@@ -92,7 +92,7 @@ In the campaign and holdout only the lobby leader carries field support and perk
 ## Challenges, mutators and records
 
 - **Seeded challenges** (main menu: the CHALLENGES button beside the daily contracts opens a panel from the right with both in full - map, kit, twist, rules, your standing, PLAY and the local board; the Holdout lobby stays clear of them): a **daily** (standard pressure; only the first attempt counts, later ones are practice) and a **weekly** (high intensity; the best attempt counts). Everyone gets the same map, loadout, twist and wave seed on the same day or week (`challengeFor` in `meta.js`). The run is fair: the given loadout only, no armory upgrades or perks. Score = wave × 1000 + kills × 10 + best combo × 25. Results go on a **local board** (top ten per kind, this machine only; there is no online leaderboard). A challenge run pays as a holdout run but stays out of the ordinary holdout records and milestones.
-- **Mutators** (on a cleared operation's briefing): Night Ops (dark map, ×1.2 pay), Veterans (high-intensity tactics at your difficulty's damage, ×1.25), Sidearms Only (both slots secondaries, no primary pick-ups, ×1.3), Scarcity (half reserves and drops, ×1.2). They multiply together. Not in team deathmatch or training.
+- **Mutators** (on a cleared operation's briefing): Night Ops (dark map, ×1.2 pay), Veterans (intense-tier tactics at your difficulty's damage, ×1.25), Sidearms Only (both slots secondaries, no primary pick-ups, ×1.3), Scarcity (half reserves and drops, ×1.2). They multiply together. Not in team deathmatch or training.
 - **Operation challenges**: one per operation, paid once (400 to 700 CR): three flows in THE CRASH, inside par in NO SAFE GROUND, a ×6 combo in DEAD FREQUENCY, under 40 damage in UNDERGROUND, three knife kills in IRON CONVOY, five flows and no deaths in GHOST SIGNAL.
 - **S rating** needs a score of 9,800 and at least one perfect flow; the debrief says what a missed S lacked.
 
@@ -107,6 +107,18 @@ Every file is on the shelf from the start, so the player sees how much there is 
 - **Complete**, after 15 / 10 / 8 / 5 / 2 kills by grade: its weak point and what it drops, and a one-time payout of 100 / 150 / 250 / 400 / 750 CR (7,900 CR for the whole book). A banner says so in the field.
 
 Kills by the player's squad count (not an AI teammate's); every member of a LAN squad files their own. Team deathmatch and the range file nothing. A save from before Intel opens with the files it has earned - the hostiles of each operation it cleared, Insane reinforcements if it cleared it on Insane, and those a holdout run of its best wave met - as sightings only. The service record shows the count. `tests/intel.cjs` checks the files against what the game really spawns.
+
+## Locker (avatars)
+
+The LOCKER button in the top bar (beside the wallet; the sound toggle is the speaker icon next to it) opens a screen of avatars: how the operator looks on the campaign board, in the lobby and to the rest of the squad. **Cosmetic only** - nothing changes in the field, and the screen says so.
+
+- **18 avatars in six grades**, graded and rank-gated like the guns: Standard Issue recolours the uniform (Regular, Desert Rat, Urban Grey, Arctic White); Field Grade changes headgear and face (Commando, Jungle Rat, Night Raider); Specialist gives a role silhouette (Ghillie, Bomb Tech, Night Ops); Elite are distinct characters (Ronin, Arctic Wolf, Desert Phantom); Legendary are not quite human (Revenant, Android, Spectre).
+- **Mythic** (a sixth grade, above legendary) is awarded, never sold: SENTINEL for winning 25 team deathmatches, OVERRIDE for reaching wave 25 in Holdout. Both are original characters.
+- The Regular look is everyone's to begin with. Picking an avatar tries it on in full, holding your primary; BUY pays in credits and wears it at once.
+- The avatar is in the save (`owned.avatars`, `avatar`), travels with the player's lobby profile over a LAN (checked against the known ones on arrival), and shows on your operator card and your seat in team deathmatch. AI teammates and operators wear the everyday looks.
+- **In the field**, the top-down operator wears it too (`LOOK` in `render.js`): its headgear for everyone - helmet colours, beret, boonie, balaclava, ghillie, bomb suit, night vision, kabuto, wolf pelt, shemagh, robot head, hood, shield, cyborg plate - and, on your own operator outside a versus match, the uniform's colours over the shoulders. Allies keep the ally colour and a versus match keeps the team colours, so who is friend or foe never depends on what anyone bought. The host sends every operator's avatar with the start of a LAN run (`looks`, beside the callsigns), and the guest checks each against the known ones.
+- **Pending: online lobbies.** Avatars ride the same profile and start messages online as on a LAN, but this has not been verified through the online relay yet. Until it is, treat avatars in online co-op as unsupported; LAN and solo are covered by the tests (`tests/locker.cjs`, `electron/net/e2e-squad.cjs`).
+- Each avatar is a short description in `icons.js` (`LOOKS`: uniform colours, headgear, face, build, idle animation) drawn by the same `soldier()` as the operator, so it looks the same everywhere. Higher grades animate: the android's visor scans, the revenant sways, the spectre's smoke drifts.
 
 ## Accessibility
 

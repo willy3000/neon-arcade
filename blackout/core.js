@@ -99,7 +99,7 @@
       slot:0,slots,lethal,tactical,grenades:training?9:lethal?G[lethal].count+s.mods.charges:0,tacticals:training?9:tactical?G[tactical].count+s.mods.charges:0,stims:training?5:s.mods.stims,ammo:{},reserve:{}};
     for(const [k,w] of Object.entries(W)){s.player.ammo[k]=w.capacity;s.player.reserve[k]=reserveOf(s,k);}
     // Mutators (World.mutators), for an operation replayed or a seeded challenge. Not in team deathmatch.
-    s.mut={};if(!training)for(const k of Array.isArray(options.mutators)?options.mutators:[])if(World.mutators[k]&&!(tdm&&k==='veterans'))s.mut[k]=true;
+    s.mut={};if(!training)for(const k of Array.isArray(options.mutators)?options.mutators:[])if(Object.hasOwn(World.mutators,k)&&!(tdm&&k==='veterans'))s.mut[k]=true;
     if(s.mut.sidearms){const side=s.player.slots[1];s.player.slots=[side,side];}
     if(s.mut.scarcity)for(const k of Object.keys(W))s.player.reserve[k]=Math.floor(s.player.reserve[k]/2);
     // Veterans in an operation: its soldiers play by the rules holdout's later threat levels bring (cover, flanking,

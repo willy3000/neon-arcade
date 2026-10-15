@@ -114,7 +114,9 @@ test('by the pacing estimate everything but the legendary pair takes about thirt
   assert(rest.at(-1).at>=10&&rest.at(-1).at<=15,'everything else is owned after '+rest.at(-1).at+' hours');assert(e.hours-rest.at(-1).at>=4,'the legendary pair adds '+(e.hours-rest.at(-1).at).toFixed(1)+' hours');
   assert.deepEqual(Object.keys(e.tiers),['2','3','4','5']);assert(e.tiers[5]>e.tiers[4]&&e.tiers[4]>e.tiers[3]&&e.tiers[3]>e.tiers[2]);});
 test('every item has a grade, and the legendary pair costs several times anything else',()=>{
-  const save=Save.defaults(),W=World.weapons;assert.equal(Meta.RARITY.length,5);
+  const save=Save.defaults(),W=World.weapons;assert.equal(Meta.RARITY.length,6);assert.equal(Meta.RARITY[4],'LEGENDARY');
+  // The sixth grade, MYTHIC, is the Locker's alone: nothing in the armory reaches it.
+  for(const [kind,table] of [['weapon',W],['gear',World.gear],['support',World.support],['perk',World.perks]])for(const k of Object.keys(table))assert(Meta.rarity(save,kind,k)<=5,kind+' '+k);
   assert.equal(Meta.rarity(save,'weapon','rifle'),1);assert.equal(Meta.rarity(save,'weapon','smg'),2);assert.equal(Meta.rarity(save,'weapon','rail'),5);assert.equal(Meta.rarity(save,'gear','frag'),1);assert.equal(Meta.rarity(save,'gear','emp'),4);
   assert.equal(Meta.rarity(save,'kit','pulse'),5,'a kit part is graded with its gun');
   // An upgrade is graded by the level it would be bought at next.
@@ -156,7 +158,7 @@ test('a version 2 save starts the economy again but keeps campaign progress, rec
   const old={version:2,credits:99999,xp:42000,owned:{weapons:['rifle','pistol','rail','smg'],gear:['emp']},upgrades:{plating:3},loadout:{primary:'rail',tactical:'emp'},seen:['rail'],
     missions:{crash:{done:true,medals:['complete'],diffs:['standard']},ruins:{done:true,medals:[],diffs:['standard']}},holdout:{standard:11},mastery:{rifle:70},stats:{kills:900,missions:5,deaths:9},settings:{volume:.3,callsign:'GHOST'}};
   const s=Save.decode(JSON.stringify(old));assert.equal(s.version,3);assert.equal(s.credits,0);assert.equal(s.xp,0);assert.deepEqual(s.upgrades,{});assert.deepEqual(s.loadout,{primary:'rifle',secondary:'pistol',lethal:null,tactical:null,support:null,perks:[null,null,null]});
-  assert.deepEqual(s.owned,{weapons:['rifle','pistol','shotgun'],gear:['frag'],support:[],perks:[]},'the opening operation\'s story cache is kept');
+  assert.deepEqual(s.owned,{weapons:['rifle','pistol','shotgun'],gear:['frag'],support:[],perks:[],avatars:['regular']},'the opening operation\'s story cache is kept');
   assert.equal(s.missions.ruins.done,true);assert.equal(s.holdout.standard,11);assert.equal(s.mastery.rifle,70);assert.equal(s.stats.kills,900);assert.equal(s.settings.callsign,'GHOST');assert.equal(s.drill,true);assert.equal(s.notice,'rebalance');
   const never=Save.decode(JSON.stringify({version:2,credits:500,settings:{}}));assert.deepEqual(never.owned.weapons,['rifle','pistol']);});
 test('version 3 saves keep finds, kit, killhouse records, presets and the drill flag, and reject bad values',()=>{

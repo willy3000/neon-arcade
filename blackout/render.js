@@ -16,7 +16,15 @@
  // What each kind of hostile wears on its head, seen from above: the first thing that tells a medic from a rifleman.
  // Shape does as much of the work as colour (a brim, a visor, a stripe, a cross, a ghillie hood), so it reads for
  // colour-blind players too. Drawn in the body's frame (facing +x), on the helmet.
- const HEAD={voss:{c:0x26292f,r:7.5,beret:true,badge:0xd8ac4a},infantry:{c:0x5d6646,r:7},rusher:{band:0xc0473a},scout:{c:0xb4a36f,r:6.2,brim:true},breacher:{c:0x2f332c,r:8,visor:0x8fa3ad},sniper:{ghillie:true},deadeye:{ghillie:true},
+ // Everyone in the field is drawn from BPIcons.fieldSheet (realistic, top-down; an avatar told by its colours and kit): hostiles from a light-grey sheet their
+// type tints and headgear dress ("characters"), each operator from a sheet in their avatar's look - or, for the regular
+// look, the menus' kit colours: olive for you, blue for a squadmate. Sheets are drawn the first time a run needs one.
+// LOOK is what moves on top of an avatar while it plays: glows, a scanning visor, drifting smoke.
+const LOOK={nightops:{nvg:true},android:{robot:true},spectre:{hood:true},override:{cyborg:true}};
+function sheetOf(scene,key,make){if(!scene.textures.exists(key)){const sh=make(),tex=scene.textures.addCanvas(key,sh.canvas);for(const [n,fx,fy] of sh.frames)tex.add(n,0,fx,fy,sh.size,sh.size);}return key;}
+const hostileSheet=scene=>sheetOf(scene,'characters',()=>root.BPIcons.fieldSheet('regular',0,true));
+const operatorSheet=(scene,look,kit)=>{const k=root.BPIcons?.LOOKS?.[look]?look:'regular',c=k==='regular'?kit:0;return sheetOf(scene,'op@'+k+'@'+c,()=>root.BPIcons.fieldSheet(k,c));};
+const HEAD={voss:{c:0x26292f,r:7.5,beret:true,badge:0xd8ac4a},infantry:{c:0x5d6646,r:7},rusher:{band:0xc0473a},scout:{c:0xb4a36f,r:6.2,brim:true},breacher:{c:0x2f332c,r:8,visor:0x8fa3ad},sniper:{ghillie:true},deadeye:{ghillie:true},
   shield:{c:0x39434d,r:8,visor:0x9fb4c0},grenadier:{c:0x5d6646,r:7,stripe:0xe08a3c},gunner:{c:0x34382c,r:8.5},rocketeer:{c:0x5d6646,r:7,stripe:0xe08a3c},medic:{c:0xeeebe2,r:7.5,cross:0xc8463a},
   mortar:{c:0x5d6646,r:7,stripe:0xe08a3c},engineer:{c:0xe3b544,r:7,brim:true},jammer:{c:0x3c4650,r:7,headset:0x8fe3ff},heavy:{c:0x1d1f1e,r:9.5,visor:0xd8503e},elite:{c:0x5c6a73,r:7.5,visor:0x8fe3ff},
   commander:{c:0x7a2f2c,r:7.5,beret:true,badge:0xe2b074},ghost:{c:0x2a3136,r:7}};
@@ -34,7 +42,7 @@
  const TINTS={infantry:0xb2a797,rusher:0xb8a58e,sniper:0x8dafa1,shield:0xaaa58e,commander:0xc9aa89,scout:0x9fb08a,breacher:0x8e8d84,grenadier:0xa69278,gunner:0x9a8c7a,rocketeer:0x9e9c82,elite:0x8aa8b8,ghost:0x6f7d84,wraith:0x5a6670,medic:0xc9c4b8,mortar:0x9a9178,heavy:0x7b766c,engineer:0xbba66c,jammer:0x8c99a6,raider:0xc59a86,striker:0xc9a078,deadeye:0xb98f9a,voss:0x8d919c};
  const PICKUP={health:0x5c7155,armor:0x526559,ammo:0x797153,lethal:0x6b6a4a,tactical:0x4f6670,intel:0x8a7340,cache:0x9a8240,supply:0x5c7155};
  class Render {
-  constructor(scene){this.scene=scene;this.staticObjects=[];this.actors=new Map();this.props=new Map();this.particles=Array.from({length:360},()=>({active:false}));this.flashes=[];this.decals=[];this.cameraX=0;this.cameraY=0;this.lastMap=null;this.hurt=[];this.hitMark=0;this.killMark=0;this.weather=[];
+  constructor(scene){this.scene=scene;hostileSheet(scene);this.staticObjects=[];this.actors=new Map();this.props=new Map();this.particles=Array.from({length:360},()=>({active:false}));this.flashes=[];this.decals=[];this.cameraX=0;this.cameraY=0;this.lastMap=null;this.hurt=[];this.hitMark=0;this.killMark=0;this.weather=[];
    this.effects=scene.add.graphics().setDepth(11000);this.lines=scene.add.graphics().setDepth(10900);this.decalsGraphics=scene.add.graphics().setDepth(2);this.smoke=scene.add.graphics().setDepth(11500);this.uiGraphics=scene.add.graphics().setScrollFactor(0).setDepth(20000);
    this.crosshair=scene.add.graphics().setScrollFactor(0).setDepth(20010);this.brush=scene.make.graphics({x:0,y:0,add:false});this.dark=null;
    this.sprites=new Map();this.landed=new Set();this.frame=0;this.labels=Array.from({length:6},()=>scene.add.text(0,0,'',{fontFamily:'IBM Plex Mono, Consolas, monospace',fontSize:'13px',fontStyle:'600',color:'#f4cf8e',stroke:'#0b0f0a',strokeThickness:3}).setOrigin(.5,1).setDepth(12001).setVisible(false));
@@ -52,7 +60,7 @@
   textScale(k){this.textK=k;this.bounds();const set=(t,px)=>t.setFontSize(Math.round(px*k)+'px').setStroke(t.style.stroke,Math.round(3*k));
    for(const t of [...this.labels,...this.nameTags,this.stationLabel])set(t,13);for(const q of this.texts)set(q.obj,15);for(const t of this.areaLabels)t.setFontSize(Math.round(13*k)+'px');}
   clear(){for(const obj of this.staticObjects)obj.destroy();this.staticObjects=[];for(const a of this.actors.values())for(const obj of Object.values(a))if(obj?.destroy)obj.destroy();this.actors.clear();this.props.clear();this.decals=[];this.flashes=[];this.hurt=[];for(const p of this.particles)p.active=false;for(const t of this.texts){t.life=0;t.obj.setVisible(false);}for(const o of this.sprites.values())o.destroy();this.sprites.clear();for(const l of [...this.labels,...this.nameTags,this.stationLabel])l.setVisible(false);this.decalsGraphics.clear();this.effects.clear();this.lines.clear();this.smoke.clear();this.uiGraphics.clear();this.crosshair.clear();if(this.dark){this.dark.destroy();this.dark=null;}}
-  static preload(scene){scene.load.atlas('characters','blackout/assets/characters.png','blackout/assets/characters.json');scene.load.atlas('props','blackout/assets/props.png','blackout/assets/props.json');scene.load.svg('helicopter','blackout/assets/helicopter.svg');if(root.BPIcons)BPIcons.load(scene);}
+  static preload(scene){scene.load.atlas('props','blackout/assets/props.png','blackout/assets/props.json');scene.load.svg('helicopter','blackout/assets/helicopter.svg');if(root.BPIcons)BPIcons.load(scene);}
   // Pooled images for icon-textured world items; unused ones are destroyed at the end of each frame.
   sprite(id,key){if(!this.scene.textures.exists(key))return null;let o=this.sprites.get(id);if(!o){o=this.scene.add.image(0,0,key).setDepth(6);this.sprites.set(id,o);}else if(o.texture.key!==key)o.setTexture(key);o.used=this.frame;o.setVisible(true);return o;}
   sweep(){for(const [id,o] of this.sprites)if(o.used!==this.frame){o.destroy();this.sprites.delete(id);}}
@@ -174,7 +182,10 @@
    if(e.vanished||e.gone>0){this.hide(a);return;}
    if(meta?.machine){this.drawMachine(a,e,s,dt,meta);return;}
    const speed=Math.hypot(e.vx,e.vy),state=e.state||'idle';a.phase+=speed*dt/95;const face=e.angle||0;let feetSeq='idle',seq='idle',bodyTime=s.time*10,footTime=a.phase*20,angle=face,scaleX=1,scaleY=1,lift=0;
-   const melee=meta?.melee,tint=isPlayer?(e.decoy?C.cyan:s.tdm&&this.self&&e.team!==undefined&&e.team!==this.self.team?0xe6a38a:e.ally?0x9fb4bd:0xc4cfad):TINTS[type]||0xb2a797;
+   const melee=meta?.melee,lk=isPlayer&&!e.decoy?this.scene.looks?.[e.id]:null,look=lk?LOOK[lk]:null,foe=s.tdm&&this.self&&e.team!==undefined&&e.team!==this.self.team,
+    sheet=isPlayer?operatorSheet(this.scene,lk||'regular',e===this.self||foe?0:1):'characters';
+   if(a.sheet!==sheet){a.sheet=sheet;for(const o of [a.body,a.feet,a.ghost])o.setTexture(sheet,o.frame.name);}
+   const tint=isPlayer?(e.decoy?C.cyan:foe?0xf4cfc4:0xffffff):TINTS[type]||0xb2a797;
    // The fallen: a quarter-second fall to the ground, then flat, grey and without their kit, on a dark stain, so a body
    // can never be read as someone still standing. A hostile's body fades over the last moments before it is cleared.
    if(e.dead||state==='death'){const age=isPlayer?9:e.deathAge||0,k=Math.min(1,age/.25),life=BPCore.CORPSE,fade=isPlayer||!e.spawned?1:Math.max(0,Math.min(1,(life.life-age)/life.fade));
@@ -205,8 +216,8 @@
    a.body.setVisible(true).setFrame(frame).setPosition(e.x-Math.cos(face)*recoil,e.y-lift-Math.sin(face)*recoil).setRotation(angle).setScale(scaleX*big,scaleY*big).setTint(tint).setAlpha((a.blend>0?1-a.blend/.07:1)*alpha).setDepth(e.y+51);
    a.ghost.setPosition(e.x,e.y-lift).setRotation(angle).setScale(scaleX*big,scaleY*big).setTint(tint).setAlpha(a.blend/.07*alpha).setDepth(e.y+50.5).setVisible(a.blend>0);
    a.gear.setVisible(true).clear().setPosition(e.x,e.y-lift).setRotation(angle).setDepth(e.y+53).setAlpha(alpha);const g=a.gear;
-   if(isPlayer){g.lineStyle(4,e.decoy?C.cyan:0xd1b170,.95).lineBetween(-8,-15,-2,-13);g.lineStyle(2,0x272e21,.7).lineBetween(-11,-18,-9,-7);g.fillStyle(0xa89c76,.7).fillRect(-14,-8,4,6);}
-   else{g.lineStyle(4,type==='elite'?C.cyan:0x9a705b,.9).lineBetween(-8,-15,-2,-13);}
+   // A hostile's shoulder flash (an operator's look is all on their sheet).
+   if(!isPlayer)g.lineStyle(4,type==='elite'?C.cyan:0x9a705b,.9).lineBetween(-9,-20,-3,-18);
    if(type==='shield'){const down=e.shieldDown>0;g.fillStyle(0x677064,down?.35+.2*Math.sin(s.time*30):.95).fillRoundedRect(20,-28,10,56,3);g.lineStyle(2,down?C.cyan:0xa8ad90,.7).strokeRoundedRect(20,-28,10,56,3);g.lineStyle(3,0xe0b572,.6).lineBetween(21,-7,28,-7);}
    if(type==='commander'){g.lineStyle(3,C.amber,.9).lineBetween(-9,-18,-1,-16);}
    // Voss: an officer's long coat over his armour and a red armband.
@@ -227,10 +238,15 @@
    if(type==='jammer'){g.lineStyle(2,0x9fb0bd,.9).lineBetween(-10,-8,-24,-22);g.fillStyle(C.cyan,.55+.45*Math.sin(s.time*9)).fillCircle(-24,-22,3.5);g.fillStyle(0x3a444c).fillRect(-16,-6,8,12);}
    // A veteran: a gold chevron on the shoulder.
    if(e.vet){g.lineStyle(2.5,0xe0b04a,.95).lineBetween(-16,-5,-11,-10).lineBetween(-11,-10,-6,-5);g.lineStyle(2.5,0xe0b04a,.7).lineBetween(-16,0,-11,-5).lineBetween(-11,-5,-6,0);}
-   if(!isPlayer)this.headgear(g,type);
+   if(!isPlayer){g.save();g.translateCanvas(-3,0);g.scaleCanvas(1.1,1.1);g.translateCanvas(3,0);this.headgear(g,type);g.restore();}else if(look)this.avatarGear(g,look,s.time,e);
    if(e.flashed>0){g.lineStyle(2,0xffffff,.6);for(let i=0;i<3;i++){const t=s.time*6+i*2.1;g.strokeCircle(Math.cos(t)*14,Math.sin(t)*14-10,3);}}
   }
   get palette(){return {hostile:C.red,team:C.cyan,self:C.amber,warn:C.red};}
+  avatarGear(g,L,t,e){const x=-3,y=0;
+   if(L.nvg)for(const dy of [-5.5,-1.8,1.8,5.5])g.fillStyle(0x7dff8a,.45+.4*Math.sin(t*4+dy)).fillCircle(x+8.9,y+dy*.65,1.3);
+   if(L.robot)g.fillStyle(C.cyan,.85).fillRect(x+4,y-1.5+Math.sin(t*2.4)*2.5,1.6,2.4);
+   if(L.hood){for(let i=0;i<4;i++){const q=t*1.6+i*1.7;g.fillStyle(0x5b6470,.16+.08*Math.sin(q)).fillCircle(-20-i*6+Math.sin(q)*2,Math.cos(q)*7,7+i*1.6);}g.fillStyle(0xcfefff,.5+.4*Math.sin(t*3)).fillCircle(x+5,y-2,1.3).fillCircle(x+5,y+2,1.3);}
+   if(L.cyborg)g.fillStyle(0xff3b2f,.35+.3*Math.sin(t*4)).fillCircle(x+5.2,y+2.6,2.6);}
   headgear(g,type){const h=HEAD[type];if(!h)return;const x=-3,y=0;
    if(h.ghillie){for(let i=0;i<7;i++){const q=i/7*Math.PI*2;g.fillStyle(i%2?0x55693c:0x73844a,.95).fillCircle(x+Math.cos(q)*5.5,y+Math.sin(q)*5.5,3.6);}g.fillStyle(0x4a5c34).fillCircle(x,y,5);return;}
    if(h.band){g.lineStyle(3,h.band,.95).strokeCircle(x,y,6);g.lineStyle(2,h.band,.95).lineBetween(x-6,y+1,x-12,y+4);return;}
@@ -492,5 +508,11 @@
   marker(obj,col,cam,enemy=false){const x=(obj.x-cam.scrollX)*cam.zoom,y=(obj.y-cam.scrollY)*cam.zoom,w=cam.width,h=cam.height;if(x>40&&x<w-40&&y>90&&y<h-100)return;const dx=x-w/2,dy=y-h/2,a=Math.atan2(dy,dx),radius=Math.min((w/2-40)/(Math.abs(Math.cos(a))||.01),(h/2-105)/(Math.abs(Math.sin(a))||.01)),sx=w/2+Math.cos(a)*radius,sy=h/2+Math.sin(a)*radius;const g=this.uiGraphics;g.fillStyle(col,enemy?.65:.95).fillTriangle(sx+Math.cos(a)*7,sy+Math.sin(a)*7,sx+Math.cos(a+2.2)*6,sy+Math.sin(a+2.2)*6,sx+Math.cos(a-2.2)*6,sy+Math.sin(a-2.2)*6);}
  }
  Render.palette=k=>Object.assign(C,PALETTES[k]||PALETTES.standard);
+// Draws the sheets of the avatars a run is likely to need while the menus wait, a few milliseconds at a time
+// (BPIcons.fieldSheetAsync), so the menus never stall; a sheet still missing when a match starts is drawn on the spot.
+const pending=new Set();
+Render.prepareLooks=(scene,looks)=>{if(!scene?.textures||!root.BPIcons?.fieldSheetAsync)return;const want=[['regular',0],['regular',1],...looks.filter(k=>k&&k!=='regular'&&root.BPIcons.LOOKS[k]).map(k=>[k,0])];
+ for(const [k,c] of want){const key='op@'+k+'@'+c;if(scene.textures.exists(key)||pending.has(key))continue;pending.add(key);
+  root.BPIcons.fieldSheetAsync(k,c).then(sh=>{pending.delete(key);if(scene.textures.exists(key))return;const tex=scene.textures.addCanvas(key,sh.canvas);for(const [n,fx,fy] of sh.frames)tex.add(n,0,fx,fy,sh.size,sh.size);});}};
  root.BPRender=Render;
 })(globalThis);

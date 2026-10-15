@@ -1,13 +1,14 @@
 'use strict';
-// Captures the pictures on the lobby's mode tiles: one unretouched screenshot of each mode in play, HUD hidden,
-// zoomed in on the fight and scaled down. Writes blackout/assets/menu/mode-<mode id>.jpg.
+// LEGACY (see legacy/README.md): the lobby's mode tiles now show drawn art (blackout/tools/make-mode-art.cjs). This
+// captured their earlier pictures: one unretouched screenshot of each mode in play, HUD hidden, zoomed in on the fight
+// and scaled down. Writes legacy/menu-stills/mode-<mode id>.jpg.
 // Each picture is a real run that is arranged for the camera a moment before the shot (who stands where), then left
 // to play: the operators, hostiles, tracers and name tags are the game's own.
 // Run it again if the look of the game changes, then refresh those entries in blackout/assets/integrity.json.
 //   node blackout/qa/mode-shots.cjs          every mode
 //   node blackout/qa/mode-shots.cjs tdm      only the ones named
 const {chromium}=require('playwright'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
-const root=path.resolve(__dirname,'../..'),out=path.join(root,'blackout/assets/menu'),only=process.argv.slice(2);
+const root=path.resolve(__dirname,'..','..'),out=path.join(root,'legacy/menu-stills'),only=process.argv.slice(2);
 const VIEW={width:1366,height:768},CROP={width:1012,height:440},SIZE={width:460,height:200},ZOOM=1.75;
 const types={'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.svg':'image/svg+xml','.ogg':'audio/ogg','.wav':'audio/wav','.mp3':'audio/mpeg'};
 const server=http.createServer((req,res)=>{const f=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://x').pathname));if(!f.startsWith(root+path.sep)){res.writeHead(403).end();return;}fs.readFile(f,(e,d)=>{if(e){res.writeHead(404).end();return;}res.setHeader('Content-Type',types[path.extname(f)]||'application/octet-stream');res.end(d);});});

@@ -138,6 +138,30 @@
     hardline:{name:'HARDLINE',short:'HARDLINE',slot:2,tier:4,challenge:'tdm',desc:'Field support charges 25% faster, and gadget kills count double towards it.'}
   };
   const perkSlots = [2,5,8], perkSlotNames = ['SURVIVAL','COMBAT','MOVEMENT'];
+  // Avatars: how the operator looks on the menus, in the lobby and to the rest of the squad. Cosmetic only - they change
+  // nothing in the field. Graded and rank-gated like the guns (tier 1-5), so a uniform in new colours is standard issue
+  // and the strange ones are legendary. Tier 6 is MYTHIC: never sold, each one awarded for a career challenge
+  // (Meta.CHALLENGES). The drawing of each is in icons.js (BPIcons.LOOKS); the regular look is everyone's to begin with.
+  const avatars = {
+    regular:{name:'REGULAR',tier:1,price:0,desc:'Woodland fatigues and the helmet you were issued. Every operator starts here.'},
+    desert:{name:'DESERT RAT',tier:1,price:400,desc:'Sand-coloured fatigues for a long war in the dunes.'},
+    urban:{name:'URBAN GREY',tier:1,price:500,desc:'Concrete-grey fatigues cut for street fighting.'},
+    arctic:{name:'ARCTIC WHITE',tier:1,price:600,desc:'Snow camouflage and a white-washed helmet.'},
+    commando:{name:'COMMANDO',tier:2,price:1600,desc:'No helmet, just the beret that says where you trained.'},
+    jungle:{name:'JUNGLE RAT',tier:2,price:2000,desc:'Boonie hat, a beard that grew in the field, and face paint that never quite washes off.'},
+    raider:{name:'NIGHT RAIDER',tier:2,price:2400,desc:'Black fatigues and a balaclava. Nobody sees your face.'},
+    ghillie:{name:'GHILLIE',tier:3,price:4500,desc:'A suit of rags and grass that turns a sniper into part of the hillside.'},
+    eod:{name:'BOMB TECH',tier:3,price:5500,desc:'A blast suit and a visored helmet. Built to stand next to the thing that goes off.'},
+    nightops:{name:'NIGHT OPS',tier:3,price:6000,desc:'Four-eyed night vision glowing green over a matte-black kit.'},
+    ronin:{name:'RONIN',tier:4,price:11000,desc:'Lacquered plates and a horned helmet. An old way of war, fought with new guns.'},
+    wolf:{name:'ARCTIC WOLF',tier:4,price:12000,desc:'A wolf pelt for a hood, worn by the hunter who took it.'},
+    phantom:{name:'DESERT PHANTOM',tier:4,price:13000,desc:'Shemagh, mirrored shades and a long coat. Seen once, then gone into the haze.'},
+    revenant:{name:'REVENANT',tier:5,price:45000,desc:'A soldier who did not stay down. Grey skin, torn fatigues, one dead eye.'},
+    android:{name:'ANDROID',tier:5,price:55000,desc:'A combat frame in plated alloy, its visor scanning for the next target.'},
+    spectre:{name:'SPECTRE',tier:5,price:60000,desc:'A hooded shape made of smoke, and two pale eyes inside it.'},
+    sentinel:{name:'SENTINEL',tier:6,challenge:'sentinel',desc:'A super-soldier in steel-blue armour with a bronze shield. Awarded, never sold.'},
+    override:{name:'OVERRIDE',tier:6,challenge:'override',desc:'A rogue combat cyborg: leather, chrome and one red eye that never blinks. Awarded, never sold.'}
+  };
   // Mutators: optional rules for replaying an operation, and the twist each seeded challenge carries. Each changes how
   // a fight has to be played rather than just adding health; reward multiplies what the run pays (Meta.settle). What
   // each does is in create() and friends in core.js.
@@ -151,7 +175,7 @@
   const difficulties = {
     story:{label:'STORY',dmg:.55,rate:1.2,windup:1,bullet:1,spread:1,lead:0,iframes:.32,reward:.6,drops:1.2,heal:70,med:true},
     standard:{label:'STANDARD',dmg:1,rate:1,windup:1,bullet:1,spread:1,lead:0,iframes:.32,reward:1,drops:1,heal:70,med:true},
-    intense:{label:'HIGH INTENSITY',dmg:1.22,rate:.8,windup:1,bullet:1,spread:1,lead:.2,iframes:.32,reward:1.4,drops:1,heal:70,med:true,camp:7,nadeCd:11},
+    intense:{label:'INTENSE',dmg:1.22,rate:.8,windup:1,bullet:1,spread:1,lead:.2,iframes:.32,reward:1.4,drops:1,heal:70,med:true,camp:7,nadeCd:11},
     insane:{label:'INSANE',dmg:1.5,rate:.62,windup:.8,bullet:1.3,spread:.7,lead:.6,iframes:.2,reward:2.2,drops:.55,heal:55,med:false,camp:3.2,nadeCd:6,suppress:true,hunt:true,extra:1,waveExtra:.5,burst:2}
   };
   // Armory tiers 1-5 open at these ranks. Upgrade levels 1, 2 and 3 sit in tiers 1, 2 and 4. A tier is also how an
@@ -257,5 +281,5 @@
       weak:'Break the generators to bring the barrier down. Explosives stagger him; keep moving when he blinks.'},
   };
 
-  return {weapons,archetypes,gear,upgrades,support,perks,perkSlots,perkSlotNames,difficulties,order,categories,tiers,upgradeTiers,mutators,intel,missions:Missions.list,mission,campaign:()=>mission('crash'),training:()=>mission('range'),holdoutMaps:Missions.holdoutMaps};
+  return {weapons,archetypes,gear,upgrades,support,perks,avatars,perkSlots,perkSlotNames,difficulties,order,categories,tiers,upgradeTiers,mutators,intel,missions:Missions.list,mission,campaign:()=>mission('crash'),training:()=>mission('range'),holdoutMaps:Missions.holdoutMaps};
 });

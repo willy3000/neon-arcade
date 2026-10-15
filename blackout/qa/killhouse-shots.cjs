@@ -24,5 +24,6 @@ const server=http.createServer((req,res)=>{const f=path.resolve(root,'.'+decodeU
   const png=await page.screenshot({clip,type:'png'});
   const jpg=await scaler.evaluate(async([b64,w,h])=>{const img=await createImageBitmap(await (await fetch('data:image/png;base64,'+b64)).blob()),c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.imageSmoothingQuality='high';g.drawImage(img,0,0,w,h);return c.toDataURL('image/jpeg',.82).split(',')[1];},[png.toString('base64'),SIZE.width,SIZE.height]);
   fs.writeFileSync(path.join(out,'killhouse-'+id+'.jpg'),Buffer.from(jpg,'base64'));console.log('shot killhouse-'+id+'.jpg');
-  await page.keyboard.press('Escape');await page.click('#exit');await page.waitForFunction(()=>BPApp.snapshot().mode==='menu');}
+  // Leaving a lobby run goes back to the lobby; leave that too, so the next map starts from the menu.
+  await page.keyboard.press('Escape');await page.click('#exit');await page.waitForFunction(()=>['menu','lobby'].includes(BPApp.snapshot().mode));if(await page.evaluate(()=>BPApp.snapshot().mode==='lobby')){await page.click('#lobby-leave');await page.waitForFunction(()=>BPApp.snapshot().mode==='menu');}}
  await browser.close();server.close();})().catch(e=>{console.error(e);process.exit(1);});

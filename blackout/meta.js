@@ -1,9 +1,9 @@
 (function(root,factory){const api=factory(typeof module==='object'?require('./world.js'):root.BPWorld);if(typeof module==='object')module.exports=api;else root.BPMeta=api;})(globalThis,function(World){
   'use strict';
   // Progression and economy. Pure functions over the save object so the reward loop is testable without a browser.
-  const W=World.weapons,G=World.gear,U=World.upgrades,SUP=World.support,PERKS=World.perks,ORDER=World.order;
-  // Field support and perks are kept in lists of their own on the save; these pick the table and the list for a kind.
-  const tableOf=kind=>kind==='support'?SUP:kind==='perk'?PERKS:null,listOf=(save,kind)=>kind==='support'?save.owned.support:save.owned.perks;
+  const W=World.weapons,G=World.gear,U=World.upgrades,SUP=World.support,PERKS=World.perks,AV=World.avatars,ORDER=World.order;
+  // Field support, perks and avatars are kept in lists of their own on the save; these pick the table and the list for a kind.
+  const tableOf=kind=>kind==='support'?SUP:kind==='perk'?PERKS:kind==='avatar'?AV:null,listOf=(save,kind)=>kind==='support'?save.owned.support:kind==='avatar'?save.owned.avatars:save.owned.perks;
   const TITLES=['RECRUIT','PRIVATE','CORPORAL','SERGEANT','STAFF SERGEANT','OPERATOR','SPECIALIST','VETERAN','ELITE','GHOST','PHANTOM','SPECTRE','WRAITH HUNTER','LEGEND','BLACKOUT'];
   // XP needed to hold a rank. Rank opens the armory tiers (World.tiers), so the curve is paced against the whole
   // catalogue: see blackout/qa/economy-report.cjs.
@@ -75,7 +75,7 @@
     {id:'sidearm',text:'15 kills with sidearms',goal:15,reward:300,stat:r=>cls(r.mastery,'sidearm')},
     {id:'smg',text:'25 kills with submachine guns',goal:25,reward:300,stat:r=>cls(r.mastery,'smg')},
     {id:'combo',text:'Reach a ×5 kill combo',goal:5,reward:400,max:true,stat:r=>r.stats.bestCombo||0},
-    {id:'hard',text:'Complete a mission on High intensity or Insane',goal:1,reward:600,stat:r=>r.completed&&r.mode==='campaign'&&ORDER.indexOf(r.difficulty)>=2?1:0},
+    {id:'hard',text:'Complete a mission on Intense or Insane',goal:1,reward:600,stat:r=>r.completed&&r.mode==='campaign'&&ORDER.indexOf(r.difficulty)>=2?1:0},
     {id:'flawless',text:'Complete a mission without dying',goal:1,reward:450,stat:r=>r.completed&&r.mode==='campaign'&&!r.deaths?1:0},
     {id:'holdout',text:'Reach wave 8 in HOLDOUT',goal:8,reward:500,max:true,stat:r=>r.mode==='holdout'?r.stats.wave||0:0},
     {id:'srank',text:'Earn an S field rating',goal:1,reward:500,stat:r=>r.completed&&r.rating==='S'?1:0}];
@@ -143,7 +143,7 @@
         if(run.ranked!==false){const rec=save.tdm[run.difficulty]||(save.tdm[run.difficulty]={played:0,wins:0});rec.played++;if(run.result==='win')rec.wins++;}}
       if(hm&&hm.pay>1)line('MAP / '+hm.title,sub*(hm.pay-1),'×'+hm.pay);}
     // Mutators pay for the harder rules they set (World.mutators).
-    const muts=(run.mutators||[]).filter(k=>World.mutators[k]);if(muts.length&&sub){const m=muts.reduce((a,k)=>a*World.mutators[k].reward,1);line('MUTATORS / '+muts.map(k=>World.mutators[k].short).join(' + '),sub*(m-1),'×'+m.toFixed(2));}
+    const muts=(run.mutators||[]).filter(k=>Object.hasOwn(World.mutators,k));if(muts.length&&sub){const m=muts.reduce((a,k)=>a*World.mutators[k].reward,1);line('MUTATORS / '+muts.map(k=>World.mutators[k].short).join(' + '),sub*(m-1),'×'+m.toFixed(2));}
     const mult=D.reward;if(sub&&mult!==1){const extra=sub*(mult-1);report.lines.push({label:'DIFFICULTY / '+D.label,value:Math.round(extra),note:'×'+mult});sub+=extra;}
     report.xp=Math.round(sub);
     const scav=Math.min(3,save.upgrades.scavenger||0);if(scav&&sub){const extra=sub*.08*scav;report.lines.push({label:'SCAVENGER',value:Math.round(extra),note:'+'+8*scav+'%'});sub+=extra;}
@@ -165,11 +165,14 @@
     burn:{text:'Get 25 kills with fire',goal:25,value:s=>s.mastery.incendiary||0},
     explosive:{text:'Get 40 explosive kills',goal:40,value:s=>['grenade','mine','c4','cluster','seeker'].reduce((n,k)=>n+(s.mastery[k]||0),0)+cls(s.mastery,'explosive')},
     wave:{text:'Reach wave 12 in HOLDOUT',goal:12,value:s=>Math.max(0,...Object.values(s.holdout||{}))},
-    campaign:{text:'Finish all six operations',goal:6,value:s=>World.missions.filter(m=>s.missions[m.id]?.done).length}};
+    campaign:{text:'Finish all six operations',goal:6,value:s=>World.missions.filter(m=>s.missions[m.id]?.done).length},
+    // The mythic avatars (World.avatars, tier 6): the long-haul feats of a career.
+    sentinel:{text:'Win 25 team deathmatches',goal:25,value:s=>Object.values(s.tdm||{}).reduce((n,r)=>n+(r.wins||0),0)},
+    override:{text:'Reach wave 25 in HOLDOUT',goal:25,value:s=>Math.max(0,...Object.values(s.holdout||{}),...Object.values(s.killhouse||{}).flatMap(r=>Object.values(r||{})))}};
   // Kills that belong to no gun and are still kept for the career: the knife, and each kind of explosive and fire.
   const EXTRA_KILLS=['melee','grenade','mine','incendiary','c4','cluster','seeker'];
   function challenge(save,id){const c=CHALLENGES[id];if(!c)return null;const progress=Math.max(0,Math.min(c.goal,Math.floor(c.value(save)||0)));return {id,text:c.text,goal:c.goal,progress,done:progress>=c.goal};}
-  function claim(save){const out=[];for(const [kind,table] of [['weapon',W],['gear',G],['support',SUP],['perk',PERKS]])for(const [key,item] of Object.entries(table))if(item.challenge&&!owns(save,kind,key)&&challenge(save,item.challenge).done){grant(save,kind,key);out.push({kind,key,name:item.name,text:CHALLENGES[item.challenge].text});}return out;}
+  function claim(save){const out=[];for(const [kind,table] of [['weapon',W],['gear',G],['support',SUP],['perk',PERKS],['avatar',AV]])for(const [key,item] of Object.entries(table))if(item.challenge&&!owns(save,kind,key)&&challenge(save,item.challenge).done){grant(save,kind,key);out.push({kind,key,name:item.name,text:CHALLENGES[item.challenge].text});}return out;}
   // How many perk slots the player's rank has opened (World.perkSlots).
   const perkSlots=save=>World.perkSlots.filter(r=>rankOf(save.xp).rank>=r).length;
   // A gun found in the field (picked up from a fallen enemy) is 25% off from then on. "kit" is a weapon's next part.
@@ -181,7 +184,8 @@
   // An item's grade, 1 to 5, is its armory tier; the screens colour it by that (silver, green, blue, gold, and a
   // fiery red for the legendary pair) so what is ordinary and what is exceptional can be told at a glance. An
   // upgrade is graded by the level it would be bought at next, and a weapon's kit by the weapon.
-  const RARITY=['STANDARD ISSUE','FIELD GRADE','SPECIALIST','ELITE','LEGENDARY'],rarity=(save,kind,key)=>Math.max(1,Math.min(RARITY.length,tierOf(save,kind==='kit'?'weapon':kind,key)));
+  // Avatars add a sixth grade above legendary, MYTHIC, for the ones that are awarded rather than sold.
+  const RARITY=['STANDARD ISSUE','FIELD GRADE','SPECIALIST','ELITE','LEGENDARY','MYTHIC'],rarity=(save,kind,key)=>Math.max(1,Math.min(RARITY.length,tierOf(save,kind==='kit'?'weapon':kind,key)));
   // 0 when the item can be bought at the player's rank, otherwise the rank it needs.
   function locked(save,kind,key){const rank=rankFor(tierOf(save,kind,key));return rankOf(save.xp).rank>=rank?0:rank;}
   function buy(save,kind,key){const cost=price(save,kind,key);if(cost==null)return {ok:false,reason:'UNAVAILABLE'};if(owns(save,kind,key))return {ok:false,reason:'OWNED'};
@@ -204,7 +208,7 @@
   function loadout(save,lo=save.loadout){const ow=save.owned.weapons,og=save.owned.gear,pick=(k,slot,fb)=>k&&W[k]&&W[k].slot===slot&&ow.includes(k)?k:fb,gear=(k,slot)=>k&&G[k]&&G[k].slot===slot&&og.includes(k)?k:null;
     // One field support, and one perk in each slot the player's rank has opened.
     const open=perkSlots(save),perks=[0,1,2].map(i=>{const k=Array.isArray(lo.perks)?lo.perks[i]:null;return i<open&&PERKS[k]?.slot===i&&save.owned.perks.includes(k)?k:null;});
-    return {primary:pick(lo.primary,0,'rifle'),secondary:pick(lo.secondary,1,'pistol'),lethal:gear(lo.lethal,'lethal'),tactical:gear(lo.tactical,'tactical'),support:SUP[lo.support]&&save.owned.support.includes(lo.support)?lo.support:null,perks};}
+    return {primary:pick(lo.primary,0,'rifle'),secondary:pick(lo.secondary,1,'pistol'),lethal:gear(lo.lethal,'lethal'),tactical:gear(lo.tactical,'tactical'),support:Object.hasOwn(SUP,lo.support??'')&&save.owned.support.includes(lo.support)?lo.support:null,perks};}
   const profile=save=>({upgrades:{...save.upgrades},kit:{...save.kit},mastery:Object.fromEntries(Object.entries(save.mastery).map(([k,v])=>[k,masteryLevel(v)]))});
   // ---------- Intel: the armory's file on every hostile ----------
   // A file opens in three steps: UNKNOWN (never met: a silhouette in its threat colour), SIGHTED (seen in a run: its

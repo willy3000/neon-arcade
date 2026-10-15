@@ -7,7 +7,7 @@
   "type": "commonjs",
   "main": "electron/main.js",
   "scripts": {
-    "test": "node blackout/tests/core.cjs && node blackout/tests/progression.cjs && node blackout/tests/walkthrough.cjs && node blackout/tests/coop.cjs && node blackout/tests/squad.cjs && node blackout/tests/support.cjs && node blackout/tests/arsenal.cjs && node blackout/tests/holdout.cjs && node blackout/tests/quality.cjs && node blackout/tests/intel.cjs && node blackout/tests/modes.cjs && node electron/net/test.cjs",
+    "test": "node blackout/tests/core.cjs && node blackout/tests/progression.cjs && node blackout/tests/walkthrough.cjs && node blackout/tests/coop.cjs && node blackout/tests/squad.cjs && node blackout/tests/support.cjs && node blackout/tests/arsenal.cjs && node blackout/tests/holdout.cjs && node blackout/tests/quality.cjs && node blackout/tests/intel.cjs && node blackout/tests/modes.cjs && node blackout/tests/locker.cjs && node electron/net/test.cjs",
     "test:browser": "node blackout/tests/browser.cjs",
     "test:tactical": "node blackout/tests/tactical.cjs",
     "test:e2e": "node electron/net/e2e.cjs",

@@ -5,13 +5,6 @@ Blackout Protocol includes the work of others, used under the licences below. Th
 "licenses" folder beside this file; Electron's and Chromium's own are in LICENSE.electron.txt and
 LICENSES.chromium.html in the game's folder.
 
-Character animations
-  Animated Top Down Survivor Player by Riley Gombart
-  https://opengameart.org/content/animated-top-down-survivor-player
-  Creative Commons Attribution 3.0 Unported - https://creativecommons.org/licenses/by/3.0/
-  Changes: resized, desaturated, re-centred and packed into one atlas; tinted in the game.
-  licenses/characters-CC-BY-3.0.txt
-
 Props and sound effects
   Top-down Shooter, Impact Sounds and Sci-fi Sounds by Kenney (kenney.nl) - Creative Commons Zero (CC0 1.0)
   Residue-sfx by FacadeGaikan (opengameart.org) - CC0 1.0

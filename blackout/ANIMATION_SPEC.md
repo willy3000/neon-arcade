@@ -1,6 +1,6 @@
 # Animation pipeline and honest coverage
 
-`characters.png` contains 365 genuine raster animation frames from Riley Gombart's CC BY 3.0 pack. Feet rotate independently from the torso. Movement animation advances by ground distance rather than a fixed idle loop; strafing and reverse travel select the appropriate gait and phase. Torso and muzzle use the same aim angle as hit detection. A 70ms crossfade softens changes of action sequence without blocking input.
+The field's 365 character frames are drawn by the game itself (`BPIcons.fieldSheet` in `icons.js`): a realistic top-down soldier in each operator's avatar, and a grey one that hostiles' tints and headgear dress, with the same frame names and counts as the CC BY atlas they replaced (archived in `legacy/sprites/`). Feet rotate independently from the torso. Movement animation advances by ground distance rather than a fixed idle loop; strafing and reverse travel select the appropriate gait and phase. Torso and muzzle use the same aim angle as hit detection. A 70ms crossfade softens changes of action sequence without blocking input.
 
 | State | Live implementation |
 |---|---|

@@ -746,16 +746,6 @@
       "sha256": "1723a9fd25103ed41af06054814e84e65f4a772bac86ab2dc927da93d9592ff5"
     },
     {
-      "file": "characters.json",
-      "bytes": 64026,
-      "sha256": "cea4e2e3c27869dfdbe7eee8a64bf9391fcbddad2489f3027e515ae289bc5e92"
-    },
-    {
-      "file": "characters.png",
-      "bytes": 1441293,
-      "sha256": "86a015e4a5dfa26581a59f89561c788aad91b856f0bfd360c5ad3b11060439ef"
-    },
-    {
       "file": "cover.svg",
       "bytes": 7067,
       "sha256": "393b86b9f38b03953d1a6641574a3c596c61918b4ce585f31b006151a385cad9"
@@ -816,11 +806,6 @@
       "sha256": "7cc66558f255d3e4ed208395468943d8ed95f47ead32ad721babbba25f050fdc"
     },
     {
-      "file": "licenses/characters-CC-BY-3.0.txt",
-      "bytes": 757,
-      "sha256": "66de915d134fbe8d5eda300383dfd06b7f7e86af386ffc3110a4db61984a44c9"
-    },
-    {
       "file": "licenses/fonts-OFL.txt",
       "bytes": 4864,
       "sha256": "b2d761fc026cd730d9bd675c00a50f4d3da434ed4e08c3907caf2968f580f84e"
@@ -857,148 +842,148 @@
     },
     {
       "file": "menu/campaign-convoy.jpg",
-      "bytes": 10140,
-      "sha256": "94e4187b8b14fcb1c8744ab38e129054e6000abfb9b13898b279767e3073979d"
+      "bytes": 7372,
+      "sha256": "4bdcad3a5fc577ea08e0ee65255b927c05926a4190e6e225988e02a78e8f282e"
     },
     {
       "file": "menu/campaign-crash.jpg",
-      "bytes": 15029,
-      "sha256": "518f5fe7c8f181c77a1a6f991efb19d64e5244e682b352c22b55367ac36c150d"
+      "bytes": 14502,
+      "sha256": "5f04f753c1ec47abd90a7e6ada392aa314fbbb0e9cfeb11bb31f87dfc7162af1"
     },
     {
       "file": "menu/campaign-kestrel.jpg",
-      "bytes": 10314,
-      "sha256": "87a2aca61a66b51f88f5a5f6763d3b9ecd7fc5a7872ae9bf6f993c5fb81fafd5"
+      "bytes": 10548,
+      "sha256": "ad8898e5be5dee2f63e945d3b258c5d95400f5d9517eab4632fc74b6d7d58403"
     },
     {
       "file": "menu/campaign-meridian.jpg",
-      "bytes": 18713,
-      "sha256": "f98ef90345e9eb9241611c866035e2974ff4f031b25f3410e85118de866dbc76"
+      "bytes": 17464,
+      "sha256": "e80e23e7806830164536cecbfc738e4699745e7ce1e854c8a2dc1aeaaef86e60"
     },
     {
       "file": "menu/campaign-blackout.jpg",
-      "bytes": 7646,
-      "sha256": "4b16d9e3d54ae9b95e99448bbd8b27228b45e12482224b870af694edc44f435b"
+      "bytes": 8113,
+      "sha256": "62b96843431961b5f2ec1b1dd12dcf88f22b604a3fe9259ac91c7f022861b2a6"
     },
     {
       "file": "menu/campaign-citadel.jpg",
-      "bytes": 10164,
-      "sha256": "18e90dbc6e0dd318d2438147efee5b6fe5469370d3897ef41790f3b047f03e64"
+      "bytes": 10449,
+      "sha256": "b3fc348e237a3225a51b7aa8f72f7fd1f352672f80404a575afe719713f26617"
     },
     {
       "file": "menu/campaign-redline.jpg",
-      "bytes": 8340,
-      "sha256": "fcec7d7213169aee2f3d7080c0656832256e1f5aa3970e295719b82df3a4a8c6"
+      "bytes": 8227,
+      "sha256": "fc90773852b4c97542bd8c122115ebccfe639710ce614d5a2cdc7b911b5ece38"
     },
     {
       "file": "menu/campaign-ruins.jpg",
-      "bytes": 15902,
-      "sha256": "2658fea2da958f0c771fa86c06fac346239f3684efbb76475a6004a74230cd6c"
+      "bytes": 12541,
+      "sha256": "e1011fb964eb3136ae39f43f32df9e8b11b4e5587fcaa2b97e7a28e2dd38388b"
     },
     {
       "file": "menu/campaign-underground.jpg",
-      "bytes": 9198,
-      "sha256": "2e819b43fa85a702ab8bf80313e78e6e77648ebd0f372225e910e78c78a1ea30"
+      "bytes": 13661,
+      "sha256": "4e253182bcc2fc337100eb709a05475b2486caae5c3d3242e6ac5c81c2217c93"
     },
     {
       "file": "menu/holdout.jpg",
-      "bytes": 9532,
-      "sha256": "89c511d36163d2c244430b6d4c7fc14ee52515030b1635fcf5fb0aae39662c22"
+      "bytes": 10094,
+      "sha256": "6da6f83988553093e9c7be39d56dc680148b6f6f9ac4233a0167fc851a5cdcc1"
     },
     {
       "file": "menu/killhouse-holdout-convoy.jpg",
-      "bytes": 5840,
-      "sha256": "97a6f9424a8a39883880d1dec702abc3841c0156d24b1e49fb8c4c08608e2ac1"
+      "bytes": 5204,
+      "sha256": "ea7d83d2ae89cb12ee6ecc18687e3ad31b4509d009be971a571735ad4ea1c62e"
     },
     {
       "file": "menu/killhouse-holdout-crash.jpg",
-      "bytes": 8665,
-      "sha256": "4e835edfab4dd308dd14818728c9c91ca9ff7a2d85651ac742bbf72b59fb1b92"
+      "bytes": 8833,
+      "sha256": "797af2640b136597e3400ff1cc7ed6b09bd781fa01517535cd9b25bd1549bb90"
     },
     {
       "file": "menu/killhouse-holdout-kestrel.jpg",
-      "bytes": 8031,
-      "sha256": "5ef8aeaea5770a2cdb3cc55a4abeafe175e144ffef15aa33a1de679005476173"
+      "bytes": 7781,
+      "sha256": "10c44e8a6ab0935aed0d23f282c5712c06c5c81c1e116c7b5616659ac712f2b5"
     },
     {
       "file": "menu/killhouse-holdout-meridian.jpg",
-      "bytes": 11349,
-      "sha256": "e418b97fe878e28e1e3f67c47fafc05775f77567da3b30b0d41248f8a701eda2"
+      "bytes": 11047,
+      "sha256": "6a6bfb507353068af382beabf138a9cf49fd02b2e5e411f55b23023e28223a61"
     },
     {
       "file": "menu/killhouse-holdout-blackout.jpg",
-      "bytes": 6055,
-      "sha256": "2f51e84716e9f7b58f1383fa07822b8b6b6939be104728fbc5063df0c2503ba8"
+      "bytes": 5821,
+      "sha256": "263394a010a90b751074563d15d1fccd8db3679231c417b51c2563fe0dba51ab"
     },
     {
       "file": "menu/killhouse-holdout-citadel.jpg",
-      "bytes": 7744,
-      "sha256": "3730f685b7ca9f7ebb8ed5d4fb3d8a9c36ba9705cd5ab9020eff8cd2c7bf84ff"
+      "bytes": 7551,
+      "sha256": "c504be558cc61d7507da2db494ea251efc30c002a11899f125ef14113ddf552b"
     },
     {
       "file": "menu/killhouse-holdout-redline.jpg",
-      "bytes": 7473,
-      "sha256": "a4c4eeed381977f5645d49d4302a0afd5e9a51f88eb1ce28537207c17cf43582"
+      "bytes": 7867,
+      "sha256": "0430e9750bc3283d6ae84fbb1ea4342762533e5d2b6d6120ea514457cd52b83c"
     },
     {
       "file": "menu/killhouse-holdout-ruins.jpg",
-      "bytes": 11023,
-      "sha256": "f50a89135482643e51ec64ebf0d161e53397b6f91db8fffac4bed0957a839db5"
+      "bytes": 10381,
+      "sha256": "d9a304febcb8c45313d9615d662a741505158f651497d73aba26d522b25a9fdb"
     },
     {
       "file": "menu/killhouse-holdout-underground.jpg",
-      "bytes": 8280,
-      "sha256": "24514dc9301e88e6befdbd40ce7ba50370f5e71f21f90396eed9f430ad9fa6a8"
+      "bytes": 9319,
+      "sha256": "8c484649ec99110da021823eb949f87029a6b0bf36c188f86aa014f5c1511724"
     },
     {
       "file": "menu/killhouse-holdout.jpg",
-      "bytes": 7402,
-      "sha256": "643dbf7440412f29aed9a07c876036df5d6b5207ec861d6b4648a22cf40a2fa2"
+      "bytes": 6384,
+      "sha256": "ee814f37e8619cca11eb76ee3bc41da2e87fba7c9f1f68b9e9baabdff347c7cc"
     },
     {
-      "file": "menu/mode-holdout.jpg",
-      "bytes": 7830,
-      "sha256": "cad72767609d870a84614b114d272ccee95f1905f04e68c09374613a62711eb8"
+      "file": "menu/mode-holdout.svg",
+      "bytes": 26205,
+      "sha256": "2f2f7b3f9c17014b21238ad394f5259b84b5e445846939a95bf6c903ca25ed6b"
     },
     {
-      "file": "menu/mode-tdm.jpg",
-      "bytes": 8030,
-      "sha256": "da8c1ef69d1d585db29e80e6d371088a7bbb3350c89bcf7b5ab05e5462175166"
+      "file": "menu/mode-tdm.svg",
+      "bytes": 15907,
+      "sha256": "d2b0d22065b83af9a5f7b0e7daef04a8cf3d1c0f6b8d509bd7b684b3bbd8f5f7"
     },
     {
-      "file": "menu/mode-trials.jpg",
-      "bytes": 6069,
-      "sha256": "b21b23d065cc457ec32383077019af0fe5546f4d518dd256dfa9838c09dd1109"
+      "file": "menu/mode-arms.svg",
+      "bytes": 15305,
+      "sha256": "86beeeab6d1da8b91a88ec2cd47d4cc53effc525146e09063602cf3e6562bd7f"
     },
     {
-      "file": "menu/mode-extract.jpg",
-      "bytes": 7698,
-      "sha256": "c2ff7ecaa7d0ae9150e7a37e1b1186672386158175832078c4bf174e24953dec"
+      "file": "menu/mode-uplink.svg",
+      "bytes": 7447,
+      "sha256": "c1ff288809066cf3aa20092ac07369a7283602559ff24f2b217a1a0f5b44b2ef"
     },
     {
-      "file": "menu/mode-breach.jpg",
-      "bytes": 8552,
-      "sha256": "151ccd68d63a017b6c4c648ae07747feba0c28f5d3c5ee6f7a4a08f584e313bb"
+      "file": "menu/mode-hunted.svg",
+      "bytes": 6217,
+      "sha256": "e989881235d0ee2ec7e4b871217316a3b7456014a586cfa161a3e927208a3f15"
     },
     {
-      "file": "menu/mode-hunted.jpg",
-      "bytes": 8078,
-      "sha256": "2721fffaafa3562de787569d94a79a5f35cc1ab49ad6f755b35a109b0e1e4652"
+      "file": "menu/mode-breach.svg",
+      "bytes": 11439,
+      "sha256": "fa7072e61a96dd84849d9a27e16945ade71a5d56ad6851cd25838c97da006f96"
     },
     {
-      "file": "menu/mode-uplink.jpg",
-      "bytes": 8824,
-      "sha256": "c61dc874b1b906588b996969f970197b0b4590dbb561eb51d974afc37a98f99d"
+      "file": "menu/mode-extract.svg",
+      "bytes": 9091,
+      "sha256": "126da3bf2cab7f8395c02cc05c8b2c493043dff88eb286eab2b0acf1525fdd2b"
     },
     {
-      "file": "menu/mode-arms.jpg",
-      "bytes": 7234,
-      "sha256": "0a911e9e792bbe4bc827d73f0ed1dd4c0e7d17c2a25e4b03f48b81139570568f"
+      "file": "menu/mode-trials.svg",
+      "bytes": 8682,
+      "sha256": "e8261e57935f98464bd62937c088286d1a598d67708263f03608293cc96e707f"
     },
     {
       "file": "menu/training.jpg",
-      "bytes": 9937,
-      "sha256": "e469e275ee535a6b84aa012e7e952997cbb4da104dc287bad872aed3c33b9725"
+      "bytes": 11308,
+      "sha256": "e5f73e025e7c5984549fd79de5d6fe84220ac4f59b583cd55b5c5eee23c7196b"
     },
     {
       "file": "props.json",

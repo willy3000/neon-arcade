@@ -74,7 +74,7 @@
  const make=(tag,attrs={},parent=null)=>{const n=document.createElementNS(SVG,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);if(parent)parent.append(n);return n;};
  const f=n=>+n.toFixed(1),move=(x,y,more='')=>`translate(${f(x)}px,${f(y)}px)${more}`,css=(hex,alpha=1)=>`rgba(${hex>>16&255},${hex>>8&255},${hex&255},${alpha})`;
  // The same per-archetype sprite tints and palette render.js uses.
- const TINTS={infantry:0xb2a797,rusher:0xb8a58e,sniper:0x8dafa1,shield:0xaaa58e,commander:0xc9aa89,scout:0x9fb08a,breacher:0x8e8d84,gunner:0x9a8c7a},ROOK=0xc4cfad,CORPSE=0x747761,C={shadow:0x111b15,amber:0xe2b074,red:0xd3846c};
+ const TINTS={infantry:0xb2a797,rusher:0xb8a58e,sniper:0x8dafa1,shield:0xaaa58e,commander:0xc9aa89,scout:0x9fb08a,breacher:0x8e8d84,gunner:0x9a8c7a},CORPSE=0x747761,C={shadow:0x111b15,amber:0xe2b074,red:0xd3846c};
  const DUST={spark:0xddb170,cloth:0x987c62,dust:0xa7a087,casing:0xad9b64,smoke:0x596457};
  // Guns that throw a spread of sparks, and guns with a bigger, longer muzzle flash.
  const SCATTER=['shotgun','sawedoff','autoshotgun'],HEAVY=[...SCATTER,'magnum','marksman','lmg'];
@@ -108,15 +108,17 @@
   haze(world){const rnd=this.rnd;
    for(let i=0;i<7;i++){const ms=rnd(10000,14500),x=rnd(815,885),y=rnd(440,500),puff=make('ellipse',{rx:62,ry:46,fill:'url(#ms-smoke)',class:i%2?'fx-extra':''},world);
     this.run(puff,[{opacity:0,transform:move(x,y,' scale(.55)')},{opacity:.9,transform:move(x+70,y-45,' scale(1)'),offset:.18},{opacity:.65,transform:move(x+240,y-150,' scale(1.9)'),offset:.6},{opacity:0,transform:move(x+430,y-265,' scale(2.8)')}],ms,-ms*i/7);}}
-  // The soldiers need the simulation and the character atlas. Until both are in, the fire simply burns on its own.
+  // The soldiers need the simulation and the field's character sheets (the menus' cartoon from above, BPIcons.fieldSheet:
+  // light grey for the hostiles to be tinted, olive for Rook and blue for his squadmate). Without them the fire burns alone.
   troops(){if(!root.BPCore||!root.BPWorld||!root.BPMissions)return;this.actors=new Map();this.parts=[];this.flashes=[];this.scratch=document.createElement('canvas');this.scratch.width=this.scratch.height=112;this.tinted=new Map();
-   const sheet=new Image();sheet.src='blackout/assets/characters.png';
-   Promise.all([sheet.decode(),fetch('blackout/assets/characters.json').then(r=>r.json())]).then(([,atlas])=>{this.sheet=sheet;this.frames=atlas.frames;this.battle=new Skirmish();if(this.playing)this.loop();}).catch(err=>console.warn('Menu skirmish disabled',err));}
+   if(!root.BPIcons?.fieldSheetAsync)return;const mk=sh=>({img:sh.canvas,frames:Object.fromEntries(sh.frames.map(([n,x,y])=>[n,{x,y,w:sh.size,h:sh.size}]))});
+   // Drawn a few milliseconds at a time while the title screen is idle; the fire burns on its own until they are ready.
+   Promise.all([root.BPIcons.fieldSheetAsync('regular',0,true),root.BPIcons.fieldSheetAsync('regular',0),root.BPIcons.fieldSheetAsync('regular',1)]).then(([h,r,m])=>{this.sheets={hostile:mk(h),rook:mk(r),mate:mk(m)};this.battle=new Skirmish();if(this.playing)this.loop();});}
   // A frame of the atlas multiplied by a tint, which is exactly what a tinted sprite is in a mission. Tinted frames are
   // kept only while the scene is running.
-  sprite(name,tint){const key=tint+name;let img=this.tinted.get(key);if(img)return img;const cell=this.frames[name]?.frame;if(!cell)return null;img=document.createElement('canvas');img.width=cell.w;img.height=cell.h;const g=img.getContext('2d');
-   g.drawImage(this.sheet,cell.x,cell.y,cell.w,cell.h,0,0,cell.w,cell.h);g.globalCompositeOperation='multiply';g.fillStyle=css(tint);g.fillRect(0,0,cell.w,cell.h);g.globalCompositeOperation='destination-in';g.drawImage(this.sheet,cell.x,cell.y,cell.w,cell.h,0,0,cell.w,cell.h);this.tinted.set(key,img);return img;}
-  stamp(g,name,tint,x,y,turn,sx=1,sy=1,alpha=1){const img=this.sprite(name,tint);if(!img)return;g.save();g.translate(x,y);g.rotate(turn);g.scale(sx,sy);g.globalAlpha=alpha;g.drawImage(img,-img.width/2,-img.height/2);g.restore();}
+  sprite(name,tint,who='hostile'){const key=who+tint+name;let img=this.tinted.get(key);if(img)return img;const sheet=this.sheets[who],cell=sheet.frames[name];if(!cell)return null;img=document.createElement('canvas');img.width=cell.w;img.height=cell.h;const g=img.getContext('2d');
+   g.drawImage(sheet.img,cell.x,cell.y,cell.w,cell.h,0,0,cell.w,cell.h);g.globalCompositeOperation='multiply';g.fillStyle=css(tint);g.fillRect(0,0,cell.w,cell.h);g.globalCompositeOperation='destination-in';g.drawImage(sheet.img,cell.x,cell.y,cell.w,cell.h,0,0,cell.w,cell.h);this.tinted.set(key,img);return img;}
+  stamp(g,name,tint,x,y,turn,sx=1,sy=1,alpha=1,who){const img=this.sprite(name,tint,who);if(!img)return;g.save();g.translate(x,y);g.rotate(turn);g.scale(sx,sy);g.globalAlpha=alpha;g.drawImage(img,-img.width/2,-img.height/2);g.restore();}
   emit(x,y,count,kind='spark',angle=null){const n=this.low?Math.ceil(count/2):count;for(let i=0;i<n&&this.parts.length<260;i++){const a=angle===null?Math.random()*Math.PI*2:angle+(Math.random()-.5)*1.8,speed=kind==='smoke'?15+Math.random()*35:70+Math.random()*190;
     this.parts.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,life:kind==='smoke'?1.4+Math.random()*1.4:.2+Math.random()*.6,kind,size:kind==='smoke'?7+Math.random()*14:1+Math.random()*4});}}
   // The same reactions render.js has to simulation events: muzzle flash and casing, cloth off a hit, sparks off a wall.
@@ -127,8 +129,8 @@
   actor(id){let a=this.actors.get(id);if(!a){a={phase:0,hit:0};this.actors.set(id,a);}a.seen=this.stampTime;return a;}
   // One soldier, following drawActor in render.js step for step: which animation plays, at what frame, how the body
   // twists and squashes through a roll, the recoil kick, the shoulder stripe and (for a shield trooper) the plate.
-  soldier(g,e,s,dt,op,pass){const A=root.BPWorld.archetypes,W=root.BPWorld.weapons,a=this.actor(e.id||(e===s.player?'rook':'mate')),meta=A[e.type],w=op?W[e.slots[e.slot]]:W[e.gun]||W.rifle,melee=meta?.melee,face=e.angle||0,tint=op?ROOK:TINTS[e.type]||TINTS.infantry;
-   if(e.dead){if(pass===0)this.stamp(g,(melee?'knife':w.sprite)+'/idle/8',CORPSE,e.x+6,e.y,face+.6,.86,.55,.65*Math.min(1,(14-e.deathAge)/2));return;}
+  soldier(g,e,s,dt,op,pass){const A=root.BPWorld.archetypes,W=root.BPWorld.weapons,a=this.actor(e.id||(e===s.player?'rook':'mate')),meta=A[e.type],w=op?W[e.slots[e.slot]]:W[e.gun]||W.rifle,melee=meta?.melee,face=e.angle||0,tint=op?0xffffff:TINTS[e.type]||TINTS.infantry,who=op?(e===s.player?'rook':'mate'):'hostile';
+   if(e.dead){if(pass===0)this.stamp(g,(melee?'knife':w.sprite)+'/idle/8',CORPSE,e.x+6,e.y,face+.6,.86,.55,.65*Math.min(1,(14-e.deathAge)/2),who);return;}
    const speed=Math.hypot(e.vx,e.vy),state=e.state||'idle';if(pass===1)a.phase+=speed*dt/95;let feetSeq='idle',seq='idle',bodyTime=s.time*10,footTime=a.phase*20,angle=face,scaleX=1,scaleY=1,lift=0,count=20,group=melee?'knife':w.sprite;
    if(speed>8){feetSeq=state==='sprint'?'run':'walk';seq='move';bodyTime=a.phase*20;const going=op?e.moveAngle:Math.atan2(e.vy,e.vx),rel=wrap(going-face);if(Math.abs(rel)>.6&&Math.abs(rel)<2.5)feetSeq=rel>0?'strafe_right':'strafe_left';if(Math.abs(rel)>2.5)footTime=-a.phase*20;}
    if(op&&e.reload>0){seq='reload';count=group==='handgun'?15:20;bodyTime=(1-e.reload/e.reloadTotal)*count;}
@@ -139,9 +141,9 @@
    if(pass===1){g.save();g.translate(e.x+5,e.y+9);g.scale(1-lift/55,1-lift/55);g.fillStyle=css(C.shadow,.5);g.beginPath();g.ellipse(0,0,20,12,0,0,Math.PI*2);g.fill();g.restore();return;}
    const frame=group+'/'+seq+'/'+Math.max(0,Math.min(count-1,Math.floor(((bodyTime%count)+count)%count))),feet='feet/'+feetSeq+'/'+(feetSeq==='idle'?0:Math.floor(((footTime%20)+20)%20));
    const recoil=e.shotAge<.12?(1-e.shotAge/.12)*(w.cls==='shotgun'?5:2):0,big=e.type==='gunner'?1.12:e.type==='scout'?.94:1;
-   this.stamp(g,feet,tint,e.x,e.y-lift*.45,face,1,state==='roll'?.72:1);this.stamp(g,frame,tint,e.x-Math.cos(face)*recoil,e.y-lift-Math.sin(face)*recoil,angle,scaleX*big,scaleY*big);
+   this.stamp(g,feet,tint,e.x,e.y-lift*.45,face,1,state==='roll'?.72:1,1,who);this.stamp(g,frame,tint,e.x-Math.cos(face)*recoil,e.y-lift-Math.sin(face)*recoil,angle,scaleX*big,scaleY*big,1,who);
    g.save();g.translate(e.x,e.y-lift);g.rotate(angle);g.lineCap='butt';const line=(x1,y1,x2,y2,width,color,alpha)=>{g.strokeStyle=css(color,alpha);g.lineWidth=width;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();};
-   if(op){line(-8,-15,-2,-13,4,0xd1b170,.95);line(-11,-18,-9,-7,2,0x272e21,.7);g.fillStyle=css(0xa89c76,.7);g.fillRect(-14,-8,4,6);}else line(-8,-15,-2,-13,4,0x9a705b,.9);
+   if(!op)line(-9,-20,-3,-18,4,0x9a705b,.9);
    if(e.type==='shield'){g.fillStyle=css(0x677064,.95);g.strokeStyle=css(0xa8ad90,.7);g.lineWidth=2;g.beginPath();g.roundRect(20,-28,10,56,3);g.fill();g.stroke();line(21,-7,28,-7,3,0xe0b572,.6);}
    if(e.type==='scout')line(-10,-12,-10,12,2,0xb9c48d,.7);
    if(e.type==='breacher'){g.fillStyle=css(0x4b4c44,.95);g.fillRect(-6,-13,14,26);g.strokeStyle=css(0x8a8a7c,.7);g.lineWidth=2;g.strokeRect(-6,-13,14,26);}
